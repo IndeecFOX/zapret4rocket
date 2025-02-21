@@ -26,10 +26,10 @@ else
 fi
 
 # Распаковка архива zapret и его удаление
-wget -O zapret-v69.9.zip "https://github.com/bol-van/zapret/releases/download/v69.9/zapret-v69.9.zip"
-unzip zapret-v69.9.zip 
-rm -f zapret-v69.9.zip
-mv zapret-v69.9 zapret
+wget -O zapret-v70.zip "https://github.com/bol-van/zapret/releases/download/v70/zapret-v70.zip"
+unzip zapret-v70.zip 
+rm -f zapret-v70.zip
+mv zapret-v70 zapret
 
 #Включение обхода дискорда
 cp /opt/zapret/init.d/custom.d.examples.linux/50-discord /opt/zapret/init.d/sysv/custom.d/
