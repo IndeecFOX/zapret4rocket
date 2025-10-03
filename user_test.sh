@@ -1,3 +1,5 @@
+/opt/zapret/nfq/nfqws --dry-run --user="nobody"
+/opt/zapret/nfq/nfqws --dry-run --user="$(head -n1 /etc/passwd | cut -d: -f1)"
  if /opt/zapret/nfq/nfqws --dry-run --user="nobody" 2>&1 | grep -q "queue"; then
     echo "WS_USER=nobody"
 	sed -i 's/^#\(WS_USER=nobody\)/\1/' /opt/zapret/config.default
