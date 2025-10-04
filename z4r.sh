@@ -68,7 +68,7 @@ get_repo() {
   echo "Востановление настроек подбора из резерва выполнено."
  fi
  #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
- wget -4 -O /opt/zapret/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/config.default
+ wget -4 -O /opt/zapret/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/Test/config.default
  if command -v nft >/dev/null 2>&1; then
   sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret/config.default"
  fi
