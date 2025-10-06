@@ -482,7 +482,7 @@ get_menu
  
 #entware keenetic and merlin preinstal env. merlin wget repair
 if [ "$hardware" = "keenetic" ]; then
- opkg install coreutils-sort grep gzip ipset iptables kmod_ndms xtables-addons_legacy
+ opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy
 elif [ "$hardware" = "merlin" ]; then
  opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy
  touch /root/.wget-hsts
