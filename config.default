@@ -30,7 +30,7 @@ IP2NET_OPT6="--prefix-length=56-64 --v6-threshold=5"
 # options for auto hostlist
 AUTOHOSTLIST_RETRANS_THRESHOLD=3
 AUTOHOSTLIST_FAIL_THRESHOLD=3
-AUTOHOSTLIST_FAIL_TIME=60
+AUTOHOSTLIST_FAIL_TIME=30
 # 1 = debug autohostlist positives to ipset/zapret-hosts-auto-debug.log
 AUTOHOSTLIST_DEBUGLOG=0
 
@@ -172,7 +172,7 @@ NFQWS_OPT="
 --skip --filter-l3=ipv4 --filter-tcp=443 --ipset=/opt/zapret/lists/cloudflare-ipset.txt --ipset-exclude-ip=1.1.1.1,1.0.0.1,212.109.195.93,83.220.169.155,141.105.71.21,18.244.96.0/19,18.244.128.0/19 --dpi-desync=multisplit --dpi-desync-split-seqovl=1 --dpi-desync-split-pos=sld+1 --new
 'Стратегии для сайтов попавших в автодетект заблокированных'
 --filter-l3=ipv4 --filter-tcp=80 --hostlist-domains=emptylistfix.com --hostlist-auto=/opt/zapret/lists/autohostlist.txt --hostlist-exclude=/opt/zapret/lists/netrogat.txt --dpi-desync=fake,multisplit --dpi-desync-split-seqovl=2 --dpi-desync-split-pos=host+1 --dpi-desync-fake-http=0x0E0E0F0E --dpi-desync-fooling=md5sig --new
---filter-l3=ipv4 --filter-tcp=443 --hostlist-domains=emptylistfix.com --hostlist-auto=/opt/zapret/lists/autohostlist.txt --hostlist-exclude=/opt/zapret/lists/netrogat.txt --dpi-desync=fake,fakedsplit --dpi-desync-split-pos=1 --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_9.bin --dpi-desync-fooling=badseq --dpi-desync-autottl
+--filter-l3=ipv4 --filter-tcp=443 --hostlist-domains=emptylistfix.com --hostlist-auto=/opt/zapret/lists/autohostlist.txt --hostlist-exclude=/opt/zapret/lists/netrogat.txt --dpi-desync=split2 --dpi-desync-repeats=2 --dpi-desync-split-seqovl=681 --dpi-desync-split-pos=1 --dpi-desync-fooling=badseq,hopbyhop2 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_2.bin
 "
 
 # none,ipset,hostlist,autohostlist
