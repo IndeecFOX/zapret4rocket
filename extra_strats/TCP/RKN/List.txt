@@ -1,3 +1,4 @@
+hdrezka.ag
 cloudflare-ech.com
 discord-attachments-uploads-prd.storage.googleapis.com
 cdn.betterttv.net
