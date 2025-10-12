@@ -230,7 +230,7 @@ zapret_get() {
  else
      tarfile="zapret-v$VER-openwrt-embedded.tar.gz"
  fi
- curl -L "https://github.com/bol-van/zapret/releases/download/v$VER/zapret-v$VER-openwrt-embedded.tar.gz" | tar -xz
+ curl -L "https://github.com/bol-van/zapret/releases/download/v$VER/$tarfile" | tar -xz
  mv "zapret-v$VER" zapret
  sh /tmp/zapret/install_bin.sh
  find /tmp/zapret/binaries/* -maxdepth 0 -type d ! -name "$(basename "$(dirname "$(readlink /tmp/zapret/nfq/nfqws)")")" -exec rm -rf {} +
