@@ -28,16 +28,16 @@ curl -O https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/z4r.sh 
 
 <a id="требования-и-зависимости"></a>
 ### ⚙️ Требования и зависимости
-В случае отсутствия/ошибки curl/wget/bash
+В случае отсутствия/ошибки curl/bash
 
 **Для OpenWRT/Keenetic (Entware):**
 ```bash
-opkg update && opkg install curl bash wget-ssl
+opkg update && opkg install curl bash
 ```
 
 **Для Ubuntu/Debian:**
 ```bash
-apt update && apt install curl bash wget-ssl
+apt update && apt install curl bash
 ```
 
 **Для Keenetic**: предварительно в веб-интерфейсе роутера нужно обязательно установить компоненты: "Протокол IPv6" и "Модули ядра подсистемы Netfilter" (появляется только после выбора компонента "Протокол IPv6").
