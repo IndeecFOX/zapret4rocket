@@ -33,20 +33,16 @@ dir_select(){
 #Запрос на резервирование настроек в подборе стратегий
 backup_strats() {
   if [ -d /opt/zapret/extra_strats ]; then
-   read -re -p $'\033[0;33mХотите сохранить текущие настройки ручного подбора стратегий? Не рекомендуется. (\"5\" - сохранить, Enter - нет): \033[0m' answer
-   if [[ "$answer" == "5" ]]; then
+    read -re -p $'\033[0;33mХотите сохранить текущие настройки ручного подбора стратегий? Не рекомендуется. (\"5\" - сохранить, Enter - нет): \033[0m' answer
+    if [[ "$answer" == "5" ]]; then
 		cp -rf /opt/zapret/extra_strats /opt/
   		echo "Настройки подбора резервированы."
-  		read -re -p $'\033[0;33mХотите сохранить добавленные в лист исключений домены? Не рекомендуется. (\"5\" - сохранить, Enter - нет): \033[0m' answer
-		if [[ "$answer" == "5" ]]; then
-			cp -f /opt/zapret/lists/netrogat.txt /opt/
-        	echo "Лист исключений резервирован."
-		else
-  			echo "Лист исключений НЕ будет резервирован."
-  		fi
-   else
-		echo "Настройки подбора будут сброшены. Листы будут обновлены."		
-   fi 
+	fi	
+	read -re -p $'\033[0;33mХотите сохранить добавленные в лист исключений домены? Не рекомендуется. (\"5\" - сохранить, Enter - нет): \033[0m' answer
+	if [[ "$answer" == "5" ]]; then
+		cp -f /opt/zapret/lists/netrogat.txt /opt/
+       	echo "Лист исключений резервирован."
+  	fi	
   fi
 }
 
@@ -95,7 +91,27 @@ try_strategies() {
             echo "$user_domain" > "$base_path/${i}.txt"
         fi
         echo "Стратегия номер $i активирована"
-
+		
+		if [[ "$count" == "17" ]]; then
+		 if [[ -n "$user_domain" ]]; then
+			local TestURL="https://$user_domain"
+		 else
+			local TestURL="https://rr1---sn-jvhnu5g-n8vr.googlevideo.com"
+		 fi
+			# Проверка TLS 1.2
+			if curl --tls-max 1.2 --max-time 2 -s -o /dev/null "$TestURL"; then
+				echo -e "${green}Есть ответ по TLS 1.2 (важно для ТВ и т.п.)${plain}"
+			else
+				echo -e "${yellow}Нет ответа по TLS 1.2 (важно для ТВ и т.п.) Таймаут 2сек.${plain}"
+			fi
+			# Проверка TLS 1.3
+			if curl --tlsv1.3 --max-time 2 -s -o /dev/null "$TestURL"; then
+				echo -e "${green}Есть ответ по TLS 1.3 (важно в основном для всего современного)${plain}"
+			else
+				echo -e "${yellow}Нет ответа по TLS 1.3 (важно в основном для всего современного) Таймаут 2сек.${plain}"
+			fi
+		fi
+			
         read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - далее): " answer
         if [[ "$answer" == "1" ]]; then
             echo "Стратегия $i сохранена. Выходим."
@@ -123,7 +139,8 @@ Strats_Tryer() {
             try_strategies 17 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
             ;;
         "3")
-            echo "Режим RKN"
+            echo "Режим RKN. Проверка доступности задана на домен meduza.io"
+			user_domain="meduza.io"
             try_strategies 17 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
             ;;
         "4")
