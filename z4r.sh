@@ -338,7 +338,7 @@ get_menu() {
         echo "zapret не установлен, пропускаем скрипт меню"
         return
  fi
- read -re -p $'\033[33mВыберите необходимое действие? (1-10 или Enter для перехода к переустановке):\033[0m\n\033[32m1. Подобрать другие стратегии\n2. Остановить zapret\n3. Пере(запустить) zapret\n4. Удалить zapret\n5. Обновить стратегии, сбросить листы подбора стратегий и исключений\n6. Добавить домен в исключения zapret\n7. Открыть в редакторе config\n8. Активировать альтернативные страты разблокировки войса DS,WA,TG вместо скриптов bol-van или вернуться снова к скриптам (переключатель)\n9. Переключить zapret на nftables или вернуть iptables (переключатель)(На все вопросы жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами\n10. Активировать zeefeer premium (Нажимать только Valery ProD, ну и АлександруП тоже можно :D а так же vecheromholodno)\033[0m\n' answer
+ read -re -p $'\033[33m\nВыберите необходимое действие:\033[0m\n\033[32mEnter (без цифр) - переустановка/обновление zapret\n1. Подобрать другие стратегии\n2. Остановить zapret\n3. Пере(запустить) zapret\n4. Удалить zapret\n5. Обновить стратегии, сбросить листы подбора стратегий и исключений\n6. Добавить домен в исключения zapret\n7. Открыть в редакторе config (Должен быть установлен пакет nano-full/nano)\n8. Активировать альтернативные страты разблокировки войса DS,WA,TG вместо скриптов bol-van или вернуться снова к скриптам (переключатель)\n9. Переключить zapret на nftables или вернуть iptables (переключатель)(На все вопросы жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами\n10.Активировать обход UDP на 21000-23005 портах (BF6, Fifa и т.п.).\n11. Активировать zeefeer premium (Нажимать только Valery ProD, ну и АлександруП тоже можно :D а так же vecheromholodno)\033[0m\n' answer
  case "$answer" in
   "1")
    echo "Режим подбора других стратегий"
@@ -397,19 +397,19 @@ get_menu() {
    exit 0
    ;;
   "8")
-	if grep -q '^NFQWS_PORTS_UDP=443$' "/opt/zapret/config"; then
+	if grep -Eq '^NFQWS_PORTS_UDP=.*(,|^)443$' "/opt/zapret/config"; then
      # Был только 443 → добавляем порты и убираем --skip, удаляем скрипты
-     sed -i 's/^NFQWS_PORTS_UDP=443$/NFQWS_PORTS_UDP=443,1400,3478-3481,5349,50000-50099,19294-19344/' "/opt/zapret/config"
-     sed -i '168,169s/^--skip //' "/opt/zapret/config"
+     sed -i '76s/443$/443,1400,3478-3481,5349,50000-50099,19294-19344/' /opt/zapret/config
+	 sed -i 's/^--skip --filter-udp=50000/--filter-udp=50000/' "/opt/zapret/config"
 	 rm -f \opt\zapret\init.d\sysv\custom.d\50-discord-media \opt\zapret\init.d\sysv\custom.d\50-stun4all
-     echo -e "${green}Уход от скриптов bol-van. Выделены порты 50000-50099,1400,3478-3481,5349 и раскомментированы стратегии DS, WA, TG (строки 168, 169).${plain}"
-	elif grep -q '^NFQWS_PORTS_UDP=443,1400,3478-3481,5349,50000-50099,19294-19344$' "/opt/zapret/config"; then
+     echo -e "${green}Уход от скриптов bol-van. Выделены порты 50000-50099,1400,3478-3481,5349 и раскомментированы стратегии DS, WA, TG${plain}"
+	elif grep -q '443,1400,3478-3481,5349,50000-50099,19294-19344$' "/opt/zapret/config"; then
      # Уже расширенный список → возвращаем к 443 и добавляем --skip, возвращаем скрипты
-     sed -i 's/^NFQWS_PORTS_UDP=443,1400,3478-3481,5349,50000-50099,19294-19344$/NFQWS_PORTS_UDP=443/' "/opt/zapret/config"
-     sed -i '168,169s/^/--skip /' "/opt/zapret/config"
+     sed -i 's/443,1400,3478-3481,5349,50000-50099,19294-19344$/443/' "/opt/zapret/config"
+	 sed -i 's/^--filter-udp=50000/--skip --filter-udp=50000/' "/opt/zapret/config"
 	 curl -L -o /opt/zapret/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-stun4all
 	 curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
-     echo -e "${green}Работа от скриптов bol-van. Вернули строку к виду NFQWS_PORTS_UDP=443 и добавили "--skip " в начале строк 168–169.${plain}"
+     echo -e "${green}Работа от скриптов bol-van. Вернули строку к виду NFQWS_PORTS_UDP=443 и добавили "--skip " в начале строк стратегии войса${plain}"
 	else
      echo -e "${yellow}Неизвестное состояние строки NFQWS_PORTS_UDP. Проверь конфиг вручную.${plain}"
 	fi
@@ -435,6 +435,24 @@ get_menu() {
    exit 0
    ;;
   "10")
+	if grep -q '^NFQWS_PORTS_UDP=443' "/opt/zapret/config"; then
+     # Был только 443 → добавляем порты и убираем --skip
+     sed -i 's/^NFQWS_PORTS_UDP=443/NFQWS_PORTS_UDP=21000-23005,443/' "/opt/zapret/config"
+	 sed -i 's/^--skip --filter-udp=21000/--filter-udp=21000/' "/opt/zapret/config"
+     echo -e "${green}Стратегия UDP обхода активирована. Выделены порты 21000-23005${plain}"
+	elif grep -q '^NFQWS_PORTS_UDP=21000-23005,443' "/opt/zapret/config"; then
+     # Уже расширенный список → возвращаем к 443 и добавляем --skip
+     sed -i 's/^NFQWS_PORTS_UDP=21000-23005,443/NFQWS_PORTS_UDP=443/' "/opt/zapret/config"
+	 sed -i 's/^--filter-udp=21000/--skip --filter-udp=21000/' "/opt/zapret/config"
+     echo -e "${green}Стратегия UDP обхода ДЕактивирована. Выделенные порты 21000-23005 убраны${plain}"
+	else
+     echo -e "${yellow}Неизвестное состояние строки NFQWS_PORTS_UDP. Проверь конфиг вручную.${plain}"
+	fi
+	/opt/zapret/init.d/sysv/zapret restart
+ 	echo -e "${green}Выполнение переключений завершено.${plain}"
+    exit 0 
+   ;;
+  "11")
    echo -e "${green}Специальный zeefeer premium для Valery ProD активирован. Наверное.${plain}"
    exit 0
    ;;
