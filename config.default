@@ -7,7 +7,7 @@
 #TMPDIR=/opt/zapret/tmp
 
 # redefine user for zapret daemons. required on Keenetic
-WS_USER=nobody
+#WS_USER=nobody
 
 # override firewall type : iptables,nftables,ipfw
 FWTYPE=iptables
@@ -109,7 +109,6 @@ NFQWS_OPT="
 --filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/6.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_initial_www_google_com.bin --new
 --filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/7.txt --dpi-desync=fake --dpi-desync-repeats=8 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_initial_www_google_com.bin --new
 --filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/8.txt --dpi-desync=fake --dpi-desync-repeats=11 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_initial_www_google_com.bin --new
---skip --filter-udp=21000-21050,23000-23005 --ipset=/opt/zapret/lists/cloudflare-ipset.txt --dpi-desync=fake --dpi-desync-autottl=2 --dpi-desync-repeats=10 --dpi-desync-any-protocol=1 --dpi-desync-fake-unknown-udp=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-cutoff=n2 --new
 'Ниже идут дополнительные стратегии только для TCP user domain листов имеющие приоритет над всеми другими блоками что ниже этого блока стратегий'
 --filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/temp/1.txt --hostlist=/opt/zapret/extra_strats/TCP/User/1.txt --dpi-desync=multisplit --dpi-desync-split-seqovl=681 --dpi-desync-split-pos=1 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
 --filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/temp/2.txt --hostlist=/opt/zapret/extra_strats/TCP/User/2.txt --dpi-desync=split2 --dpi-desync-repeats=2 --dpi-desync-split-seqovl=681 --dpi-desync-split-pos=1 --dpi-desync-fooling=badseq,hopbyhop2 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
