@@ -514,7 +514,8 @@ get_menu
  
 #entware keenetic and merlin preinstal env.
 if [ "$hardware" = "keenetic" ]; then
- opkg install coreutils-sort grep gzip ipset iptables kmod_ndms xtables-addons_legacy
+ opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy
+ opkg install kmod_ndms || echo -e "\033[31mНе удалось установить kmod_ndms. Если у вас не keenetic - игнорируйте.\033[0m"
 elif [ "$hardware" = "merlin" ]; then
  opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy
 fi
