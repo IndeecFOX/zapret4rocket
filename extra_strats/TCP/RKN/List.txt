@@ -1,4 +1,3 @@
-pmang.cloud
 akamaized.net
 hdrezka.ag
 cloudflare-ech.com
