@@ -1,3 +1,4 @@
+akamaized.net
 hdrezka.ag
 cloudflare-ech.com
 discord-attachments-uploads-prd.storage.googleapis.com
