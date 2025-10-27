@@ -170,10 +170,10 @@ Strats_Tryer() {
 
 #Удаление старого запрета, если есть
 remove_zapret() {
- if [ -f "/opt/zapret/config" ]; then
-  if [ -f "/opt/zapret/init.d/sysv/zapret" ]; then
-  	 /opt/zapret/init.d/sysv/zapret stop
-  fi
+ if [ -f "/opt/zapret/init.d/sysv/zapret" ]; then
+ 	/opt/zapret/init.d/sysv/zapret stop
+ fi
+ if [ -f "/opt/zapret/config" ] && [ -f "/opt/zapret/uninstall_easy.sh" ]; then
      echo "Выполняем zapret/uninstall_easy.sh"
      sh /opt/zapret/uninstall_easy.sh
      echo "Скрипт uninstall_easy.sh выполнен."
@@ -338,7 +338,7 @@ get_menu() {
         echo "zapret не установлен, пропускаем скрипт меню"
         return
  fi
- read -re -p $'\033[33m\nВыберите необходимое действие:\033[0m\n\033[32mEnter (без цифр) - переустановка/обновление zapret\n1. Подобрать другие стратегии\n2. Остановить zapret\n3. Пере(запустить) zapret\n4. Удалить zapret\n5. Обновить стратегии, сбросить листы подбора стратегий и исключений\n6. Добавить домен в исключения zapret\n7. Открыть в редакторе config (Должен быть установлен пакет nano-full/nano)\n8. Активировать альтернативные страты разблокировки войса DS,WA,TG вместо скриптов bol-van или вернуться снова к скриптам (переключатель)\n9. Переключить zapret на nftables или вернуть iptables (переключатель)(На все вопросы жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами\n10.Активировать обход UDP на 21000-23005 портах (BF6, Fifa и т.п.).\n11. Активировать zeefeer premium (Нажимать только Valery ProD, ну и АлександруП тоже можно :D а так же vecheromholodno)\033[0m\n' answer
+ read -re -p $'\033[33m\nВыберите необходимое действие:\033[0m\n\033[32mEnter (без цифр) - переустановка/обновление zapret\n1. Подобрать другие стратегии\n2. Остановить zapret\n3. Пере(запустить) zapret\n4. Удалить zapret\n5. Обновить стратегии, сбросить листы подбора стратегий и исключений\n6. Добавить домен в исключения zapret\n7. Открыть в редакторе config (Установит nano редактор ~250kb)\n8. Активировать альтернативные страты разблокировки войса DS,WA,TG вместо скриптов bol-van или вернуться снова к скриптам (переключатель)\n9. Переключить zapret на nftables или вернуть iptables (переключатель)(На все вопросы жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами\n10.Активировать обход UDP на 21000-23005 портах (BF6, Fifa и т.п.).\n11. Активировать zeefeer premium (Нажимать только Valery ProD, ну и АлександруП тоже можно :D а так же vecheromholodno)\033[0m\n' answer
  case "$answer" in
   "1")
    echo "Режим подбора других стратегий"
@@ -393,6 +393,11 @@ get_menu() {
    exit 0
    ;;
   "7")
+   if [[ "$OSystem" == "VPS" ]]; then
+	apt install nano
+   else
+	opkg install nano-full
+   fi
    nano /opt/zapret/config
    exit 0
    ;;
