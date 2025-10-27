@@ -483,7 +483,6 @@ else
 fi
 if [[ "$release" == "entware" ]]; then
  if [ -d /jffs ] || uname -a | grep -qi "Merlin"; then
- if uname -a | grep -qi "Merlin"; then
     hardware="merlin"
  elif grep -qi "keenetic" /proc/version; then
    	hardware="keenetic"
