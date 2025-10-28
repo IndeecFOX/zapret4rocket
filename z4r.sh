@@ -7,7 +7,7 @@
 
 set -e
 #Для Valery ProD. Переменная содержащая версию на случай невозможности получить информацию о lastest с github
-DEFAULT_VER="71.4"
+DEFAULT_VER="72.2"
 
 #Чтобы удобнее красить
 red='\033[0;31m'
@@ -256,6 +256,7 @@ install_zapret_reboot() {
  sh -i /opt/zapret/install_easy.sh
  /opt/zapret/init.d/sysv/zapret restart
  if pidof nfqws >/dev/null; then
+  
   echo -e "\033[32mzapret перезапущен и полностью установлен\nЕсли требуется меню (например не работают какие-то ресурсы) - введите скрипт ещё раз. Саппорт: tg: zee4r\033[0m"
  else
   echo -e "${yellow}zapret полностью установлен, но не обнаружен после запуска в исполняемых задачах через pidof\nСаппорт: tg: zee4r${plain}"
@@ -335,7 +336,7 @@ get_menu() {
         echo "zapret не установлен, пропускаем скрипт меню"
         return
  fi
- read -re -p $'\033[33m\nВыберите необходимое действие:\033[0m\n\033[32mEnter (без цифр) - переустановка/обновление zapret\n0. Выход\n1. Подобрать другие стратегии\n2. Остановить zapret\n3. Пере(запустить) zapret\n4. Удалить zapret\n5. Обновить стратегии, сбросить листы подбора стратегий и исключений\n6. Добавить домен в исключения zapret\n7. Открыть в редакторе config (Установит nano редактор ~250kb)\n8. Активировать альтернативные страты разблокировки войса DS,WA,TG вместо скриптов bol-van или вернуться снова к скриптам (переключатель)\n9. Переключить zapret на nftables или вернуть iptables (переключатель)(На все вопросы жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами\n10.Активировать обход UDP на 21000-23005 портах (BF6, Fifa и т.п.).\n11. Активировать zeefeer premium (Нажимать только Valery ProD, ну и АлександруП тоже можно :D а так же vecheromholodno)\033[0m\n' answer
+ read -re -p $'\033[33m\nВыберите необходимое действие:\033[0m\n\033[32mEnter (без цифр) - переустановка/обновление zapret\n0. Выход\n1. Подобрать другие стратегии\n2. Остановить zapret\n3. Пере(запустить) zapret\n4. Удалить zapret\n5. Обновить стратегии, сбросить листы подбора стратегий и исключений\n6. Добавить домен в исключения zapret\n7. Открыть в редакторе config (Установит nano редактор ~250kb)\n8. Активировация альтернативных страт разблокировки войса DS,WA,TG вместо скриптов bol-van или вернуться снова к скриптам (переключатель)\n9. Переключить zapret на nftables или вернуть iptables (переключатель)(На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами\n10.Активация обхода UDP на 21000-23005 портах (BF6, Fifa и т.п.)(переключатель).\n11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. (бетка).\n12. Активировать zeefeer premium (Нажимать только Valery ProD, ну и АлександруП тоже можно :D а так же vecheromholodno)\033[0m\n' answer
  case "$answer" in
   "0")
    echo "Выход выполнен"
@@ -400,10 +401,10 @@ get_menu() {
 	opkg install nano-full
    fi
    nano /opt/zapret/config
-   exit 0
+   get_menu
    ;;
   "8")
-	if grep -Eq '^NFQWS_PORTS_UDP=.*(,|^)443$' "/opt/zapret/config"; then
+	if grep -Eq '^NFQWS_PORTS_UDP=.*443$' "/opt/zapret/config"; then
      # Был только 443 → добавляем порты и убираем --skip, удаляем скрипты
      sed -i '76s/443$/443,1400,3478-3481,5349,50000-50099,19294-19344/' /opt/zapret/config
 	 sed -i 's/^--skip --filter-udp=50000/--filter-udp=50000/' "/opt/zapret/config"
@@ -458,7 +459,47 @@ get_menu() {
  	echo -e "${green}Выполнение переключений завершено.${plain}"
     exit 0 
    ;;
+
   "11")
+	echo "Текущее состояние: $(grep '^FLOWOFFLOAD=' /opt/zapret/config)" donttouch,none,software,hardware
+ 	read -re -p $'\033[33mСменить аппаратное ускорение? (1-4 или Enter для выхода):\033[0m\n\033[32m1. software. Программное ускорение. \n2.hardware. Аппаратное NAT\n3. none. Отключено.\n4. donttouch. Не трогать (дефолт).\033[0m\n' answer
+
+    case "$answer" in
+        "1")
+            echo "Режим YT (UDP QUIC)"
+ 	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=software/' "/opt/zapret/config"
+			/opt/zapret/install_prereq.sh
+  			/opt/zapret/init.d/sysv/zapret restart
+            ;;
+        "2")
+            echo "Режим YT (TCP)"
+            echo "Режим YT (UDP QUIC)"
+ 	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=hardware/' "/opt/zapret/config"
+			/opt/zapret/install_prereq.sh
+  			/opt/zapret/init.d/sysv/zapret restart
+            ;;
+        "3")
+            echo "Режим YT (UDP QUIC)"
+ 	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=none/' "/opt/zapret/config"
+			/opt/zapret/install_prereq.sh
+  			/opt/zapret/init.d/sysv/zapret restart         
+            ;;
+        "4")
+            echo "Режим кастомного домена"
+            echo "Режим YT (UDP QUIC)"
+ 	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=donttouch/' "/opt/zapret/config"
+			/opt/zapret/install_prereq.sh
+  			/opt/zapret/init.d/sysv/zapret restart
+            ;;
+        *)
+            echo "Выход"
+            ;;
+    esac
+
+   exit 0
+   ;;
+   
+  "12")
    echo -e "${green}Специальный zeefeer premium для Valery ProD активирован. Наверное.${plain}"
    exit 0
    ;;
