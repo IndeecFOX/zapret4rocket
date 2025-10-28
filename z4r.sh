@@ -112,11 +112,15 @@ try_strategies() {
 			fi
 		fi
 			
-        read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - далее): " answer
+        read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - далее, \"0\" - выйти не сохраняя): " answer
         if [[ "$answer" == "1" ]]; then
             echo "Стратегия $i сохранена. Выходим."
             eval "$final_action"
             exit 0
+		elif [[ "$answer" == "0" ]]; then
+			echo -n > "$base_path/${i}.txt"
+			echo "Изменения отменены. Выход."
+			exit 0
         fi
     done
 
@@ -148,19 +152,9 @@ Strats_Tryer() {
             read -re -p "Введите домен (например, mydomain.com): " user_domain
 			echo "Введён домен: $user_domain"
 
-            # Отключаем активный RKN-лист временно
-            for emp in {1..17}; do
-                file="/opt/zapret/extra_strats/TCP/RKN/${emp}.txt"
-                if [[ -s "$file" ]]; then
-                    echo -n > "$file"
-                    break
-                fi
-            done
-
             try_strategies 17 "/opt/zapret/extra_strats/TCP/temp" "/dev/null" \
             "echo -n > \"/opt/zapret/extra_strats/TCP/temp/\${i}.txt\"; \
-             echo \"$user_domain\" > \"/opt/zapret/extra_strats/TCP/User/\${i}.txt\"; \
-             cp \"/opt/zapret/extra_strats/TCP/RKN/List.txt\" \"/opt/zapret/extra_strats/TCP/RKN/${emp}.txt\""
+             echo \"$user_domain\" >> \"/opt/zapret/extra_strats/TCP/User/\${i}.txt\""
             ;;
         *)
             echo "Пропуск подбора альтернативной стратегии"
@@ -338,8 +332,12 @@ get_menu() {
         echo "zapret не установлен, пропускаем скрипт меню"
         return
  fi
- read -re -p $'\033[33m\nВыберите необходимое действие:\033[0m\n\033[32mEnter (без цифр) - переустановка/обновление zapret\n1. Подобрать другие стратегии\n2. Остановить zapret\n3. Пере(запустить) zapret\n4. Удалить zapret\n5. Обновить стратегии, сбросить листы подбора стратегий и исключений\n6. Добавить домен в исключения zapret\n7. Открыть в редакторе config (Установит nano редактор ~250kb)\n8. Активировать альтернативные страты разблокировки войса DS,WA,TG вместо скриптов bol-van или вернуться снова к скриптам (переключатель)\n9. Переключить zapret на nftables или вернуть iptables (переключатель)(На все вопросы жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами\n10.Активировать обход UDP на 21000-23005 портах (BF6, Fifa и т.п.).\n11. Активировать zeefeer premium (Нажимать только Valery ProD, ну и АлександруП тоже можно :D а так же vecheromholodno)\033[0m\n' answer
+ read -re -p $'\033[33m\nВыберите необходимое действие:\033[0m\n\033[32mEnter (без цифр) - переустановка/обновление zapret\n0. Выход\n1. Подобрать другие стратегии\n2. Остановить zapret\n3. Пере(запустить) zapret\n4. Удалить zapret\n5. Обновить стратегии, сбросить листы подбора стратегий и исключений\n6. Добавить домен в исключения zapret\n7. Открыть в редакторе config (Установит nano редактор ~250kb)\n8. Активировать альтернативные страты разблокировки войса DS,WA,TG вместо скриптов bol-van или вернуться снова к скриптам (переключатель)\n9. Переключить zapret на nftables или вернуть iptables (переключатель)(На все вопросы жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами\n10.Активировать обход UDP на 21000-23005 портах (BF6, Fifa и т.п.).\n11. Активировать zeefeer premium (Нажимать только Valery ProD, ну и АлександруП тоже можно :D а так же vecheromholodno)\033[0m\n' answer
  case "$answer" in
+  "0")
+   echo "Выход выполнен"
+   exit 0
+   ;;
   "1")
    echo "Режим подбора других стратегий"
    Strats_Tryer
