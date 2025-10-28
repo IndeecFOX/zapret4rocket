@@ -466,27 +466,21 @@ get_menu() {
 
     case "$answer" in
         "1")
-            echo "Режим YT (UDP QUIC)"
  	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=software/' "/opt/zapret/config"
 			/opt/zapret/install_prereq.sh
   			/opt/zapret/init.d/sysv/zapret restart
             ;;
         "2")
-            echo "Режим YT (TCP)"
-            echo "Режим YT (UDP QUIC)"
  	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=hardware/' "/opt/zapret/config"
 			/opt/zapret/install_prereq.sh
   			/opt/zapret/init.d/sysv/zapret restart
             ;;
         "3")
-            echo "Режим YT (UDP QUIC)"
  	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=none/' "/opt/zapret/config"
 			/opt/zapret/install_prereq.sh
   			/opt/zapret/init.d/sysv/zapret restart         
             ;;
         "4")
-            echo "Режим кастомного домена"
-            echo "Режим YT (UDP QUIC)"
  	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=donttouch/' "/opt/zapret/config"
 			/opt/zapret/install_prereq.sh
   			/opt/zapret/init.d/sysv/zapret restart
@@ -496,6 +490,7 @@ get_menu() {
             ;;
     esac
 
+   echo "Выполнено. Выходим"
    exit 0
    ;;
    
