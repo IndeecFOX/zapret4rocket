@@ -461,8 +461,8 @@ get_menu() {
    ;;
 
   "11")
-	echo "Текущее состояние: $(grep '^FLOWOFFLOAD=' /opt/zapret/config)" donttouch,none,software,hardware
- 	read -re -p $'\033[33mСменить аппаратное ускорение? (1-4 или Enter для выхода):\033[0m\n\033[32m1. software. Программное ускорение. \n2.hardware. Аппаратное NAT\n3. none. Отключено.\n4. donttouch. Не трогать (дефолт).\033[0m\n' answer
+	echo "Текущее состояние: $(grep '^FLOWOFFLOAD=' /opt/zapret/config)"
+ 	read -re -p $'\033[33mСменить аппаратное ускорение? (1-4 или Enter для выхода):\033[0m\n\033[32m1. software. Программное ускорение. \n2. hardware. Аппаратное NAT\n3. none. Отключено.\n4. donttouch. Не трогать (дефолт).\033[0m\n' answer
 
     case "$answer" in
         "1")
