@@ -490,7 +490,7 @@ get_menu() {
             ;;
     esac
 
-   echo "Выполнено. Выходим"
+   echo -e "${green}Выполнено.${plain}"
    exit 0
    ;;
    
