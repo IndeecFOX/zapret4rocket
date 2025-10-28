@@ -143,7 +143,10 @@ Strats_Tryer() {
             try_strategies 17 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
             ;;
         "3")
-            echo "Режим RKN. Проверка доступности задана на домен meduza.io"
+            echo "Режим RKN. Проверка доступности задана на домен meduza.io. Ранее заданная стратегия RKN сброшена в дефолт."
+			for numRKN in {1..17}; do
+				echo -n > "/opt/zapret/extra_strats/TCP/RKN/${numRKN}.txt"
+			done
 			user_domain="meduza.io"
             try_strategies 17 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
             ;;
