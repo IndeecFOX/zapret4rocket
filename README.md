@@ -16,7 +16,7 @@ YouTube без ограничений, работа войсов Telegram, Whats
 
 **Установка/обновление/подбор стратегий** (копируйте и вставляйте в SSH):
 ```bash
-curl -O https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/z4r.sh && bash z4r.sh && rm z4r.sh
+curl -O https://raw.githubusercontent.com/IndeecFOX/z4r/4/z4r && sh z4r
 ```
 
 **После запуска:**
@@ -30,14 +30,8 @@ curl -O https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/z4r.sh 
 ### ⚙️ Требования и зависимости
 В случае отсутствия/ошибки curl/bash
 
-**Для OpenWRT/Keenetic (Entware):**
 ```bash
-opkg update && opkg install curl bash
-```
-
-**Для Ubuntu/Debian:**
-```bash
-apt update && apt install curl bash
+apt update || opkg update && apt install curl || opkg install curl
 ```
 
 **Для Keenetic**: предварительно в веб-интерфейсе роутера нужно обязательно установить компоненты: "Протокол IPv6" и "Модули ядра подсистемы Netfilter" (появляется только после выбора компонента "Протокол IPv6").
