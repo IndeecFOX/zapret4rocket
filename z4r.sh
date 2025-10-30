@@ -30,13 +30,43 @@ dir_select(){
  cd /tmp
 }
 
+check_access() {
+	local TestURL="$1"
+ # Проверка TLS 1.2
+	if curl --tls-max 1.2 --max-time 2 -s -o /dev/null "$TestURL"; then
+		echo -e "${green}Есть ответ по TLS 1.2 (важно для ТВ и т.п.)${plain}"
+	else
+		echo -e "${yellow}Нет ответа по TLS 1.2 (важно для ТВ и т.п.) Таймаут 2сек.${plain}"
+	fi
+	# Проверка TLS 1.3
+	if curl --tlsv1.3 --max-time 2 -s -o /dev/null "$TestURL"; then
+		echo -e "${green}Есть ответ по TLS 1.3 (важно в основном для всего современного)${plain}"
+	else
+		echo -e "${yellow}Нет ответа по TLS 1.3 (важно в основном для всего современного) Таймаут 2сек.${plain}"
+	fi
+}
+
+check_access_list() {
+   echo "Проверка доступности youtube.com (YT TCP)"
+   check_access "https://www.youtube.com/"
+   echo "Проверка доступности rr1---sn-jvhnu5g-n8vr.googlevideo.com (YT TCP)"
+   check_access "https://rr1---sn-jvhnu5g-n8vr.googlevideo.com"
+   echo "Проверка доступности meduza.io (RKN list)"
+   check_access "https://meduza.io"
+   echo "Проверка доступности www.instagram.com (RKN list + нужен рабочий DNS)"
+   check_access "https://www.instagram.com/"
+   read -p "Enter для выхода в меню"
+}
+
 #Запрос на резервирование настроек в подборе стратегий
 backup_strats() {
   if [ -d /opt/zapret/extra_strats ]; then
-    read -re -p $'\033[0;33mХотите сохранить текущие настройки ручного подбора стратегий? Не рекомендуется. (\"5\" - сохранить, Enter - нет): \033[0m' answer
+    read -re -p $'\033[0;33mХотите сохранить текущие настройки ручного подбора стратегий? Не рекомендуется. (\"5\" - сохранить, Enter - нет\n"0" - прервать операцию): \033[0m' answer
     if [[ "$answer" == "5" ]]; then
 		cp -rf /opt/zapret/extra_strats /opt/
   		echo "Настройки подбора резервированы."
+	elif [[ "$answer" == "0" ]]; then
+		exit 0
 	fi	
 	read -re -p $'\033[0;33mХотите сохранить добавленные в лист исключений домены? Не рекомендуется. (\"5\" - сохранить, Enter - нет): \033[0m' answer
 	if [[ "$answer" == "5" ]]; then
@@ -44,6 +74,19 @@ backup_strats() {
        	echo "Лист исключений резервирован."
   	fi	
   fi
+}
+
+#Раскомменчивание юзера под keenetic или merlin
+change_user() {
+   if /opt/zapret/nfq/nfqws --dry-run --user="nobody" 2>&1 | grep -q "queue"; then
+    echo "WS_USER=nobody"
+	sed -i 's/^#\(WS_USER=nobody\)/\1/' /opt/zapret/config.default
+   elif /opt/zapret/nfq/nfqws --dry-run --user="$(head -n1 /etc/passwd | cut -d: -f1)" 2>&1 | grep -q "queue"; then
+    echo "WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)"
+    sed -i "s/^#WS_USER=nobody$/WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)/" "/opt/zapret/config.default"
+   else
+    echo -e "${yellow}WS_USER не подошёл. Скорее всего будут проблемы. Если что - пишите в саппорт${plain}"
+   fi
 }
 
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
@@ -98,18 +141,7 @@ try_strategies() {
 		 else
 			local TestURL="https://rr1---sn-jvhnu5g-n8vr.googlevideo.com"
 		 fi
-			# Проверка TLS 1.2
-			if curl --tls-max 1.2 --max-time 2 -s -o /dev/null "$TestURL"; then
-				echo -e "${green}Есть ответ по TLS 1.2 (важно для ТВ и т.п.)${plain}"
-			else
-				echo -e "${yellow}Нет ответа по TLS 1.2 (важно для ТВ и т.п.) Таймаут 2сек.${plain}"
-			fi
-			# Проверка TLS 1.3
-			if curl --tlsv1.3 --max-time 2 -s -o /dev/null "$TestURL"; then
-				echo -e "${green}Есть ответ по TLS 1.3 (важно в основном для всего современного)${plain}"
-			else
-				echo -e "${yellow}Нет ответа по TLS 1.3 (важно в основном для всего современного) Таймаут 2сек.${plain}"
-			fi
+		 check_access $TestURL
 		fi
 			
         read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - далее, \"0\" - выйти не сохраняя): " answer
@@ -256,7 +288,7 @@ install_zapret_reboot() {
  sh -i /opt/zapret/install_easy.sh
  /opt/zapret/init.d/sysv/zapret restart
  if pidof nfqws >/dev/null; then
-  
+  check_access_list
   echo -e "\033[32mzapret перезапущен и полностью установлен\nЕсли требуется меню (например не работают какие-то ресурсы) - введите скрипт ещё раз. Саппорт: tg: zee4r\033[0m"
  else
   echo -e "${yellow}zapret полностью установлен, но не обнаружен после запуска в исполняемых задачах через pidof\nСаппорт: tg: zee4r${plain}"
@@ -279,17 +311,10 @@ entware_fixes() {
   echo "10-keenetic-udp-fix скопирован"
  fi
  
-# #Раскомменчивание юзера под keenetic или merlin
  sh /opt/zapret/install_bin.sh
- if /opt/zapret/nfq/nfqws --dry-run --user="nobody" 2>&1 | grep -q "queue"; then
-    echo "WS_USER=nobody"
-	sed -i 's/^#\(WS_USER=nobody\)/\1/' /opt/zapret/config.default
- elif /opt/zapret/nfq/nfqws --dry-run --user="$(head -n1 /etc/passwd | cut -d: -f1)" 2>&1 | grep -q "queue"; then
-    echo "WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)"
-    sed -i "s/^#WS_USER=nobody$/WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)/" "/opt/zapret/config.default"
- else
-  echo -e "${yellow}WS_USER не подошёл. Скорее всего будут проблемы. Если что - пишите в саппорт${plain}"
- fi
+ 
+ # #Раскомменчивание юзера под keenetic или merlin
+ change_user
  #Патчинг на некоторых merlin /opt/zapret/common/linux_fw.sh
  if command -v sysctl >/dev/null 2>&1; then
   echo "sysctl доступен. Патч linux_fw.sh не требуется"
@@ -332,15 +357,19 @@ get_panel() {
 
 #Меню
 get_menu() {
- if [ ! -f "/opt/zapret/config" ]; then
-        echo "zapret не установлен, пропускаем скрипт меню"
+  if ! [ -d /opt/zapret/extra_strats ]; then
+        echo "zapret-zeefeer не установлен, пропускаем скрипт меню"
         return
  fi
- read -re -p $'\033[33m\nВыберите необходимое действие:\033[0m\n\033[32mEnter (без цифр) - переустановка/обновление zapret\n0. Выход\n1. Подобрать другие стратегии\n2. Остановить zapret\n3. Пере(запустить) zapret\n4. Удалить zapret\n5. Обновить стратегии, сбросить листы подбора стратегий и исключений\n6. Добавить домен в исключения zapret\n7. Открыть в редакторе config (Установит nano редактор ~250kb)\n8. Активировация альтернативных страт разблокировки войса DS,WA,TG вместо скриптов bol-van или вернуться снова к скриптам (переключатель)\n9. Переключить zapret на nftables или вернуть iptables (переключатель)(На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами\n10. Активация обхода UDP на 21000-23005 портах (BF6, Fifa и т.п.)(переключатель).\n11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. (бетка).\n12. Активировать zeefeer premium (Нажимать только Valery ProD, ну и АлександруП тоже можно :D а так же vecheromholodno)\033[0m\n' answer
+ read -re -p $'\033[33m\nВыберите необходимое действие:\033[0m\n\033[32mEnter (без цифр) - переустановка/обновление zapret\n0. Выход\n01. Проверить доступность сервисов\n1. Подобрать другие стратегии\n2. Остановить zapret\n3. Пере(запустить) zapret\n4. Удалить zapret\n5. Обновить стратегии, сбросить листы подбора стратегий и исключений\n6. Добавить домен в исключения zapret\n7. Открыть в редакторе config (Установит nano редактор ~250kb)\n8. Активировация альтернативных страт разблокировки войса DS,WA,TG вместо скриптов bol-van или вернуться снова к скриптам (переключатель)\n9. Переключить zapret на nftables или вернуть iptables (переключатель)(На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами\n10. Активация обхода UDP на 21000-23005 портах (BF6, Fifa и т.п.)(переключатель).\n11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. (бетка).\n12. Активировать zeefeer premium (Нажимать только Valery ProD, ну и АлександруП тоже можно :D а так же vecheromholodno)\033[0m\n' answer
  case "$answer" in
   "0")
    echo "Выход выполнен"
    exit 0
+   ;;
+  "01")
+   check_access_list
+   get_menu
    ;;
   "1")
    echo "Режим подбора других стратегий"
@@ -363,23 +392,16 @@ get_menu() {
    ;;
   "5")
    echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
-   /opt/zapret/init.d/sysv/zapret stop
    backup_strats
+   /opt/zapret/init.d/sysv/zapret stop
    rm -rf /opt/zapret/lists /opt/zapret/extra_strats
    rm -f /opt/zapret/files/fake/http_fake_MS.bin /opt/zapret/files/fake/quic_{1..7}.bin /opt/zapret/files/fake/syn_packet.bin /opt/zapret/files/fake/tls_clienthello_{1..18}.bin /opt/zapret/files/fake/tls_clienthello_2n.bin /opt/zapret/files/fake/tls_clienthello_6a.bin
    get_repo
    #Раскомменчивание юзера под keenetic или merlin
-   if /opt/zapret/nfq/nfqws --dry-run --user="nobody" 2>&1 | grep -q "queue"; then
-    echo "WS_USER=nobody"
-	sed -i 's/^#\(WS_USER=nobody\)/\1/' /opt/zapret/config.default
-   elif /opt/zapret/nfq/nfqws --dry-run --user="$(head -n1 /etc/passwd | cut -d: -f1)" 2>&1 | grep -q "queue"; then
-    echo "WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)"
-    sed -i "s/^#WS_USER=nobody$/WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)/" "/opt/zapret/config.default"
-   else
-    echo -e "${yellow}WS_USER не подошёл. Скорее всего будут проблемы. Если что - пишите в саппорт${plain}"
-   fi
+   change_user
    cp -f /opt/zapret/config.default /opt/zapret/config
    /opt/zapret/init.d/sysv/zapret start
+   check_access_list
    echo -e "${green}Config файл обновлён. Листы подбора стратегий и исключений сброшены в дефолт, если не просили сохранить. Фейк файлы обновлены.${plain}"
    exit 0
    ;;
