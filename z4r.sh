@@ -526,10 +526,10 @@ get_menu() {
 #___Сам код начинается тут____
 
 #Добавление ссылки на быстрый вызов скрипта
-if ! [ -f "/opt/usr/bin/z4r" ] && ! [ -f "/usr/bin/z4r" ]; then
-	if [ -d /opt/usr/bin ]; then
- 		curl -L -o /opt/usr/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
- 		chmod +x /opt/usr/bin/z4r
+if ! [ -f "/opt/bin/z4r" ] && ! [ -f "/usr/bin/z4r" ]; then
+	if [ -d /opt/bin ]; then
+ 		curl -L -o /opt/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
+ 		chmod +x /opt/bin/z4r
  	else
 		curl -L -o /usr/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
  		chmod +x /usr/bin/z4r
