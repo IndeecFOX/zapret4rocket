@@ -1,3 +1,4 @@
+kp-pro.cloud
 oaistatic.com
 digitalocean.com
 akamaized.net
