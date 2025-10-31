@@ -102,7 +102,7 @@ get_repo() {
   rm -rf /opt/zapret/extra_strats
   mv /opt/extra_strats /opt/zapret/
   if [ -f "/opt/netrogat.txt" ]; then
-   mv -f /opt/netrogat.txt /opt/zapret/lists/
+   mv -f /opt/netrogat.txt /opt/zapret/lists/netrogat.txt
   fi
   echo "Востановление настроек подбора из резерва выполнено."
  fi
@@ -403,7 +403,7 @@ get_menu() {
    /opt/zapret/init.d/sysv/zapret start
    check_access_list
    echo -e "${green}Config файл обновлён. Листы подбора стратегий и исключений сброшены в дефолт, если не просили сохранить. Фейк файлы обновлены.${plain}"
-   exit 0
+   get_menu
    ;;
   "6")
    read -re -p "Введите домен, который добавить в исключения (например, mydomain.com): " user_domain
