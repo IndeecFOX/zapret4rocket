@@ -1,3 +1,4 @@
+oaistatic.com
 digitalocean.com
 akamaized.net
 hdrezka.ag
