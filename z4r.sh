@@ -101,10 +101,11 @@ get_repo() {
  if [ -d /opt/extra_strats ]; then
   rm -rf /opt/zapret/extra_strats
   mv /opt/extra_strats /opt/zapret/
-  if [ -f "/opt/netrogat.txt" ]; then
-   mv -f /opt/netrogat.txt /opt/zapret/lists/netrogat.txt
-  fi
   echo "Востановление настроек подбора из резерва выполнено."
+ fi
+ if [ -f "/opt/netrogat.txt" ]; then
+   mv -f /opt/netrogat.txt /opt/zapret/lists/netrogat.txt
+   echo "Востановление листа исключений выполнено."
  fi
  #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
  curl -L -o /opt/zapret/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/config.default
