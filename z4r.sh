@@ -395,7 +395,7 @@ get_menu() {
    backup_strats
    /opt/zapret/init.d/sysv/zapret stop
    rm -rf /opt/zapret/lists /opt/zapret/extra_strats
-   rm -f /opt/zapret/files/fake/http_fake_MS.bin /opt/zapret/files/fake/quic_{1..7}.bin /opt/zapret/files/fake/syn_packet.bin /opt/zapret/files/fake/tls_clienthello_{1..18}.bin /opt/zapret/files/fake/tls_clienthello_2n.bin /opt/zapret/files/fake/tls_clienthello_6a.bin
+   rm -f /opt/zapret/files/fake/http_fake_MS.bin /opt/zapret/files/fake/quic_{1..7}.bin /opt/zapret/files/fake/syn_packet.bin /opt/zapret/files/fake/tls_clienthello_{1..18}.bin /opt/zapret/files/fake/tls_clienthello_2n.bin /opt/zapret/files/fake/tls_clienthello_6a.bin /opt/zapret/files/fake/tls_clienthello_4pda_to.bin
    get_repo
    #Раскомменчивание юзера под keenetic или merlin
    change_user
