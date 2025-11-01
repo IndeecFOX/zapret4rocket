@@ -33,16 +33,16 @@ dir_select(){
 check_access() {
 	local TestURL="$1"
  # Проверка TLS 1.2
-	if curl --tls-max 1.2 --max-time 2 -s -o /dev/null "$TestURL"; then
+	if curl --tls-max 1.2 --max-time 3 -s -o /dev/null "$TestURL"; then
 		echo -e "${green}Есть ответ по TLS 1.2 (важно для ТВ и т.п.)${plain}"
 	else
-		echo -e "${yellow}Нет ответа по TLS 1.2 (важно для ТВ и т.п.) Таймаут 2сек.${plain}"
+		echo -e "${yellow}Нет ответа по TLS 1.2 (важно для ТВ и т.п.) Таймаут 3сек.${plain}"
 	fi
 	# Проверка TLS 1.3
-	if curl --tlsv1.3 --max-time 2 -s -o /dev/null "$TestURL"; then
+	if curl --tlsv1.3 --max-time 3 -s -o /dev/null "$TestURL"; then
 		echo -e "${green}Есть ответ по TLS 1.3 (важно в основном для всего современного)${plain}"
 	else
-		echo -e "${yellow}Нет ответа по TLS 1.3 (важно в основном для всего современного) Таймаут 2сек.${plain}"
+		echo -e "${yellow}Нет ответа по TLS 1.3 (важно в основном для всего современного) Таймаут 3сек.${plain}"
 	fi
 }
 
