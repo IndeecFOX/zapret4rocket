@@ -540,8 +540,8 @@ if [ -d /opt/bin ]; then
     fi
 elif [ ! -f /usr/bin/z4r ] || ! grep -q 'z4r.sh "$@"' /opt/bin/z4r; then
 	echo "Скачиваем /usr/bin/z4r"
-    curl -L -o /opt/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
-    chmod +x /opt/bin/z4r
+    curl -L -o /usr/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
+    chmod +x /usr/bin/z4r
 fi
 
 #Проверка ОС
