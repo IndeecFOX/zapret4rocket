@@ -1,3 +1,4 @@
+community.platformio.org
 tatoeba.org
 snbforums.com
 kp-pro.cloud
