@@ -1,12 +1,7 @@
 #!/bin/bash
-#Команда установки
-#curl -O https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/refs/heads/master/z4r.sh && bash z4r.sh && rm z4r.sh
-#В случае отсутствия curl или bash: 
-#Для роутеров: opkg update && opkg install curl bash
-#Для Ubuntu/Debian: apt update && apt install curl bash
 
 set -e
-#Для Valery ProD. Переменная содержащая версию на случай невозможности получить информацию о lastest с github
+#Переменная содержащая версию на случай невозможности получить информацию о lastest с github
 DEFAULT_VER="72.2"
 
 #Чтобы удобнее красить
@@ -164,8 +159,20 @@ try_strategies() {
 
 #Сама функция подбора стратегий
 Strats_Tryer() {
-    read -re -p $'\033[33mПодобрать стратегию? (1-4 или Enter для пропуска):\033[0m\n\033[32m1. YT (UDP QUIC)\n2. YT (TCP)\n3. RKN\n4. Кастомный домен\033[0m\n' answer
-
+	local mode_domain="$1"
+	
+	if [ -z "$mode_domain" ]; then
+		# если аргумент не передан — спрашиваем вручную
+		read -re -p $'\033[33mПодобрать стратегию? (1-4 или Enter для пропуска):\033[0m\n\033[32m1. YT (UDP QUIC)\n2. YT (TCP)\n3. RKN\n4. Кастомный домен\033[0m\n' answer
+	else
+		if [ "${#mode_domain}" -gt 1 ]; then
+			answer="4"
+			user_domain="$mode_domain"
+		else
+			answer="$mode_domain"
+		fi
+	fi
+	
     case "$answer" in
         "1")
             echo "Режим YT (UDP QUIC)"
@@ -185,7 +192,9 @@ Strats_Tryer() {
             ;;
         "4")
             echo "Режим кастомного домена"
-            read -re -p "Введите домен (например, mydomain.com): " user_domain
+			if [ -z "$mode_domain" ]; then
+				read -re -p "Введите домен (например, mydomain.com): " user_domain
+			fi
 			echo "Введён домен: $user_domain"
 
             try_strategies 17 "/opt/zapret/extra_strats/TCP/temp" "/dev/null" \
@@ -358,10 +367,6 @@ get_panel() {
 
 #Меню
 get_menu() {
-  if ! [ -d /opt/zapret/extra_strats ]; then
-        echo "zapret-zeefeer не установлен, пропускаем скрипт меню"
-        return
- fi
  read -re -p $'\033[33m\nВыберите необходимое действие:\033[0m\n\033[32mEnter (без цифр) - переустановка/обновление zapret\n0. Выход\n01. Проверить доступность сервисов\n1. Подобрать другие стратегии\n2. Остановить zapret\n3. Пере(запустить) zapret\n4. Удалить zapret\n5. Обновить стратегии, сбросить листы подбора стратегий и исключений\n6. Добавить домен в исключения zapret\n7. Открыть в редакторе config (Установит nano редактор ~250kb)\n8. Активировация альтернативных страт разблокировки войса DS,WA,TG вместо скриптов bol-van или вернуться снова к скриптам (переключатель)\n9. Переключить zapret на nftables или вернуть iptables (переключатель)(На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами\n10. Активация обхода UDP на 21000-23005 портах (BF6, Fifa и т.п.)(переключатель).\n11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. (бетка).\n12. Активировать zeefeer premium (Нажимать только Valery ProD, Александру, АлександруП, vecheromholodno, Евгению Головащенко, Dyadyabo)\033[0m\n' answer
  case "$answer" in
   "0")
@@ -526,15 +531,17 @@ get_menu() {
 
 #___Сам код начинается тут____
 
-#Добавление ссылки на быстрый вызов скрипта
-if ! [ -f "/opt/bin/z4r" ] && ! [ -f "/usr/bin/z4r" ]; then
-	if [ -d /opt/bin ]; then
- 		curl -L -o /opt/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
- 		chmod +x /opt/bin/z4r
- 	else
-		curl -L -o /usr/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
- 		chmod +x /usr/bin/z4r
- 	fi
+#Добавление ссылки на быстрый вызов скрипта, проверка на актуальность сначала если есть
+if [ -d /opt/bin ]; then
+    if [ ! -f /opt/bin/z4r ] || ! grep -q 'z4r.sh "$@"' /opt/bin/z4r; then
+		echo "Скачиваем /opt/bin/z4r"
+        curl -L -o /opt/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
+        chmod +x /opt/bin/z4r
+    fi
+elif [ ! -f /usr/bin/z4r ] || ! grep -q 'z4r.sh "$@"' /opt/bin/z4r; then
+	echo "Скачиваем /usr/bin/z4r"
+    curl -L -o /opt/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
+    chmod +x /opt/bin/z4r
 fi
 
 #Проверка ОС
@@ -585,8 +592,13 @@ if [[ "$OSystem" == "VPS" ]]; then
  get_panel
 fi
 
-#Меню
-get_menu
+#Меню и быстрый запуск подбора стратегии
+ if [ -d /opt/zapret/extra_strats ]; then
+	if [ $1 ]; then
+		Strats_Tryer $1
+	fi
+    get_menu
+ fi
  
 #entware keenetic and merlin preinstal env.
 if [ "$hardware" = "keenetic" ]; then
