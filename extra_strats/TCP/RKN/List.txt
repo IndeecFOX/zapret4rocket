@@ -1,3 +1,4 @@
+lemonde.fr
 community.platformio.org
 tatoeba.org
 snbforums.com
