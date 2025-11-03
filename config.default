@@ -158,7 +158,7 @@ NFQWS_OPT="
 'Обход блокировок сайтов по httpS'
 --filter-tcp=443,2053,2083,2087,2096,8443 --hostlist=/opt/zapret/extra_strats/TCP/RKN/List.txt --dpi-desync=split2 --dpi-desync-repeats=2 --dpi-desync-split-seqovl=681 --dpi-desync-split-pos=1 --dpi-desync-fooling=badseq,hopbyhop2 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_2.bin --new
 'Обход блокировок TG сетей (бета)'
---filter-tcp=80,443,8443 --ipset=/opt/zapret/lists/tg_cidr.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
+--skip --filter-tcp=80,443,8443 --ipset=/opt/zapret/lists/tg_cidr.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
 'Обход блокировок войса Discord. Отключено в дефолте, если обход скриптом bol-van'
 --skip --filter-udp=50000-50099,1400,3478-3481,5349,19294-19344 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-autottl6 --dup=2 --dup-autottl6 --dup-cutoff=n3 --new
 'Стратегия обхода UDP блокировок игр и т.п.'
