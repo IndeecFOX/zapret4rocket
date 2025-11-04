@@ -1,3 +1,4 @@
+amazonaws.com
 lemonde.fr
 community.platformio.org
 tatoeba.org
