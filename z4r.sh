@@ -319,6 +319,10 @@ entware_fixes() {
   echo "Права выданы /opt/etc/init.d/S00fix"
   cp -a /opt/zapret/init.d/custom.d.examples.linux/10-keenetic-udp-fix /opt/zapret/init.d/sysv/custom.d/10-keenetic-udp-fix
   echo "10-keenetic-udp-fix скопирован"
+ elif [ "$hardware" = "merlin" ]; then
+  if sed -n '167p' /opt/zapret/install_easy.sh | grep -q '^nfqws_opt_validat'; then
+	sed -i '172s/return 1/return 0/' /opt/zapret/install_easy.sh
+  fi
  fi
  
  sh /opt/zapret/install_bin.sh
