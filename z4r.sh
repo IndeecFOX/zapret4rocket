@@ -27,7 +27,7 @@ dir_select(){
 
 check_access() {
 	local TestURL="$1"
- # Проверка TLS 1.2
+	# Проверка TLS 1.2
 	if curl --tls-max 1.2 --max-time 3 -s -o /dev/null "$TestURL"; then
 		echo -e "${green}Есть ответ по TLS 1.2 (важно для ТВ и т.п.)${plain}"
 	else
@@ -367,7 +367,21 @@ get_panel() {
 
 #Меню
 get_menu() {
- read -re -p $'\033[33m\nВыберите необходимое действие:\033[0m\n\033[32mEnter (без цифр) - переустановка/обновление zapret\n0. Выход\n01. Проверить доступность сервисов\n1. Подобрать другие стратегии\n2. Остановить zapret\n3. Пере(запустить) zapret\n4. Удалить zapret\n5. Обновить стратегии, сбросить листы подбора стратегий и исключений\n6. Добавить домен в исключения zapret\n7. Открыть в редакторе config (Установит nano редактор ~250kb)\n8. Активировация альтернативных страт разблокировки войса DS,WA,TG вместо скриптов bol-van или вернуться снова к скриптам (переключатель)\n9. Переключить zapret на nftables или вернуть iptables (переключатель)(На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами\n10. Активация обхода UDP на 21000-23005 портах (BF6, Fifa и т.п.)(переключатель).\n11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. (бетка).\n12. Активировать zeefeer premium (Нажимать только Valery ProD, Dina_turat, Александру, АлександруП, vecheromholodno, Евгению Головащенко, Dyadyabo)\033[0m\n' answer
+ read -re -p $'\033[32m\nВыберите необходимое действие:\033[33m
+Enter (без цифр) - переустановка/обновление zapret\n0. Выход
+01. Проверить доступность сервисов
+1. Подобрать другие стратегии\n2. Остановить zapret
+3. Пере(запустить) zapret
+4. Удалить zapret
+5. Обновить стратегии, сбросить листы подбора стратегий и исключений
+6. Добавить домен в исключения zapret
+7. Открыть в редакторе config (Установит nano редактор ~250kb)
+8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам
+9. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами
+10. Активация обхода UDP на 21000-23005 портах (BF6, Fifa и т.п.)(переключатель).
+11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. (бетка).
+12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (безразборный режим) 
+13. Активировать zeefeer premium (Нажимать только Valery ProD, Dina_turat, Александру, АлександруП, vecheromholodno, Евгению Головащенко, Dyadyabo)\033[0m\n' answer
  case "$answer" in
   "0")
    echo "Выход выполнен"
@@ -426,7 +440,7 @@ get_menu() {
    if [[ "$OSystem" == "VPS" ]]; then
 	apt install nano
    else
-	opkg install nano-full
+	opkg remove nano && opkg install nano-full
    fi
    nano /opt/zapret/config
    get_menu
@@ -487,7 +501,6 @@ get_menu() {
  	echo -e "${green}Выполнение переключений завершено.${plain}"
     exit 0 
    ;;
-
   "11")
 	echo "Текущее состояние: $(grep '^FLOWOFFLOAD=' /opt/zapret/config)"
  	read -re -p $'\033[33mСменить аппаратное ускорение? (1-4 или Enter для выхода):\033[0m\n\033[32m1. software. Программное ускорение. \n2. hardware. Аппаратное NAT\n3. none. Отключено.\n4. donttouch. Не трогать (дефолт).\033[0m\n' answer
@@ -521,8 +534,30 @@ get_menu() {
    echo -e "${green}Выполнено.${plain}"
    exit 0
    ;;
-   
   "12")
+   num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --h' | head -n1 | cut -d: -f1); echo -e "${yellow}Безразборный режим по стратегии: ${plain}$((num ? num : 0))"
+   read -re -p $'\033[33mС каким номером применить стратегию? (1-17, 0 - отключение безразборного режима, Enter - выход):\033[0m' answer_bezr
+   if echo "$answer_bezr" | grep -Eq '^[0-9]+$' && [ "$answer_bezr" -ge 0 ] && [ "$answer_bezr" -le 17 ]; then
+	#Отключение
+    for i in $(seq 112 128); do
+	 if sed -n "${i}p" /opt/zapret/config | grep -Fq -- '--filter-tcp=443 --hostlist-domains= --h'; then
+		sed -i "${i}s#--filter-tcp=443 --hostlist-domains= --h#--filter-tcp=443 --hostlist-domains=none.dom --h#" /opt/zapret/config
+		break
+	fi
+	done
+	echo "Безразборный режим отключен"
+	if [ "$answer_bezr" -ge 1 ] && [ "$answer_bezr" -le 17 ]; then
+		sed -i "$((111 + answer_bezr))s/--hostlist-domains=none\.dom/--hostlist-domains=/" /opt/zapret/config
+		echo -e "${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443. Проверка доступа к meduza.io${plain}"
+		check_access "https://meduza.io"
+	fi
+   else
+    get_menu
+   fi
+   read -p "Enter для выхода в меню"
+   get_menu
+   ;;  
+  "13")
    echo -e "${green}Специальный zeefeer premium для Valery ProD, Dina_turat, Александру, АлександруП, vecheromholodno, Евгению Головащенко, Dyadyabo активирован. Наверное.${plain}"
    exit 0
    ;;
