@@ -28,7 +28,7 @@ curl -O https://raw.githubusercontent.com/IndeecFOX/z4r/4/z4r && sh z4r
 
 <a id="требования-и-зависимости"></a>
 ### ⚙️ Требования и зависимости
-В случае отсутствия/ошибки curl/bash
+В случае отсутствия/ошибки curl
 
 ```bash
 apt update || opkg update && apt install curl || opkg install curl
