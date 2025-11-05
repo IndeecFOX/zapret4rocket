@@ -1,3 +1,7 @@
+afcdn.net
+aucdn.net
+orbsrv.com
+xhcdn.com
 amazonaws.com
 lemonde.fr
 community.platformio.org
