@@ -433,12 +433,11 @@ Enter (без цифр) - переустановка/обновление zapret
    read -re -p "Введите домен, который добавить в исключения (например, mydomain.com): " user_domain
    if [ -n "$user_domain" ]; then
     echo "$user_domain" >> /opt/zapret/lists/netrogat.txt
-	/opt/zapret/init.d/sysv/zapret restart
     echo -e "Домен ${yellow}$user_domain${plain} добавлен в исключения (netrogat.txt). zapret перезапущен."
    else
     echo "Ввод пустой, ничего не добавлено"
    fi
-   exit 0
+   get_menu
    ;;
   "7")
    if [[ "$OSystem" == "VPS" ]]; then
