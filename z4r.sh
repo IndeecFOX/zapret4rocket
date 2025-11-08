@@ -635,7 +635,7 @@ echo -e "${yellow}zeefeer обновлен (UTC +0): $(curl -s "https://api.gith
 
 #Выполнение общего для всех ОС кода с ответвлениями под ОС
 #Запрос на установку 3x-ui или аналогов для VPS
-if [[ "$OSystem" == "VPS" ]]; then
+if [[ "$OSystem" == "VPS" ]] && [ ! $1 ]; then
  get_panel
 fi
 
