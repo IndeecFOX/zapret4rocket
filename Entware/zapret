@@ -22,7 +22,7 @@ do_start()
 		echo "xt_multiport.ko is already loaded"
     else
         if insmod /lib/modules/$(uname -r)/xt_multiport.ko &> /dev/null; then
-			echo "iptable_raw.ko loaded"
+			echo "xt_multiport.ko loaded"
         else
 			echo "Cannot find xt_multiport.ko kernel module, aborting"
 			exit 1
