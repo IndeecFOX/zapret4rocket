@@ -676,5 +676,10 @@ if [[ "$OSystem" == "Entware" ]]; then
  entware_fixes
 fi
 
+#Для x-wrt
+if [[ "$release" == "x-wrt" ]]; then
+	sed -i 's/kmod-nft-nat kmod-nft-offload/kmod-nft-nat/' /opt/zapret/common/installer.sh
+fi
+
 #Запуск установочных скриптов и перезагрузка
 install_zapret_reboot
