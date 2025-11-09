@@ -381,7 +381,7 @@ ttyd_webssh() {
  read -re -p $'\033[33mЛогин для доступа к zeefeer через WEB (Enter для пустого. \033[31mНо не рекомендуется, панель может быть доступна из интернета!)\033[0m' ttyd_login
  if [[ "$OSystem" == "VPS" ]]; then
 	echo -e "${yellow}Установка ttyd for VPS${plain}"
-	systemctl stop ttyd
+	systemctl stop ttyd 2>/dev/null || true
 	curl -L -o /usr/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64
 	chmod +x /usr/bin/ttyd
 	
@@ -404,6 +404,7 @@ EOF
 	systemctl start ttyd
  elif [[ "$OSystem" == "WRT" ]]; then
 	echo -e "${yellow}Установка ttyd for WRT${plain}"
+	/etc/init.d/ttyd stop 2>/dev/null || true
 	opkg install ttyd
     uci set ttyd.@ttyd[0].interface=''
     uci set ttyd.@ttyd[0].command='-p 17681 -W -a -c : bash z4r'
