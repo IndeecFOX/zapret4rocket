@@ -50,7 +50,11 @@ check_access_list() {
    check_access "https://meduza.io"
    echo "Проверка доступности www.instagram.com (RKN list + нужен рабочий DNS)"
    check_access "https://www.instagram.com/"
+}
+
+exit_to_menu() {
    read -p "Enter для выхода в меню"
+   get_menu
 }
 
 #Запрос на резервирование настроек в подборе стратегий
@@ -372,6 +376,77 @@ get_panel() {
  fi
 }
 
+#webssh ttyd
+ttyd_webssh() {
+ read -re -p $'\033[33mЛогин для доступа к zeefeer через WEB (Enter для пустого. \033[31mНо не рекомендуется, панель может быть доступна из интернета!)\033[0m' ttyd_login
+ if [[ "$OSystem" == "VPS" ]]; then
+	echo -e "${yellow}Установка ttyd for VPS${plain}"
+	systemctl stop ttyd
+	curl -L -o /usr/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64
+	chmod +x /usr/bin/ttyd
+	
+	cat > /etc/systemd/system/ttyd.service <<EOF
+[Unit]
+Description=ttyd WebSSH Service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/ttyd -p 17681 -W -a -c "${ttyd_login}": bash z4r
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+	systemctl daemon-reload
+	systemctl enable ttyd
+	systemctl start ttyd
+ elif [[ "$OSystem" == "WRT" ]]; then
+	echo -e "${yellow}Установка ttyd for WRT${plain}"
+	opkg install ttyd
+    uci set ttyd.@ttyd[0].interface=''
+    uci set ttyd.@ttyd[0].command='-p 17681 -W -a -c : bash z4r'
+	uci commit ttyd
+	/etc/init.d/ttyd enable
+	/etc/init.d/ttyd start
+ elif [[ "$OSystem" == "entware" ]]; then
+	echo -e "${yellow}Установка ttyd for Entware${plain}"
+	/opt/etc/init.d/S99ttyd stop 2>/dev/null || true
+	opkg install ttyd
+	
+	cat > /opt/etc/init.d/S99ttyd <<EOF
+#!/bin/sh
+
+START=99
+
+case "\$1" in
+  start)
+    echo "Starting ttyd..."
+    ttyd -p 17681 -W -a -c "${ttyd_login}": z4r &
+    ;;
+  stop)
+    echo "Stopping ttyd..."
+    killall ttyd
+    ;;
+  restart)
+    \$0 stop
+    sleep 1
+    \$0 start
+    ;;
+  *)
+    echo "Usage: \$0 {start|stop|restart}"
+    exit 1
+    ;;
+esac
+EOF
+
+  chmod +x /opt/etc/init.d/S99ttyd
+  /opt/etc/init.d/S99ttyd start
+ fi
+ echo -e "${green}Установка web-терминала завешена. Доступ по ip вашего роутера/VPS в формате ip:17681, например 192.168.1.1:17681 или mydomain.com:17681${plain}"
+}
+
 #Меню
 get_menu() {
  read -re -p $'\033[32m\nВыберите необходимое действие:\033[33m
@@ -388,7 +463,8 @@ Enter (без цифр) - переустановка/обновление zapret
 10. Активация обхода UDP на 21000-23005 портах (BF6, Fifa и т.п.)(переключатель).
 11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. (бетка).
 12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (безразборный режим) 
-13. Активировать zeefeer premium (Нажимать только Valery ProD, Dina_turat, Александру, АлександруП, vecheromholodno, Евгению Головащенко, Dyadyabo и остальным поддержавшим проект)\033[0m\n' answer
+13. Активировать доступ в меню через браузер (~3мб места)
+777. Активировать zeefeer premium (Нажимать только Valery ProD, Dina_turat, Александру, АлександруП, vecheromholodno, Евгению Головащенко, Dyadyabo и остальным поддержавшим проект)\033[0m\n' answer
  case "$answer" in
   "0")
    echo "Выход выполнен"
@@ -396,7 +472,7 @@ Enter (без цифр) - переустановка/обновление zapret
    ;;
   "01")
    check_access_list
-   get_menu
+   exit_to_menu
    ;;
   "1")
    echo "Режим подбора других стратегий"
@@ -405,17 +481,17 @@ Enter (без цифр) - переустановка/обновление zapret
   "2")
    /opt/zapret/init.d/sysv/zapret stop
    echo -e "${green}zapret остановлен${plain}"
-   exit 0
+   exit_to_menu
    ;;
   "3")
    /opt/zapret/init.d/sysv/zapret restart
    echo -e "${green}zapret пере(запущен)${plain}"
-   exit 0
+   exit_to_menu
    ;;
   "4")
    remove_zapret
    echo -e "${yellow}zapret удалён${plain}"
-   exit 0
+   exit_to_menu
    ;;
   "5")
    echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
@@ -430,7 +506,7 @@ Enter (без цифр) - переустановка/обновление zapret
    /opt/zapret/init.d/sysv/zapret start
    check_access_list
    echo -e "${green}Config файл обновлён. Листы подбора стратегий и исключений сброшены в дефолт, если не просили сохранить. Фейк файлы обновлены.${plain}"
-   get_menu
+   exit_to_menu
    ;;
   "6")
    read -re -p "Введите домен, который добавить в исключения (например, mydomain.com): " user_domain
@@ -440,7 +516,7 @@ Enter (без цифр) - переустановка/обновление zapret
    else
     echo "Ввод пустой, ничего не добавлено"
    fi
-   get_menu
+   exit_to_menu
    ;;
   "7")
    if [[ "$OSystem" == "VPS" ]]; then
@@ -449,7 +525,7 @@ Enter (без цифр) - переустановка/обновление zapret
 	opkg remove nano && opkg install nano-full
    fi
    nano /opt/zapret/config
-   get_menu
+   exit_to_menu
    ;;
   "8")
 	if grep -Eq '^NFQWS_PORTS_UDP=.*443$' "/opt/zapret/config"; then
@@ -472,7 +548,7 @@ Enter (без цифр) - переустановка/обновление zapret
 	fi
 	/opt/zapret/init.d/sysv/zapret restart
  	echo -e "${green}Выполнение переключений завершено.${plain}"
-   exit 0
+   exit_to_menu
    ;;
   "9")
 	if grep -q '^FWTYPE=iptables$' "/opt/zapret/config"; then
@@ -489,7 +565,7 @@ Enter (без цифр) - переустановка/обновление zapret
 	else
      echo -e "${yellow}Неизвестное состояние строки FWTYPE. Проверь конфиг вручную.${plain}"
 	fi
-   exit 0
+   exit_to_menu
    ;;
   "10")
 	if grep -q '^NFQWS_PORTS_UDP=443' "/opt/zapret/config"; then
@@ -507,7 +583,7 @@ Enter (без цифр) - переустановка/обновление zapret
 	fi
 	/opt/zapret/init.d/sysv/zapret restart
  	echo -e "${green}Выполнение переключений завершено.${plain}"
-    exit 0 
+    exit_to_menu 
    ;;
   "11")
 	echo "Текущее состояние: $(grep '^FLOWOFFLOAD=' /opt/zapret/config)"
@@ -540,7 +616,7 @@ Enter (без цифр) - переустановка/обновление zapret
     esac
 
    echo -e "${green}Выполнено.${plain}"
-   exit 0
+   exit_to_menu
    ;;
   "12")
    num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); echo -e "${yellow}Безразборный режим по стратегии: ${plain}$((num ? num : 0))"
@@ -566,12 +642,15 @@ Enter (без цифр) - переустановка/обновление zapret
    else
     get_menu
    fi
-   read -p "Enter для выхода в меню"
-   get_menu
-   ;;  
+   exit_to_menu
+   ;;
   "13")
+   ttyd_webssh
+   exit_to_menu
+   ;;
+  "777")
    echo -e "${green}Специальный zeefeer premium для Valery ProD, Dina_turat, Александру, АлександруП, vecheromholodno, Евгению Головащенко, Dyadyabo активирован. Наверное. Так же благодарю поддержавших проект comandante1928 и VssA${plain}"
-   exit 0
+   exit_to_menu
    ;;
   esac
  }
@@ -585,7 +664,7 @@ if [ -d /opt/bin ]; then
         curl -L -o /opt/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
         chmod +x /opt/bin/z4r
     fi
-elif [ ! -f /usr/bin/z4r ] || ! grep -q 'z4r.sh "$@"' /opt/bin/z4r; then
+elif [ ! -f /usr/bin/z4r ] || ! grep -q 'z4r.sh "$@"' /usr/bin/z4r; then
 	echo "Скачиваем /usr/bin/z4r"
     curl -L -o /usr/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
     chmod +x /usr/bin/z4r
@@ -624,7 +703,7 @@ if [[ "$release" == "ubuntu" || "$release" == "debian" || "$release" == "endeavo
 elif [[ "$release" == "openwrt" || "$release" == "immortalwrt" || "$release" == "asuswrt" || "$release" == "x-wrt" || "$release" == "kwrt" ]]; then
 	OSystem="WRT"
 elif [[ "$release" == "entware" ]]; then
-	OSystem="Entware"
+	OSystem="entware"
 else
     echo "Для этой ОС нет подходящей функции. Или ОС определение выполнено некорректно."
 	exit 0
@@ -657,13 +736,27 @@ fi
 
 #Проверка наличия каталога opt и его создание при необходиомости (для некоторых роутеров), переход в него
 dir_select
+
 #Запрос на резервирование стратегий, если есть что резервировать
 backup_strats
+
 #Удаление старого запрета, если есть
 remove_zapret
+
 #Запрос желаемой версии zapret
 echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
 version_select
+
+#Запрос на установку web-ssh
+read -re -p $'\033[33mАктивировать доступ в меню через браузер (~3мб места)? 1 - Да, Enter - нет\033[0m\n' ttyd_answer
+case "$ttyd_answer" in
+	"1")
+		ttyd_webssh
+	;;
+	*)
+		echo "Пропуск (пере)установки web-терминала"
+	;;
+esac 
  
 #Скачивание, распаковка архива zapret и его удаление
 zapret_get
@@ -672,7 +765,7 @@ zapret_get
 get_repo
 
 #Для Keenetic и merlin
-if [[ "$OSystem" == "Entware" ]]; then
+if [[ "$OSystem" == "entware" ]]; then
  entware_fixes
 fi
 
