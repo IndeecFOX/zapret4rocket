@@ -472,7 +472,7 @@ Enter (без цифр) - переустановка/обновление zapret
 11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. (бетка).
 12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (безразборный режим) 
 13. Активировать доступ в меню через браузер (~3мб места)
-777. Активировать zeefeer premium (Нажимать только Valery ProD, Dina_turat, Александру, АлександруП, vecheromholodno, Евгению Головащенко, Dyadyabo и остальным поддержавшим проект)\033[0m\n' answer
+777. Активировать zeefeer premium (Нажимать только Valery ProD, Dina_turat, Александру, АлександруП, vecheromholodno, Евгению Головащенко, Dyadyabo, skuwakin и остальным поддержавшим проект)\033[0m\n' answer
  case "$answer" in
   "0")
    echo "Выход выполнен"
@@ -657,7 +657,7 @@ Enter (без цифр) - переустановка/обновление zapret
    exit_to_menu
    ;;
   "777")
-   echo -e "${green}Специальный zeefeer premium для Valery ProD, Dina_turat, Александру, АлександруП, vecheromholodno, Евгению Головащенко, Dyadyabo активирован. Наверное. Так же благодарю поддержавших проект comandante1928 и VssA${plain}"
+   echo -e "${green}Специальный zeefeer premium для Valery ProD, Dina_turat, Александра, АлександраП, vecheromholodno, Евгения Головащенко, Dyadyabo и skuwakin активирован. Наверное. Так же благодарю поддержавших проект comandante1928, VssA и vladdrazz${plain}"
    exit_to_menu
    ;;
   esac
