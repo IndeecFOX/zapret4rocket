@@ -378,7 +378,14 @@ get_panel() {
 
 #webssh ttyd
 ttyd_webssh() {
- read -re -p $'\033[33mЛогин для доступа к zeefeer через WEB (Enter для пустого. \033[31mНо не рекомендуется, панель может быть доступна из интернета!)\033[0m' ttyd_login
+ read -re -p $'\033[33mВведите логин для доступа к zeefeer через браузер (0 - отказ от логина через web в z4r и переход на логин в ssh (может помочь в safari). Enter - пустой логин, \033[31mно не рекомендуется, панель может быть доступна из интернета!)\033[0m' ttyd_login
+ 
+ ttyd_login_have="-c "${ttyd_login}": bash z4r"
+ if [[ "$ttyd_login" == "0" ]]; then
+	echo "Отключение логина в веб. Перевод с z4r на CLI логин."
+    ttyd_login_have="login"
+ fi
+ 
  if [[ "$OSystem" == "VPS" ]]; then
 	echo -e "${yellow}Установка ttyd for VPS${plain}"
 	systemctl stop ttyd 2>/dev/null || true
@@ -391,7 +398,7 @@ Description=ttyd WebSSH Service
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/ttyd -p 17681 -W -a -c "${ttyd_login}": bash z4r
+ExecStart=/usr/bin/ttyd -p 17681 -W -a ${ttyd_login_have}
 Restart=always
 RestartSec=5
 
@@ -407,7 +414,7 @@ EOF
 	/etc/init.d/ttyd stop 2>/dev/null || true
 	opkg install ttyd
     uci set ttyd.@ttyd[0].interface=''
-    uci set ttyd.@ttyd[0].command='-p 17681 -W -a -c : bash z4r'
+    uci set ttyd.@ttyd[0].command='-p 17681 -W -a ${ttyd_login_have}'
 	uci commit ttyd
 	/etc/init.d/ttyd enable
 	/etc/init.d/ttyd start
@@ -424,7 +431,7 @@ START=99
 case "\$1" in
   start)
     echo "Starting ttyd..."
-    ttyd -p 17681 -W -a -c "${ttyd_login}": z4r &
+    ttyd -p 17681 -W -a ${ttyd_login_have} &
     ;;
   stop)
     echo "Stopping ttyd..."
