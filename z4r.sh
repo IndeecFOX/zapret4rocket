@@ -414,7 +414,7 @@ EOF
 	/etc/init.d/ttyd stop 2>/dev/null || true
 	opkg install ttyd
     uci set ttyd.@ttyd[0].interface=''
-    uci set ttyd.@ttyd[0].command='-p 17681 -W -a ${ttyd_login_have}'
+    uci set ttyd.@ttyd[0].command="-p 17681 -W -a ${ttyd_login_have}"
 	uci commit ttyd
 	/etc/init.d/ttyd enable
 	/etc/init.d/ttyd start
