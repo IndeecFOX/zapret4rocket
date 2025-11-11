@@ -735,13 +735,31 @@ fi
 #Запуск скрипта под нужную версию
 if [[ "$release" == "ubuntu" || "$release" == "debian" || "$release" == "endeavouros" || "$release" == "arch" ]]; then
 	OSystem="VPS"
-elif [[ "$release" == "openwrt" || "$release" == "immortalwrt" || "$release" == "asuswrt" || "$release" == "x-wrt" || "$release" == "kwrt" ]]; then
+elif [[ "$release" == "openwrt" || "$release" == "immortalwrt" || "$release" == "asuswrt" || "$release" == "x-wrt" || "$release" == "kwrt" || "$release" == "istoreos" ]]; then
 	OSystem="WRT"
 elif [[ "$release" == "entware" ]]; then
 	OSystem="entware"
 else
-    echo "Для этой ОС нет подходящей функции. Или ОС определение выполнено некорректно."
-	exit 0
+	read -re -p $'\033[31mДля этой ОС нет подходящей функции. Или ОС определение выполнено некорректно.\033[33m Рекомендуется обратиться в чат поддержки
+Enter - выход
+1 - Плюнуть и продолжить как OpenWRT
+2 - Плюнуть и продолжить как entware
+3 - Плюнуть и продолжить как VPS\033[0m\n' os_answer
+	case "$os_answer" in
+	"1")
+		OSystem="WRT"
+	;;
+	"2")
+		OSystem="entware"
+	;;
+	"3")
+		OSystem="VPS"
+	;;
+	*)
+		echo "Выбран выход"
+		exit 0
+	;;
+esac 
 fi
 
 #Инфа о времени обновления скрпта
