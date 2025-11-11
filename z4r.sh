@@ -703,7 +703,13 @@ if [[ "$release" == "entware" ]]; then
   hardware="keenetic"
  fi
 fi
-echo "OS: $release $hardware"
+
+#Вот только дл Meinsteren чтобы писало Netcraze правка -_-
+if grep -q "netcraze" "/bin/ndmc"; then
+ echo "OS: $release Netcraze"
+else
+ echo "OS: $release $hardware"
+fi
 
 #Запуск скрипта под нужную версию
 if [[ "$release" == "ubuntu" || "$release" == "debian" || "$release" == "endeavouros" || "$release" == "arch" ]]; then
