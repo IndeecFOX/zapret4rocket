@@ -453,17 +453,18 @@ EOF
 
   chmod +x /opt/etc/init.d/S99ttyd
   /opt/etc/init.d/S99ttyd start
-  if pidof ttyd >/dev/null; then
-	echo -e "Проверка...${green}Служба ttyd запущена.${plain} Проверка порта..."
-	sleep 1
-	if netstat -tuln | grep -q ':17681'; then
-		echo -e "${green}Порт 17681 для службы ttyd слушается${plain}"
-	else
-		echo -e "${red}Порт 17681 для службы ttyd не прослушивается${plain}"
-	fi
+  sleep 1
+  if netstat -tuln | grep -q ':17681'; then
+	echo -e "${green}Порт 17681 для службы ttyd слушается${plain}"
   else
-	echo -e "Проверка...${red}Служба ttyd не запущена!${plain}"
+	echo -e "${red}Порт 17681 для службы ttyd не прослушивается${plain}"
   fi
+ fi
+
+ if pidof ttyd >/dev/null; then
+	echo -e "Проверка...${green}Служба ttyd запущена.${plain}"
+ else
+	echo -e "Проверка...${red}Служба ttyd не запущена!${plain}"
  fi
  echo -e "${green}Установка web-терминала завешена. Доступ по ip вашего роутера/VPS в формате ip:17681, например 192.168.1.1:17681 или mydomain.com:17681${plain}. Был выполнен выход из скрипта для сохранения состояния."
 }
