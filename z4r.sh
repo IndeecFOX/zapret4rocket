@@ -726,7 +726,7 @@ if [[ "$release" == "entware" ]]; then
 fi
 
 #По просьбе наших слушателей) Теперь netcraze официально детектится скриптом не как keenetic, а отдельно)
-if grep -q "netcraze" "/bin/ndmc"; then
+if grep -q "netcraze" "/bin/ndmc" 2>/dev/null; then
  echo "OS: $release Netcraze"
 else
  echo "OS: $release $hardware"
