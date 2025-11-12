@@ -65,7 +65,7 @@ backup_strats() {
 		cp -rf /opt/zapret/extra_strats /opt/
   		echo "Настройки подбора резервированы."
 	elif [[ "$answer" == "0" ]]; then
-		exit 0
+		exit_to_menu
 	fi	
 	read -re -p $'\033[0;33mХотите сохранить добавленные в лист исключений домены? Не рекомендуется. (\"5\" - сохранить, Enter - нет): \033[0m' answer
 	if [[ "$answer" == "5" ]]; then
@@ -146,21 +146,21 @@ try_strategies() {
 		 check_access $TestURL
 		fi
 			
-        read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - далее, \"0\" - выйти не сохраняя): " answer
+        read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - следующий вариант, \"0\" - выйти не сохраняя): " answer
         if [[ "$answer" == "1" ]]; then
             echo "Стратегия $i сохранена. Выходим."
             eval "$final_action"
-            exit 0
+            exit_to_menu
 		elif [[ "$answer" == "0" ]]; then
 			echo -n > "$base_path/${i}.txt"
 			echo "Изменения отменены. Выход."
-			exit 0
+			exit_to_menu
         fi
     done
 
     echo -n > "$base_path/${count}.txt"
     echo "Все стратегии испробованы. Ничего не подошло."
-    exit 0
+    exit_to_menu
 }
 
 #Сама функция подбора стратегий
