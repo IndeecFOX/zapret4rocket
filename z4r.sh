@@ -13,18 +13,6 @@ plain='\033[0m'
 
 #___Сначала идут анонсы функций____
 
-#Проверка наличия каталога opt и его создание при необходиомости (для некоторых роутеров), переход в него
-dir_select(){
- cd /
- if [ -d /opt ]; then
-     echo "Каталог /opt уже существует"
- else
-     echo "Создаём каталог /opt"
-     mkdir /opt
- fi
- cd /tmp
-}
-
 check_access() {
 	local TestURL="$1"
 	# Проверка TLS 1.2
@@ -788,8 +776,9 @@ elif [ "$hardware" = "merlin" ]; then
  opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy
 fi
 
-#Проверка наличия каталога opt и его создание при необходиомости (для некоторых роутеров), переход в него
-dir_select
+#Проверка наличия каталога opt и его создание при необходиомости (для некоторых роутеров), переход в tmp
+mkdir -p /opt
+cd /tmp
 
 #Запрос на резервирование стратегий, если есть что резервировать
 backup_strats
