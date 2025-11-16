@@ -17,4 +17,3 @@ youtube.googleapis.com
 youtubei.googleapis.com
 yt-video-upload.l.google.com
 wide-youtube.l.google.com
-play.google.com
