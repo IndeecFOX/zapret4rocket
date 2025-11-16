@@ -1,7 +1,6 @@
 youtube.com
 googlevideo.com
 gvt1.com
-play.google.com
 ytimg.com
 ggpht.com
 googleusercontent.com
@@ -10,4 +9,3 @@ googleadservices.com
 youtubeembeddedplayer.googleapis.com
 youtube.googleapis.com
 youtubei.googleapis.com
-
