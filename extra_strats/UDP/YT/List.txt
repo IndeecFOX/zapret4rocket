@@ -1,7 +1,6 @@
 youtube.com
 googlevideo.com
 gvt1.com
-play.google.com
 ytimg.com
 ggpht.com
 jnn-pa.googleapis.com
