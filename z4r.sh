@@ -667,7 +667,7 @@ Enter (без цифр) - переустановка/обновление zapret
    exit 7
    ;;
   "777")
-   echo -e "${green}Специальный zeefeer premium для Valery ProD, Dina_turat, Александра, АлександраП, vecheromholodno, Евгения Головащенко, Dyadyabo и skuwakin активирован. Наверное. Так же благодарю поддержавших проект comandante1928, VssA, vladdrazz и Alexey_Tob${plain}"
+   echo -e "${green}Специальный zeefeer premium для Valery ProD, Dina_turat, Александра, АлександраП, vecheromholodno, Евгения Головащенко, Dyadyabo и skuwakin активирован. Наверное. Так же благодарю поддержавших проект comandante1928, VssA, vladdrazz, Alexey_Tob, Bor1sBr1tva и DA00001${plain}"
    exit_to_menu
    ;;
   esac
