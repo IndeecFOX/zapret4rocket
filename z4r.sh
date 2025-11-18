@@ -457,29 +457,24 @@ EOF
  echo -e "${green}Установка web-терминала завешена. Доступ по ip вашего роутера/VPS в формате ip:17681, например 192.168.1.1:17681 или mydomain.com:17681${plain}. Был выполнен выход из скрипта для сохранения состояния."
 }
 
-#Меню
+#Меню, проверка состояний и вывод с чтением ответа
 get_menu() {
- if pidof nfqws >/dev/null; then
-	nfqws_status="${green}Запущен${yellow}"
- else
-	nfqws_status="${red}Остановлен${yellow}"
- fi 
  echo -e '\033[32m\nВыберите необходимое действие:\033[33m
 Enter (без цифр) - переустановка/обновление zapret
 0. Выход
 01. Проверить доступность сервисов
 1. Подобрать другие стратегии
-2. Стоп/пере(запуск) zapret (сейчас: '${nfqws_status}')
+2. Стоп/пере(запуск) zapret (сейчас: '$(pidof nfqws >/dev/null && echo "${green}Запущен${yellow}" || echo "${red}Остановлен${yellow}")')
 3. Тут могла быть ваша реклама :D (Функция перенесена во 2 пункт. Резерв)
 4. Удалить zapret
 5. Обновить стратегии, сбросить листы подбора стратегий и исключений
 6. Добавить домен в исключения zapret
 7. Открыть в редакторе config (Установит nano редактор ~250kb)
-8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам
-9. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами
-10. Активация обхода UDP на 21000-23005 портах (BF6, Fifa и т.п.)(переключатель).
-11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. (бетка).
-12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (безразборный режим) 
+8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '${plain}$(grep -Eq '^NFQWS_PORTS_UDP=.*443$' /opt/zapret/config && echo "Скрипты" || (grep -Eq '443,1400,3478-3481,5349,50000-50099,19294-19344$' /opt/zapret/config && echo "Классические стратегии" || echo "Незвестно"))${yellow}'
+9. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '${plain}$(grep -q '^FWTYPE=iptables$' /opt/zapret/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret/config && echo "nftables" || echo "Неизвестно"))${yellow}'
+10. (Де)активировать обход UDP на 21000-23005 портах (BF6, Fifa и т.п.). Сейчас: '${plain}$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=21000-23005,443' /opt/zapret/config && echo "Включен" || echo "Неизвестно"))${yellow}'
+11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '${plain}$(grep '^FLOWOFFLOAD=' /opt/zapret/config)${yellow}'
+12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (безразборный режим) Сейчас: '${plain}$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")${yellow}'
 13. Активировать доступ в меню через браузер (~3мб места)
 777. Активировать zeefeer premium (Нажимать только Valery ProD, Andrei_5288515371, Dina_turat, Александру, АлександруП, vecheromholodno, Евгению Головащенко, Dyadyabo, skuwakin, subzeero452 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
  read -re -p '' answer
@@ -658,7 +653,7 @@ Enter (без цифр) - переустановка/обновление zapret
 		done
 		sed -i "$((111 + answer_bezr))s/--hostlist-domains=none\.dom/--hostlist-domains=/" /opt/zapret/config
 		echo -e "${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443. Проверка доступа к meduza.io${plain}"
-		check_access "https://meduza.io"
+		check_access_list
 	fi
    else
     get_menu
