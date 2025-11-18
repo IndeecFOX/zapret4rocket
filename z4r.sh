@@ -469,8 +469,8 @@ Enter (без цифр) - переустановка/обновление zapret
 0. Выход
 01. Проверить доступность сервисов
 1. Подобрать другие стратегии
-2. Остановить zapret (сейчас: '${nfqws_status}')
-3. Пере(запустить) zapret
+2. Стоп/пере(запуск) zapret (сейчас: '${nfqws_status}')
+3. Тут могла быть ваша реклама :D (Функция перенесена во 2 пункт. Резерв)
 4. Удалить zapret
 5. Обновить стратегии, сбросить листы подбора стратегий и исключений
 6. Добавить домен в исключения zapret
@@ -497,13 +497,16 @@ Enter (без цифр) - переустановка/обновление zapret
    Strats_Tryer
    ;;
   "2")
-   /opt/zapret/init.d/sysv/zapret stop
-   echo -e "${green}zapret остановлен${plain}"
+   if pidof nfqws >/dev/null; then
+	/opt/zapret/init.d/sysv/zapret stop
+  	echo -e "${green}Выполнена команда остановки zapret${plain}"
+   else
+	/opt/zapret/init.d/sysv/zapret restart
+   	echo -e "${green}Выполнена команда перезапуска zapret${plain}"
+   fi 
    exit_to_menu
    ;;
   "3")
-   /opt/zapret/init.d/sysv/zapret restart
-   echo -e "${green}zapret пере(запущен)${plain}"
    exit_to_menu
    ;;
   "4")
