@@ -162,7 +162,7 @@ NFQWS_OPT="
 'Обход блокировок войса Discord. Отключено в дефолте, если обход скриптом bol-van'
 --skip --filter-udp=50000-50099,1400,3478-3481,5349,19294-19344 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-autottl6 --dup=2 --dup-autottl6 --dup-cutoff=n3 --new
 'Стратегия обхода UDP блокировок игр и т.п.'
---skip --filter-udp=21000-23005 --dpi-desync=fake --dpi-desync-autottl=2 --dpi-desync-repeats=10 --dpi-desync-any-protocol=1 --dpi-desync-fake-unknown-udp=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-cutoff=n2 --new
+--skip --filter-udp=1026-65531 --dpi-desync=fake --dpi-desync-autottl=2 --dpi-desync-repeats=10 --dpi-desync-any-protocol=1 --dpi-desync-fake-unknown-udp=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-cutoff=n2 --new
 'Обход блокировок cloudflare. Обход по ip. Иногда могут вызывать различные проблемы'
 --skip --filter-l3=ipv6 --filter-tcp=443 --ipset=/opt/zapret/lists/cloudflare-ipset_v6.txt --ipset-exclude-ip=2606:4700:4700::1111,2606:4700:4700::1001 --dpi-desync=multisplit --dpi-desync-split-seqovl=1 --dpi-desync-split-pos=sld+1 --new
 --skip --filter-l3=ipv4 --filter-tcp=443 --ipset=/opt/zapret/lists/cloudflare-ipset.txt --ipset-exclude-ip=1.1.1.1,1.0.0.1,212.109.195.93,83.220.169.155,141.105.71.21,18.244.96.0/19,18.244.128.0/19 --dpi-desync=multisplit --dpi-desync-split-seqovl=1 --dpi-desync-split-pos=sld+1 --new
