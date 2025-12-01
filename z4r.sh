@@ -472,7 +472,7 @@ Enter (без цифр) - переустановка/обновление zapret
 7. Открыть в редакторе config (Установит nano редактор ~250kb)
 8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '${plain}$(grep -Eq '^NFQWS_PORTS_UDP=.*443$' /opt/zapret/config && echo "Скрипты" || (grep -Eq '443,1400,3478-3481,5349,50000-50099,19294-19344$' /opt/zapret/config && echo "Классические стратегии" || echo "Незвестно"))${yellow}'
 9. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '${plain}$(grep -q '^FWTYPE=iptables$' /opt/zapret/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret/config && echo "nftables" || echo "Неизвестно"))${yellow}'
-10. (Де)активировать обход UDP на 21000-23005 портах (BF6, Fifa и т.п.). Сейчас: '${plain}$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=21000-23005,443' /opt/zapret/config && echo "Включен" || echo "Неизвестно"))${yellow}'
+10. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '${plain}$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=1026-65531,443' /opt/zapret/config && echo "Включен" || echo "Неизвестно"))${yellow}'
 11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '${plain}$(grep '^FLOWOFFLOAD=' /opt/zapret/config)${yellow}'
 12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (безразборный режим) Сейчас: '${plain}$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")${yellow}'
 13. Активировать доступ в меню через браузер (~3мб места)
@@ -586,14 +586,14 @@ Enter (без цифр) - переустановка/обновление zapret
   "10")
 	if grep -q '^NFQWS_PORTS_UDP=443' "/opt/zapret/config"; then
      # Был только 443 → добавляем порты и убираем --skip
-     sed -i 's/^NFQWS_PORTS_UDP=443/NFQWS_PORTS_UDP=21000-23005,443/' "/opt/zapret/config"
-	 sed -i 's/^--skip --filter-udp=21000/--filter-udp=21000/' "/opt/zapret/config"
-     echo -e "${green}Стратегия UDP обхода активирована. Выделены порты 21000-23005${plain}"
-	elif grep -q '^NFQWS_PORTS_UDP=21000-23005,443' "/opt/zapret/config"; then
+     sed -i 's/^NFQWS_PORTS_UDP=443/NFQWS_PORTS_UDP=1026-65531,443/' "/opt/zapret/config"
+	 sed -i 's/^--skip --filter-udp=1026/--filter-udp=1026/' "/opt/zapret/config"
+     echo -e "${green}Стратегия UDP обхода активирована. Выделены порты 1026-65531${plain}"
+	elif grep -q '^NFQWS_PORTS_UDP=1026-65531,443' "/opt/zapret/config"; then
      # Уже расширенный список → возвращаем к 443 и добавляем --skip
-     sed -i 's/^NFQWS_PORTS_UDP=21000-23005,443/NFQWS_PORTS_UDP=443/' "/opt/zapret/config"
-	 sed -i 's/^--filter-udp=21000/--skip --filter-udp=21000/' "/opt/zapret/config"
-     echo -e "${green}Стратегия UDP обхода ДЕактивирована. Выделенные порты 21000-23005 убраны${plain}"
+     sed -i 's/^NFQWS_PORTS_UDP=1026-65531,443/NFQWS_PORTS_UDP=443/' "/opt/zapret/config"
+	 sed -i 's/^--filter-udp=1026/--skip --filter-udp=1026/' "/opt/zapret/config"
+     echo -e "${green}Стратегия UDP обхода ДЕактивирована. Выделенные порты 1026-65531 убраны${plain}"
 	else
      echo -e "${yellow}Неизвестное состояние строки NFQWS_PORTS_UDP. Проверь конфиг вручную.${plain}"
 	fi
