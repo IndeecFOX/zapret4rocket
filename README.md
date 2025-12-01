@@ -34,6 +34,10 @@ curl -O https://raw.githubusercontent.com/IndeecFOX/z4r/4/z4r && sh z4r
 ```bash
 apt update || opkg update && apt install curl || opkg install curl
 ```
+Если висит на downloading packages (блок РКН), решение для Entware:
+```bash
+sed -i 's|bin.entware.net|entware.diversion.ch|g' /opt/etc/opkg.conf
+```
 
 **Для Keenetic**: предварительно в веб-интерфейсе роутера нужно обязательно установить компоненты: "Протокол IPv6" и "Модули ядра подсистемы Netfilter" (появляется только после выбора компонента "Протокол IPv6").
 
