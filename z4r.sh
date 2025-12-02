@@ -704,7 +704,7 @@ fi
 if [[ "$release" == "entware" ]]; then
  if [ -d /jffs ] || uname -a | grep -qi "Merlin"; then
     hardware="merlin"
- elif grep -qi "keenetic" /proc/version; then
+ elif grep -Eqi "netcraze|keenetic" /proc/version; then
    	hardware="keenetic"
  else
   echo -e "${yellow}Железо не определено. Будем считать что это Keenetic. Если будут проблемы - пишите в саппорт.${plain}"
