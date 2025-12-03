@@ -4,6 +4,7 @@ roblox-api.arkoselabs.com
 robloxlabs.com
 rbxasset.com
 roblox.eu
+roblox.com
 rbxcdn.com
 trafficjunky.net
 threads.com
