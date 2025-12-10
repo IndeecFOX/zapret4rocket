@@ -13,6 +13,30 @@ plain='\033[0m'
 
 #___Сначала идут анонсы функций____
 
+get_yt_cluster_domain() {
+    local urls=(
+        "https://redirector.googlevideo.com/report_mapping?di=no"
+    )
+    
+    local letters_list_a=('u' 'z' 'p' 'k' 'f' 'a' '5' '0' 'v' 'q' 'l' 'g' 'b' '6' '1' 'w' 'r' 'm' 'h' 'c' '7' '2' 'x' 's' 'n' 'i' 'd' '8' '3' 'y' 't' 'o' 'j' 'e' '9' '4' '-')
+    local letters_list_b=('0' '1' '2' '3' '4' '5' '6' '7' '8' '9' 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 'u' 'v' 'w' 'x' 'y' 'z' '-')
+    declare -A letters_map
+
+    for i in "${!letters_list_a[@]}"; do
+        letters_map["${letters_list_a[$i]}"]="${letters_list_b[$i]}"
+    done
+
+    cluster_codename=$(echo "$(curl -s --max-time 2 "https://redirector.xn--ngstr-lra8j.com/report_mapping?di=no")" | grep -oP '=>\s*\K(\S+)(?=\s*(?:\(|:))' | tr -d '.: ')
+    if [[ -n "$cluster_codename" ]]; then
+        for (( i=0; i<${#cluster_codename}; i++ )); do
+            char="${cluster_codename:$i:1}"
+            converted_name+="${letters_map[$char]}"
+        done
+        echo "rr1---sn-${converted_name}.googlevideo.com"
+        return
+    fi
+}
+
 check_access() {
 	local TestURL="$1"
 	# Проверка TLS 1.2
@@ -32,8 +56,8 @@ check_access() {
 check_access_list() {
    echo "Проверка доступности youtube.com (YT TCP)"
    check_access "https://www.youtube.com/"
-   echo "Проверка доступности rr1---sn-jvhnu5g-n8vr.googlevideo.com (YT TCP)"
-   check_access "https://rr1---sn-jvhnu5g-n8vr.googlevideo.com"
+   echo "Проверка доступности $(get_yt_cluster_domain) (YT TCP)"
+   check_access "https://$(get_yt_cluster_domain)"
    echo "Проверка доступности meduza.io (RKN list)"
    check_access "https://meduza.io"
    echo "Проверка доступности www.instagram.com (RKN list + нужен рабочий DNS)"
@@ -129,7 +153,7 @@ try_strategies() {
 		 if [[ -n "$user_domain" ]]; then
 			local TestURL="https://$user_domain"
 		 else
-			local TestURL="https://rr1---sn-jvhnu5g-n8vr.googlevideo.com"
+			local TestURL="https://$(get_yt_cluster_domain)"
 		 fi
 		 check_access $TestURL
 		fi
