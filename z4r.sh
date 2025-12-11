@@ -14,27 +14,31 @@ plain='\033[0m'
 #___Сначала идут анонсы функций____
 
 get_yt_cluster_domain() {
-    local urls=(
-        "https://redirector.googlevideo.com/report_mapping?di=no"
-    )
-    
     local letters_list_a=('u' 'z' 'p' 'k' 'f' 'a' '5' '0' 'v' 'q' 'l' 'g' 'b' '6' '1' 'w' 'r' 'm' 'h' 'c' '7' '2' 'x' 's' 'n' 'i' 'd' '8' '3' 'y' 't' 'o' 'j' 'e' '9' '4' '-')
     local letters_list_b=('0' '1' '2' '3' '4' '5' '6' '7' '8' '9' 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 'u' 'v' 'w' 'x' 'y' 'z' '-')
-    declare -A letters_map
+    letters_map_a="${letters_list_a[*]}"
+    letters_map_b="${letters_list_b[*]}"
+    cluster_codename=$(curl -s --max-time 2 "https://redirector.xn--ngstr-lra8j.com/report_mapping?di=no"| sed -n 's/.*=>[[:space:]]*\([^ (:)]*\).*/\1/p')
 
-    for i in "${!letters_list_a[@]}"; do
-        letters_map["${letters_list_a[$i]}"]="${letters_list_b[$i]}"
-    done
-
-    cluster_codename=$(echo "$(curl -s --max-time 2 "https://redirector.xn--ngstr-lra8j.com/report_mapping?di=no")" | grep -oP '=>\s*\K(\S+)(?=\s*(?:\(|:))' | tr -d '.: ')
-    if [[ -n "$cluster_codename" ]]; then
-        for (( i=0; i<${#cluster_codename}; i++ )); do
-            char="${cluster_codename:$i:1}"
-            converted_name+="${letters_map[$char]}"
-        done
-        echo "rr1---sn-${converted_name}.googlevideo.com"
+    [ -z "$cluster_codename" ] && {
+        echo "Не удалось получить cluster_codename. Сообщите в чат разработчика!" >&2
         return
-    fi
+    }
+
+    converted_name=""
+    for i in $(seq 0 $((${#cluster_codename}-1))); do
+        char="${cluster_codename:$i:1}"
+
+        idx=0
+        for a in $letters_map_a; do
+            if [ "$a" = "$char" ]; then break; fi
+            idx=$((idx+1))
+        done
+
+        b=$(echo "$letters_map_b" | cut -d' ' -f $((idx+1)))
+        converted_name="${converted_name}${b}"
+    done
+    echo "rr1---sn-${converted_name}.googlevideo.com"
 }
 
 check_access() {
