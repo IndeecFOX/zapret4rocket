@@ -19,9 +19,11 @@ get_yt_cluster_domain() {
     letters_map_a="${letters_list_a[*]}"
     letters_map_b="${letters_list_b[*]}"
     cluster_codename=$(curl -s --max-time 2 "https://redirector.xn--ngstr-lra8j.com/report_mapping?di=no"| sed -n 's/.*=>[[:space:]]*\([^ (:)]*\).*/\1/p')
+	#Второй раз для пробития нерелевантного ответа
+	cluster_codename=$(curl -s --max-time 2 "https://redirector.xn--ngstr-lra8j.com/report_mapping?di=no"| sed -n 's/.*=>[[:space:]]*\([^ (:)]*\).*/\1/p')
 
     [ -z "$cluster_codename" ] && {
-        echo "Не удалось получить cluster_codename. Сообщите в чат разработчика!" >&2
+        echo "Не удалось получить cluster_codename. Сообщите в чат разработчика! Так же может помочь повторный запуск теста" >&2
         return
     }
 
