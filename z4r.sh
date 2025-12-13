@@ -757,7 +757,7 @@ if [[ "$release" == "ubuntu" || "$release" == "debian" || "$release" == "endeavo
 	OSystem="VPS"
 elif [[ "$release" == "openwrt" || "$release" == "immortalwrt" || "$release" == "asuswrt" || "$release" == "x-wrt" || "$release" == "kwrt" || "$release" == "istoreos" ]]; then
 	OSystem="WRT"
-elif [[ "$release" == "entware" ]]; then
+elif [[ "$release" == "entware" || "$hardware" = "keenetic" ]]; then
 	OSystem="entware"
 else
 	read -re -p $'\033[31mДля этой ОС нет подходящей функции. Или ОС определение выполнено некорректно.\033[33m Рекомендуется обратиться в чат поддержки
