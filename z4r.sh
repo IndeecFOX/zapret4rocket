@@ -78,15 +78,16 @@ exit_to_menu() {
 #Запрос на резервирование настроек в подборе стратегий
 backup_strats() {
   if [ -d /opt/zapret/extra_strats ]; then
-    read -re -p $'\033[0;33mХотите сохранить текущие настройки ручного подбора стратегий? Не рекомендуется. (\"5\" - сохранить, Enter - нет\n"0" - прервать операцию): \033[0m' answer
-    if [[ "$answer" == "5" ]]; then
+    read -re -p $'\033[0;33mХотите сохранить текущие настройки ручного подбора стратегий? Не рекомендуется. (\"5\" - сохранить, Enter - нет\n"0" - прервать операцию): \033[0m' answer_backup
+    if [[ "$answer_backup" == "5" ]]; then
 		cp -rf /opt/zapret/extra_strats /opt/
   		echo "Настройки подбора резервированы."
-	elif [[ "$answer" == "0" ]]; then
+	elif [[ "$answer_backup" == "0" ]]; then
 		exit_to_menu
-	fi	
-	read -re -p $'\033[0;33mХотите сохранить добавленные в лист исключений домены? Не рекомендуется. (\"5\" - сохранить, Enter - нет): \033[0m' answer
-	if [[ "$answer" == "5" ]]; then
+	fi
+	answer_backup=""
+	read -re -p $'\033[0;33mХотите сохранить добавленные в лист исключений домены? Не рекомендуется. (\"5\" - сохранить, Enter - нет): \033[0m' answer_backup
+	if [[ "$answer_backup" == "5" ]]; then
 		cp -f /opt/zapret/lists/netrogat.txt /opt/
        	echo "Лист исключений резервирован."
   	fi	
@@ -164,13 +165,15 @@ try_strategies() {
 		 check_access $TestURL
 		fi
 			
-        read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - следующий вариант, \"0\" - выйти не сохраняя): " answer
-        if [[ "$answer" == "1" ]]; then
+        read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - следующий вариант, \"0\" - выйти не сохраняя): " answer_strat
+        if [[ "$answer_strat" == "1" ]]; then
             echo "Стратегия $i сохранена. Выходим."
+			answer_strat=""
             eval "$final_action"
             exit_to_menu
-		elif [[ "$answer" == "0" ]]; then
+		elif [[ "$answer_strat" == "0" ]]; then
 			echo -n > "$base_path/${i}.txt"
+			answer_strat=""
 			echo "Изменения отменены. Выход."
 			exit_to_menu
         fi
@@ -187,17 +190,17 @@ Strats_Tryer() {
 	
 	if [ -z "$mode_domain" ]; then
 		# если аргумент не передан — спрашиваем вручную
-		read -re -p $'\033[33mПодобрать стратегию? (1-4 или Enter для пропуска):\033[0m\n\033[32m1. YT (UDP QUIC)\n2. YT (TCP)\n3. RKN\n4. Кастомный домен\033[0m\n' answer
+		read -re -p $'\033[33mПодобрать стратегию? (1-4 или Enter для пропуска):\033[0m\n\033[32m1. YT (UDP QUIC)\n2. YT (TCP)\n3. RKN\n4. Кастомный домен\033[0m\n' answer_strat_mode
 	else
 		if [ "${#mode_domain}" -gt 1 ]; then
-			answer="4"
+			answer_strat_mode="4"
 			user_domain="$mode_domain"
 		else
-			answer="$mode_domain"
+			answer_strat_mode="$mode_domain"
 		fi
 	fi
 	
-    case "$answer" in
+    case "$answer_strat_mode" in
         "1")
             echo "Режим YT (UDP QUIC)"
             try_strategies 8 "/opt/zapret/extra_strats/UDP/YT" "/opt/zapret/extra_strats/UDP/YT/List.txt" ""
@@ -371,9 +374,9 @@ entware_fixes() {
 
 #Запрос на установку 3x-ui или аналогов
 get_panel() {
- read -re -p $'\033[33mУстановить ПО для туннелирования?\033[0m \033[32m(3xui, marzban, wg, 3proxy или Enter для пропуска): \033[0m' answer
+ read -re -p $'\033[33mУстановить ПО для туннелирования?\033[0m \033[32m(3xui, marzban, wg, 3proxy или Enter для пропуска): \033[0m' answer_panel
  # Удаляем лишние символы и пробелы, приводим к верхнему регистру
- clean_answer=$(echo "$answer" | tr '[:lower:]' '[:upper:]')
+ clean_answer=$(echo "$answer_panel" | tr '[:lower:]' '[:upper:]')
  if [[ -z "$clean_answer" ]]; then
      echo "Пропуск установки ПО туннелирования."
  elif [[ "$clean_answer" == "3XUI" ]]; then
@@ -509,8 +512,8 @@ Enter (без цифр) - переустановка/обновление zapret
 12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (безразборный режим) Сейчас: '${plain}$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")${yellow}'
 13. Активировать доступ в меню через браузер (~3мб места)
 777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, Andrei_5288515371, Dina_turat, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, subzeero452, Grigaraz, Reconnaissance, comandante1928, rudnev2028 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
- read -re -p '' answer
- case "$answer" in
+ read -re -p '' answer_menu
+ case "$answer_menu" in
   "0")
    echo "Выход выполнен"
    exit 0
@@ -635,9 +638,9 @@ Enter (без цифр) - переустановка/обновление zapret
    ;;
   "11")
 	echo "Текущее состояние: $(grep '^FLOWOFFLOAD=' /opt/zapret/config)"
- 	read -re -p $'\033[33mСменить аппаратное ускорение? (1-4 или Enter для выхода):\033[0m\n\033[32m1. software. Программное ускорение. \n2. hardware. Аппаратное NAT\n3. none. Отключено.\n4. donttouch. Не трогать (дефолт).\033[0m\n' answer
+ 	read -re -p $'\033[33mСменить аппаратное ускорение? (1-4 или Enter для выхода):\033[0m\n\033[32m1. software. Программное ускорение. \n2. hardware. Аппаратное NAT\n3. none. Отключено.\n4. donttouch. Не трогать (дефолт).\033[0m\n' answer_offload
 
-    case "$answer" in
+    case "$answer_offload" in
         "1")
  	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=software/' "/opt/zapret/config"
 			/opt/zapret/install_prereq.sh
