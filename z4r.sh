@@ -786,7 +786,12 @@ esac
 fi
 
 #Инфа о времени обновления скрпта
-echo -e "${yellow}zeefeer обновлен (UTC +0): $(curl -s "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+commit_date=$(curl -s --max-time 60 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4)
+if [[ -z "$commit_date" ]]; then
+    echo -e "${red}Не был получен доступ к api.github.com (таймаут 60 сек). Возможны проблемы при установке.${plain}"
+else
+    echo -e "${yellow}zeefeer обновлен (UTC +0): $commit_date ${plain}"
+fi
 
 #Выполнение общего для всех ОС кода с ответвлениями под ОС
 #Запрос на установку 3x-ui или аналогов для VPS
