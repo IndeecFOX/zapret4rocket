@@ -23,22 +23,22 @@ get_yt_cluster_domain() {
 	cluster_codename=$(curl -s --max-time 2 "https://redirector.xn--ngstr-lra8j.com/report_mapping?di=no"| sed -n 's/.*=>[[:space:]]*\([^ (:)]*\).*/\1/p')
 
     [ -z "$cluster_codename" ] && {
-        echo "Не удалось получить cluster_codename. Сообщите в чат разработчика! Так же может помочь повторный запуск теста" >&2
+        echo "Не удалось получить cluster_codename. Используем тогда rr1---sn-5goeenes.googlevideo.com" >&2
+		echo "rr1---sn-5goeenes.googlevideo.com"
         return
     }
 
     converted_name=""
-    for i in $(seq 0 $((${#cluster_codename}-1))); do
+	while [ $i -lt $len ]; do
         char="${cluster_codename:$i:1}"
-
-        idx=0
-        for a in $letters_map_a; do
-            if [ "$a" = "$char" ]; then break; fi
+        idx=1
+        for a in $letters_list_a; do
+            [ "$a" = "$char" ] && break
             idx=$((idx+1))
         done
-
-        b=$(echo "$letters_map_b" | cut -d' ' -f $((idx+1)))
+        b=$(echo "$letters_list_b" | cut -d' ' -f "$idx")
         converted_name="${converted_name}${b}"
+        i=$((i+1))
     done
     echo "rr1---sn-${converted_name}.googlevideo.com"
 }
@@ -796,6 +796,15 @@ if [[ -z "$commit_date" ]]; then
 	fi
 else
     echo -e "${yellow}zeefeer обновлен (UTC +0): $commit_date ${plain}"
+fi
+
+#Проверка доступности raw.githubusercontent.com
+if [[ -z "$(curl -s --max-time 10 "https://raw.githubusercontent.com/test")" ]]; then
+    echo -e "${red}Не был получен доступ к raw.githubusercontent.com (таймаут 10 сек). Возможны проблемы при установке.${plain}"
+	if [ "$hardware" = "keenetic" ]; then
+		echo "Добавляем ip с от DNS 1.1.1.1 к raw.githubusercontent.com и пытаемся снова"
+		ndmc -c "ip host raw.githubusercontent.com $(nslookup raw.githubusercontent.com 1.1.1.1 | sed -n 's/^Address [0-9]*: \([0-9.]*\).*/\1/p' | tail -n1)"
+	fi
 fi
 
 #Выполнение общего для всех ОС кода с ответвлениями под ОС
