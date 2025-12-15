@@ -28,17 +28,17 @@ get_yt_cluster_domain() {
         return
     }
 
-    converted_name=""
-	while [ $i -lt $len ]; do
+	local converted_name=""
+    local i char idx a b
+    for ((i=0; i<${#cluster_codename}; i++)); do
         char="${cluster_codename:$i:1}"
-        idx=1
-        for a in $letters_list_a; do
+        idx=0
+        for a in $letters_map_a; do
             [ "$a" = "$char" ] && break
             idx=$((idx+1))
         done
-        b=$(echo "$letters_list_b" | cut -d' ' -f "$idx")
+        b=$(echo "$letters_map_b" | cut -d' ' -f $((idx+1)))
         converted_name="${converted_name}${b}"
-        i=$((i+1))
     done
     echo "rr1---sn-${converted_name}.googlevideo.com"
 }
