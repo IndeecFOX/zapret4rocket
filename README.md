@@ -31,6 +31,7 @@ curl -O https://raw.githubusercontent.com/IndeecFOX/z4r/4/z4r && sh z4r
 
 <a id="требования-и-зависимости"></a>
 ### ⚙️ Требования и зависимости
+Конечная папка zapret занимает ~2.6(3.05)Мб места
 В случае отсутствия/ошибки curl
 
 ```bash
