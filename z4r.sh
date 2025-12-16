@@ -78,7 +78,7 @@ exit_to_menu() {
 #Запрос на резервирование настроек в подборе стратегий
 backup_strats() {
   if [ -d /opt/zapret/extra_strats ]; then
-    read -re -p $'\033[0;33mХотите сохранить текущие настройки ручного подбора стратегий? Не рекомендуется. (\"5\" - сохранить, Enter - нет\n"0" - прервать операцию): \033[0m' answer_backup
+    read -re -p $'\033[0;33mХотите сохранить текущие настройки ручного подбора стратегий? Не рекомендуется. (5 - сохранить, Enter - нет\n0 - прервать операцию): \033[0m' answer_backup
     if [[ "$answer_backup" == "5" ]]; then
 		cp -rf /opt/zapret/extra_strats /opt/
   		echo "Настройки подбора резервированы."
@@ -254,56 +254,56 @@ remove_zapret() {
  fi
 }
 
-#Запрос желаемой версии zapret или выход из скрипта для удаления
+#Запрос желаемой версии zapret
 version_select() {
-    while true; do
-		read -re -p $'\033[0;32mВведите желаемую версию zapret (Enter для новейшей версии): \033[0m' USER_VER
-        # Если пустой ввод — берем значение по умолчанию
-		if [ -z "$USER_VER" ]; then
-    	 if [ -z "$USER_VER" ]; then
-    	 VER1=$(curl -sL https://api.github.com/repos/bol-van/zapret/releases/latest | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-    	 VER2=$(curl -sL https://api.github.com/repos/bol-van/zapret/releases/latest | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 | sed 's/^v//')
-    	 VER3=$(curl -sL https://api.github.com/repos/bol-van/zapret/releases/latest | grep '"tag_name":' | sed -r 's/.*"v([^"]+)".*/\1/')
-    	 VER4=$(curl -sL https://api.github.com/repos/bol-van/zapret/releases/latest | grep '"tag_name":' | awk -F'"' '{print $4}' | sed 's/^v//')
-		 fi
-	     # проверяем результаты по порядку
-    	 if [ ${#VER1} -ge 2 ]; then
-       	  VER="$VER1"
-       	  METHOD="sed -E"
-    	 elif [ ${#VER2} -ge 2 ]; then
-       	  VER="$VER2"
-       	  METHOD="grep+cut"
-    	 elif [ ${#VER3} -ge 2 ]; then
-          VER="$VER3"
-          METHOD="sed -r"
-    	 elif [ ${#VER4} -ge 2 ]; then
-       	  VER="$VER4"
-       	  METHOD="awk"
-    	 else
-          echo -e "${yellow}Не удалось получить информацию о последней версии с GitHub. Будет использоваться версия $DEFAULT_VER.${plain}"
-          VER="$DEFAULT_VER"
-          METHOD="default"
-    	 fi
-	     # краткий отчёт
-    	 echo -e "${yellow}Проверка версий:${plain}"
-    	 echo "  sed -E   : $VER1"
-    	 echo "  grep+cut : $VER2"
-    	 echo "  sed -r   : $VER3"
-    	 echo "  awk      : $VER4"
-    	 echo -e "${green}Выбрано: $VER (метод: $METHOD)${plain}"
-    	 break
-		fi
-        # Считаем длину
-        LEN=${#USER_VER}
-        # Проверка длины и знака %
-        if (( LEN > 4 )); then
-            echo "Некорректный ввод. Максимальная длина — 4 символа. Попробуйте снова."
-            continue
-        fi
-        VER="$USER_VER"
-        break
-    done
-    echo "Будет использоваться версия: $VER"
+   while true; do
+	read -re -p $'\033[0;32mВведите желаемую версию zapret (Enter для новейшей версии): \033[0m' USER_VER
+    # Если пустой ввод — берем значение по умолчанию
+	if [ -z "$USER_VER" ]; then
+		lastest_release="https://api.github.com/repos/bol-van/zapret/releases/latest"
+	    # проверяем результаты по порядку
+		echo -e "${yellow}Поиск последней версии...${plain}"
+    	VER1=$(curl -sL $lastest_release | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+		if [ ${#VER1} -ge 2 ]; then
+			VER="$VER1"
+			echo -e "${green}Выбрано: $VER (метод: sed -E)${plain}"
+		else
+			VER2=$(curl -sL $lastest_release | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 | sed 's/^v//')
+			if [ ${#VER2} -ge 2 ]; then
+				VER="$VER2"
+				echo -e "${green}Выбрано: $VER (метод: grep+cut)${plain}"
+			else
+				VER3=$(curl -sL $lastest_release | grep '"tag_name":' | sed -r 's/.*"v([^"]+)".*/\1/')
+				if [ ${#VER3} -ge 2 ]; then
+					VER="$VER3"
+					echo -e "${green}Выбрано: $VER (метод: sed -r)${plain}"
+				else
+					VER4=$(curl -sL $lastest_release | grep '"tag_name":' | awk -F'"' '{print $4}' | sed 's/^v//')
+					if [ ${#VER4} -ge 2 ]; then
+						VER="$VER4"
+						echo -e "${green}Выбрано: $VER (метод: awk)${plain}"
+					else
+						echo -e "${yellow}Не удалось получить информацию о последней версии с GitHub. Будет использоваться версия $DEFAULT_VER.${plain}"
+						VER="$DEFAULT_VER"
+					fi
+				fi
+			fi
+    	fi
+    	break
+	fi
+    #Считаем длину
+    LEN=${#USER_VER}
+    #Проверка длины и простая валидация формата (цифры и точки)
+    if [ "$LEN" -gt 4 ]; then
+        echo "Некорректный ввод. Максимальная длина — 4 символа. Попробуйте снова."
+        continue
+    elif ! echo "$USER_VER" | grep -Eq '^[0-9]+(\.[0-9]+)*$'; then
+        echo "Некорректный формат версии. Пример: 72.3"
+        continue
+    fi
+    echo "Будет использоваться версия: $USER_VER"
+    break
+done
 }
 
 #Скачивание, распаковка архива zapret, очистка от ненуных бинарей
