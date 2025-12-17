@@ -437,7 +437,7 @@ EOF
  elif [[ "$OSystem" == "WRT" ]]; then
 	echo -e "${yellow}Установка ttyd for WRT${plain}"
 	/etc/init.d/ttyd stop 2>/dev/null || true
-	opkg install ttyd
+	opkg install ttyd 2>/dev/null || apk install ttyd 2>/dev/null
     uci set ttyd.@ttyd[0].interface=''
     uci set ttyd.@ttyd[0].command="-p 17681 -W -a ${ttyd_login_have}"
 	uci commit ttyd
@@ -446,7 +446,7 @@ EOF
  elif [[ "$OSystem" == "entware" ]]; then
 	echo -e "${yellow}Установка ttyd for Entware${plain}"
 	/opt/etc/init.d/S99ttyd stop 2>/dev/null || true
-	opkg install ttyd
+	opkg install ttyd 2>/dev/null || apk install ttyd 2>/dev/null
 	
 	cat > /opt/etc/init.d/S99ttyd <<EOF
 #!/bin/sh
@@ -573,7 +573,7 @@ Enter (без цифр) - переустановка/обновление zapret
    if [[ "$OSystem" == "VPS" ]]; then
 	apt install nano
    else
-	opkg remove nano && opkg install nano-full
+	opkg remove nano 2>/dev/null || apk remove nano 2>/dev/null && opkg install nano-full 2>/dev/null || apk install nano-full 2>/dev/null
    fi
    nano /opt/zapret/config
    exit_to_menu
@@ -823,10 +823,10 @@ fi
  
 #entware keenetic and merlin preinstal env.
 if [ "$hardware" = "keenetic" ]; then
- opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy
- opkg install kmod_ndms || echo -e "\033[31mНе удалось установить kmod_ndms. Если у вас не keenetic - игнорируйте.\033[0m"
+ opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy 2>/dev/null || apk install coreutils-sort grep gzip ipset iptables xtables-addons_legacy 2>/dev/null
+ opkg install kmod_ndms 2>/dev/null || apk install kmod_ndms 2>/dev/null || echo -e "\033[31mНе удалось установить kmod_ndms. Если у вас не keenetic - игнорируйте.\033[0m"
 elif [ "$hardware" = "merlin" ]; then
- opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy
+ opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy 2>/dev/null || apk install coreutils-sort grep gzip ipset iptables xtables-addons_legacy 2>/dev/null
 fi
 
 #Проверка наличия каталога opt и его создание при необходиомости (для некоторых роутеров), переход в tmp
