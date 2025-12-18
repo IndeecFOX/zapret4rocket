@@ -678,6 +678,8 @@ Enter (без цифр) - переустановка/обновление zapret
     for i in $(seq 112 128); do
 	 if sed -n "${i}p" /opt/zapret/config | grep -Fq -- '--filter-tcp=443 --hostlist-domains= --h'; then
 		sed -i "${i}s#--filter-tcp=443 --hostlist-domains= --h#--filter-tcp=443 --hostlist-domains=none.dom --h#" /opt/zapret/config
+		/opt/zapret/init.d/sysv/zapret restart
+   		echo -e "${green}Выполнена команда перезапуска zapret${plain}"
 		break
 	fi
 	done
@@ -688,7 +690,8 @@ Enter (без цифр) - переустановка/обновление zapret
 			echo -n > "/opt/zapret/extra_strats/TCP/temp/$f_clear.txt"
 		done
 		sed -i "$((111 + answer_bezr))s/--hostlist-domains=none\.dom/--hostlist-domains=/" /opt/zapret/config
-		echo -e "${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443. Проверка доступа к meduza.io${plain}"
+		/opt/zapret/init.d/sysv/zapret restart
+		echo -e "${green}Выполнена команда перезапуска zapret${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443. Проверка доступа к meduza.io${plain}"
 		check_access_list
 	fi
    else
