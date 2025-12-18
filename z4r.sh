@@ -573,7 +573,7 @@ Enter (без цифр) - переустановка/обновление zapret
    if [[ "$OSystem" == "VPS" ]]; then
 	apt install nano
    else
-	opkg remove nano 2>/dev/null || apk remove nano 2>/dev/null && opkg install nano-full 2>/dev/null || apk add nano-full 2>/dev/null
+	opkg remove nano 2>/dev/null || apk del nano 2>/dev/null && opkg install nano-full 2>/dev/null || apk add nano-full 2>/dev/null
    fi
    nano /opt/zapret/config
    exit_to_menu
