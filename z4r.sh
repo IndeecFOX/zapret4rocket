@@ -680,10 +680,10 @@ Enter (без цифр) - переустановка/обновление zapret
 		sed -i "${i}s#--filter-tcp=443 --hostlist-domains= --h#--filter-tcp=443 --hostlist-domains=none.dom --h#" /opt/zapret/config
 		/opt/zapret/init.d/sysv/zapret restart
    		echo -e "${green}Выполнена команда перезапуска zapret${plain}"
+		echo "Безразборный режим отключен"
 		break
 	fi
 	done
-	echo "Безразборный режим отключен"
 	if [ "$answer_bezr" -ge 1 ] && [ "$answer_bezr" -le 17 ]; then
 		for f_clear in $(seq 1 17); do
 			echo -n > "/opt/zapret/extra_strats/TCP/User/$f_clear.txt"
@@ -691,7 +691,7 @@ Enter (без цифр) - переустановка/обновление zapret
 		done
 		sed -i "$((111 + answer_bezr))s/--hostlist-domains=none\.dom/--hostlist-domains=/" /opt/zapret/config
 		/opt/zapret/init.d/sysv/zapret restart
-		echo -e "${green}Выполнена команда перезапуска zapret${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443. Проверка доступа к meduza.io${plain}"
+		echo -e "${green}Выполнена команда перезапуска zapret. ${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443. Проверка доступа к meduza.io${plain}"
 		check_access_list
 	fi
    else
