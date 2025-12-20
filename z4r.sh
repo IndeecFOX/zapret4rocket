@@ -190,7 +190,7 @@ Strats_Tryer() {
 	
 	if [ -z "$mode_domain" ]; then
 		# если аргумент не передан — спрашиваем вручную
-		read -re -p $'\033[33mПодобрать стратегию? (1-4 или Enter для пропуска):\033[0m\n\033[32m1. YT (UDP QUIC)\n2. YT (TCP)\n3. RKN\n4. Кастомный домен\033[0m\n' answer_strat_mode
+		read -re -p $'\033[33mПодобрать стратегию? (1-4 или Enter для отмены подбора):\033[0m\n\033[32m1. YT (UDP QUIC)\n2. YT (TCP)\n3. RKN\n4. Кастомный домен\033[0m\n' answer_strat_mode
 	else
 		if [ "${#mode_domain}" -gt 1 ]; then
 			answer_strat_mode="4"
@@ -525,6 +525,7 @@ Enter (без цифр) - переустановка/обновление zapret
   "1")
    echo "Режим подбора других стратегий"
    Strats_Tryer
+   exit_to_menu
    ;;
   "2")
    if pidof nfqws >/dev/null; then
