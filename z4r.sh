@@ -511,7 +511,7 @@ Enter (без цифр) - переустановка/обновление zapret
 11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '${plain}$(grep '^FLOWOFFLOAD=' /opt/zapret/config)${yellow}'
 12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (безразборный режим) Сейчас: '${plain}$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")${yellow}'
 13. Активировать доступ в меню через браузер (~3мб места)
-777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, Andrei_5288515371, Nomand, Dina_turat, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, subzeero452, Grigaraz, Reconnaissance, comandante1928, rudnev2028 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
+777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, Andrei_5288515371, Nomand, Dina_turat, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, subzeero452, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
  read -re -p '' answer_menu
  case "$answer_menu" in
   "0")
@@ -705,17 +705,7 @@ Enter (без цифр) - переустановка/обновление zapret
    exit 7
    ;;
   "777")
-   echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, Andrei_5288515371, Nomand, Dina_turat, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028 и subzeero452 активирован. Наверное. Так же благодарю поддержавших проект VssA, vladdrazz, Alexey_Tob, Bor1sBr1tva, Azamatstd, iMLT, Qu3Bee, SasayKudasay1, alexander_novikoff, MarsKVV, porfenon123, bobrishe_dazzle, DA00001, geodomin, I_ZNA_I и анонимов${plain}"
-   exit_to_menu
-   ;;
-  esac
- }
-
-#___Сам код начинается тут____
-
-#Добавление ссылки на быстрый вызов скрипта, проверка на актуальность сначала если есть
-if [ -d /opt/bin ]; then
-    if [ ! -f /opt/bin/z4r ] || ! grep -q 'opt/z4r.sh "$@"' /opt/bin/z4r; then
+   echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, Andrei_5288515371, Nomand, Dina_turat, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028 и subzeero452 активирован. Наверное. Так же благодарю поддержавших проект VssA, vladdrazz, Alexey_Tob, Bo   echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, Andrei_5288515371, Nomand, Dina_turat, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028, umad и subzeero452 активирован. Наверное. Так же благодарю подде comandante1928, rudnev20drazz, Alexe, ЕвгенияГ, Dyadyabo, skuwakin,iMLT, Qu3Bee,o, ' /opt/bin/z4r; then
 		echo "Скачиваем /opt/bin/z4r"
         curl -L -o /opt/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
         chmod +x /opt/bin/z4r
