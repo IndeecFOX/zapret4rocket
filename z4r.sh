@@ -706,6 +706,16 @@ Enter (без цифр) - переустановка/обновление zapret
    ;;
   "777")
    echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, Andrei_5288515371, Nomand, Dina_turat, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028 и subzeero452 активирован. Наверное. Так же благодарю поддержавших проект VssA, vladdrazz, Alexey_Tob, Bo   echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, Andrei_5288515371, Nomand, Dina_turat, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028, umad и subzeero452 активирован. Наверное. Так же благодарю подде comandante1928, rudnev20drazz, Alexe, ЕвгенияГ, Dyadyabo, skuwakin,iMLT, Qu3Bee,o, ' /opt/bin/z4r; then
+   exit_to_menu
+   ;;
+  esac
+ }
+
+#___Сам код начинается тут____
+
+#Добавление ссылки на быстрый вызов скрипта, проверка на актуальность сначала если есть
+if [ -d /opt/bin ]; then
+    if [ ! -f /opt/bin/z4r ] || ! grep -q 'opt/z4r.sh "$@"' /opt/bin/z4r; then	
 		echo "Скачиваем /opt/bin/z4r"
         curl -L -o /opt/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
         chmod +x /opt/bin/z4r
