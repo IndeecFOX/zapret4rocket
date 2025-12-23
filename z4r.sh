@@ -2,7 +2,7 @@
 
 set -e
 #Переменная содержащая версию на случай невозможности получить информацию о lastest с github
-DEFAULT_VER="72.3"
+DEFAULT_VER="72.5"
 
 #Чтобы удобнее красить текст
 red='\033[0;31m'
@@ -257,9 +257,9 @@ remove_zapret() {
 #Запрос желаемой версии zapret
 version_select() {
    while true; do
-	read -re -p $'\033[0;32mВведите желаемую версию zapret (Enter для новейшей версии): \033[0m' USER_VER
+	read -re -p $'\033[0;32mВведите желаемую версию zapret (Enter для новейшей версии): \033[0m' VER
     # Если пустой ввод — берем значение по умолчанию
-	if [ -z "$USER_VER" ]; then
+	if [ -z "$VER" ]; then
 		lastest_release="https://api.github.com/repos/bol-van/zapret/releases/latest"
 	    # проверяем результаты по порядку
 		echo -e "${yellow}Поиск последней версии...${plain}"
@@ -292,16 +292,16 @@ version_select() {
     	break
 	fi
     #Считаем длину
-    LEN=${#USER_VER}
+    LEN=${#VER}
     #Проверка длины и простая валидация формата (цифры и точки)
     if [ "$LEN" -gt 4 ]; then
         echo "Некорректный ввод. Максимальная длина — 4 символа. Попробуйте снова."
         continue
-    elif ! echo "$USER_VER" | grep -Eq '^[0-9]+(\.[0-9]+)*$'; then
+    elif ! echo "$VER" | grep -Eq '^[0-9]+(\.[0-9]+)*$'; then
         echo "Некорректный формат версии. Пример: 72.3"
         continue
     fi
-    echo "Будет использоваться версия: $USER_VER"
+    echo "Будет использоваться версия: $VER"
     break
 done
 }
