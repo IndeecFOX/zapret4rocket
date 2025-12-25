@@ -236,7 +236,7 @@ Strats_Tryer() {
 
 #Удаление старого запрета, если есть
 remove_zapret() {
- if [ -f "/opt/zapret/init.d/sysv/zapret" ]; then
+ if [ -f "/opt/zapret/init.d/sysv/zapret" ] && [ -f "/opt/zapret/config" ]; then
  	/opt/zapret/init.d/sysv/zapret stop
  fi
  if [ -f "/opt/zapret/config" ] && [ -f "/opt/zapret/uninstall_easy.sh" ]; then
@@ -818,7 +818,7 @@ if [[ "$OSystem" == "VPS" ]] && [ ! $1 ]; then
 fi
 
 #Меню и быстрый запуск подбора стратегии
- if [ -d /opt/zapret/extra_strats ]; then
+ if [ -d /opt/zapret/extra_strats ] && [ -f "/opt/zapret/config" ]; then
 	if [ $1 ]; then
 		Strats_Tryer $1
 	fi
