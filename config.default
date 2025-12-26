@@ -153,6 +153,8 @@ NFQWS_OPT="
 --filter-udp=443 --hostlist=/opt/zapret/lists/russia-youtubeQ.txt --dpi-desync=fake,udplen --dpi-desync-udplen-increment=8 --dpi-desync-udplen-pattern=0x0F0F0E0F --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_6.bin --dpi-desync-cutoff=n3 --dpi-desync-repeats=2 --new
 'Стратегия YouTube TCP без GV'
 --filter-tcp=443 --hostlist=/opt/zapret/lists/russia-youtube.txt --dpi-desync=split2 --dpi-desync-repeats=2 --dpi-desync-split-seqovl=681 --dpi-desync-split-pos=1 --dpi-desync-fooling=badseq,hopbyhop2 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
+'Обход замедления whatsapp'
+--filter-tcp=443 --hostlist-domains=whatsapp.net --dpi-desync=multisplit --dpi-desync-split-seqovl=681 --dpi-desync-split-pos=1 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --new
 'Обход блокировки анонсеров rutracker.org и сайтов по HTTP'
 --filter-tcp=80 --hostlist-domains=t-ru.org --hostlist=/opt/zapret/extra_strats/TCP/RKN/List.txt --dpi-desync=fake,multisplit --dpi-desync-split-seqovl=2 --dpi-desync-split-pos=host+1 --dpi-desync-fake-http=0x0E0E0F0E --dpi-desync-fooling=md5sig --new
 'Обход блокировок сайтов по httpS'
