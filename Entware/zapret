@@ -24,8 +24,7 @@ do_start()
         if insmod /lib/modules/$(uname -r)/xt_multiport.ko &> /dev/null; then
 			echo "xt_multiport.ko loaded"
         else
-			echo "Cannot find xt_multiport.ko kernel module, aborting"
-			exit 1
+			echo -e "\033[0;31mCannot find xt_multiport.ko kernel module, this make some problems. Or not.\033[0;31m"
         fi
 	fi
      
