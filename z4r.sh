@@ -142,19 +142,23 @@ try_strategies() {
     local base_path="$2"
     local list_file="$3"
     local final_action="$4"
-
-    for ((i=1; i<=count; i++)); do
-        if [[ $i -ge 2 ]]; then
-            prev=$((i - 1))
+	read -re -p "Введите номер стратегии к которой перейти или Enter: " strat_num
+	if (( strat_num < 1 || strat_num > 17 )); then
+		echo "Введено значение не из диапазона 1-17. Начинаем с 1 стратегии"
+		strat_num=1
+	fi
+    for ((strat_num=strat_num; strat_num<=count; strat_num++)); do
+        if [[ $strat_num -ge 2 ]]; then
+            prev=$((strat_num - 1))
             echo -n > "$base_path/${prev}.txt"
         fi
 
         if [[ "$list_file" != "/dev/null" ]]; then
-            cp "$list_file" "$base_path/${i}.txt"
+            cp "$list_file" "$base_path/${strat_num}.txt"
         else
-            echo "$user_domain" > "$base_path/${i}.txt"
+            echo "$user_domain" > "$base_path/${strat_num}.txt"
         fi
-        echo "Стратегия номер $i активирована"
+        echo "Стратегия номер $strat_num активирована"
 		
 		if [[ "$count" == "17" ]]; then
 		 if [[ -n "$user_domain" ]]; then
@@ -167,12 +171,12 @@ try_strategies() {
 			
         read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - следующий вариант, \"0\" - выйти не сохраняя): " answer_strat
         if [[ "$answer_strat" == "1" ]]; then
-            echo "Стратегия $i сохранена. Выходим."
+            echo "Стратегия $strat_num сохранена. Выходим."
 			answer_strat=""
             eval "$final_action"
             return
 		elif [[ "$answer_strat" == "0" ]]; then
-			echo -n > "$base_path/${i}.txt"
+			echo -n > "$base_path/${strat_num}.txt"
 			answer_strat=""
 			echo "Изменения отменены. Выход."
 			return
