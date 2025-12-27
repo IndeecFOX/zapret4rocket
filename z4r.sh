@@ -46,16 +46,16 @@ get_yt_cluster_domain() {
 check_access() {
 	local TestURL="$1"
 	# Проверка TLS 1.2
-	if curl --tls-max 1.2 --max-time 3 -s -o /dev/null "$TestURL"; then
+	if curl --tls-max 1.2 --max-time 2 -s -o /dev/null "$TestURL"; then
 		echo -e "${green}Есть ответ по TLS 1.2 (важно для ТВ и т.п.)${plain}"
 	else
-		echo -e "${yellow}Нет ответа по TLS 1.2 (важно для ТВ и т.п.) Таймаут 3сек. ${red}Проверьте доступность вручную. Возможно ошибка теста.${plain}"
+		echo -e "${yellow}Нет ответа по TLS 1.2 (важно для ТВ и т.п.) Таймаут 2сек. ${red}Проверьте доступность вручную. Возможно ошибка теста.${plain}"
 	fi
 	# Проверка TLS 1.3
-	if curl --tlsv1.3 --max-time 3 -s -o /dev/null "$TestURL"; then
+	if curl --tlsv1.3 --max-time 2 -s -o /dev/null "$TestURL"; then
 		echo -e "${green}Есть ответ по TLS 1.3 (важно в основном для всего современного)${plain}"
 	else
-		echo -e "${yellow}Нет ответа по TLS 1.3 (важно в основном для всего современного) Таймаут 3сек. ${red}Проверьте доступность вручную. Возможно ошибка теста.${plain}"
+		echo -e "${yellow}Нет ответа по TLS 1.3 (важно в основном для всего современного) Таймаут 2сек. ${red}Проверьте доступность вручную. Возможно ошибка теста.${plain}"
 	fi
 }
 
@@ -170,12 +170,12 @@ try_strategies() {
             echo "Стратегия $i сохранена. Выходим."
 			answer_strat=""
             eval "$final_action"
-            exit_to_menu
+            return
 		elif [[ "$answer_strat" == "0" ]]; then
 			echo -n > "$base_path/${i}.txt"
 			answer_strat=""
 			echo "Изменения отменены. Выход."
-			exit_to_menu
+			return
         fi
     done
 
