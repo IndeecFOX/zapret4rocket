@@ -93,9 +93,9 @@ NFQWS_UDP_PKT_IN=0
 
 # just notes: --debug=@/opt/zapret/debug.log
 #Стратегия DISCORD вместо просто fake. Если закомментировать - будет использоваться просто fake
-NFQWS_OPT_DESYNC_DISCORD_MEDIA="--dpi-desync=fake --dpi-desync-autottl --dup=2 --dup-autottl --dup-cutoff=n3"
+NFQWS_OPT_DESYNC_DISCORD_MEDIA="--dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-repeats=6"
 #Стратегия войсов ТГ, ВА и т.п. вместо просто fake. Если закомментировать - будет использоваться просто fake
-NFQWS_OPT_DESYNC_STUN="--dpi-desync=fake --dpi-desync-autottl --dup=2 --dup-autottl --dup-cutoff=n3"
+NFQWS_OPT_DESYNC_STUN="--dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-repeats=6"
 NFQWS_OPT="
 'Лист для исключения из фильтрации доменов по TCP. Можно просто на место example вписать нужные через запятую, можно в листы добавить'
 --filter-tcp=80,443,8443 --hostlist-domains=example.com,test.com --hostlist=/opt/zapret/lists/netrogat.txt --new
@@ -162,7 +162,7 @@ NFQWS_OPT="
 'Обход блокировок TG сетей (бета)'
 --skip --filter-tcp=80,443,8443 --ipset=/opt/zapret/lists/tg_cidr.txt --dpi-desync=split2 --dpi-desync-repeats=2 --dpi-desync-split-seqovl=681 --dpi-desync-split-pos=1 --dpi-desync-fooling=badseq,hopbyhop2 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_2.bin --new
 'Обход блокировок войса Discord. Отключено в дефолте, если обход скриптом bol-van'
---skip --filter-udp=50000-50099,1400,3478-3481,5349,19294-19344 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-autottl6 --dup=2 --dup-autottl6 --dup-cutoff=n3 --new
+--skip --filter-udp=50000-50099,1400,3478-3481,5349,19294-19344 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-repeats=6 --new
 'Стратегия обхода UDP блокировок игр и т.п.'
 --skip --filter-udp=1026-65531 --dpi-desync=fake --dpi-desync-autottl=2 --dpi-desync-repeats=10 --dpi-desync-any-protocol=1 --dpi-desync-fake-unknown-udp=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-cutoff=n2 --new
 'Обход блокировок cloudflare. Обход по ip. Иногда могут вызывать различные проблемы'
