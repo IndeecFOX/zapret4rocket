@@ -197,7 +197,7 @@ Strats_Tryer() {
 	
 	if [ -z "$mode_domain" ]; then
 		# если аргумент не передан — спрашиваем вручную
-		read -re -p $'\033[33mПодобрать стратегию? (1-4 или Enter для отмены подбора):\033[0m\n\033[32m1. YT (UDP QUIC)\n2. YT (TCP)\n3. RKN\n4. Кастомный домен\033[0m\n' answer_strat_mode
+		read -re -p $'\033[33mПодобрать стратегию? (1-4 или Enter для отмены подбора):\033[0m\n\033[32m1. YT (UDP QUIC) 8 вариантов\n2. YT (TCP) 17 вариантов\n3. RKN 17 вариантов\n4. Кастомный домен 17 вариантов\033[0m\n' answer_strat_mode
 	else
 		if [ "${#mode_domain}" -gt 1 ]; then
 			answer_strat_mode="4"
@@ -811,9 +811,9 @@ esac
 fi
 
 #Инфа о времени обновления скрпта
-commit_date=$(curl -s --max-time 50 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4)
+commit_date=$(curl -s --max-time 30 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4)
 if [[ -z "$commit_date" ]]; then
-    echo -e "${red}Не был получен доступ к api.github.com (таймаут 50 сек). Возможны проблемы при установке.${plain}"
+    echo -e "${red}Не был получен доступ к api.github.com (таймаут 30 сек). Возможны проблемы при установке.${plain}"
 	if [ "$hardware" = "keenetic" ]; then
 		echo "Добавляем ip с от DNS 1.1.1.1 к api.github.com и пытаемся снова"
 		ndmc -c "ip host api.github.com $(nslookup api.github.com 1.1.1.1 | sed -n 's/^Address [0-9]*: \([0-9.]*\).*/\1/p' | tail -n1)"
