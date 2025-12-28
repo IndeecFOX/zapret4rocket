@@ -147,6 +147,9 @@ try_strategies() {
 		echo "Введено значение не из диапазона 1-17. Начинаем с 1 стратегии"
 		strat_num=1
 	fi
+	for ((clr_txt=1; clr_txt<=count; clr_txt++)); do
+		: > "$base_path/$clr_txt.txt"
+	done
     for ((strat_num=strat_num; strat_num<=count; strat_num++)); do
         if [[ $strat_num -ge 2 ]]; then
             prev=$((strat_num - 1))
