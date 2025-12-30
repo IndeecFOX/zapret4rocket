@@ -140,7 +140,7 @@ guess_provider_by_strings() {
     *tele2*|*теле2*)                echo "Tele2" ;;
     *megafon*|*мегафон*)            echo "MegaFon" ;;
     *dom.ru*|*er-telecom*|*эр-телеком*) echo "Dom.ru" ;;
-    *ttk*|*transtel*|*trans telecom*|*ттк*|*транстелеком*) echo "TTK" ;;
+    *ttk*|*transtel*|*"trans telecom"*|*ттк*|*транстелеком*) echo "TTK" ;;
     *) echo "" ;;
   esac
 }
