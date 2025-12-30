@@ -69,11 +69,6 @@ _detect_api_simple() {
     if [ -n "$res" ]; then
         mkdir -p "$(dirname "$PROVIDER_CACHE")"
         
-        # >>>> ОТЛАДКА <<<<
-        echo "DEBUG: Пытаюсь записать '$res' в '$PROVIDER_CACHE'"
-        touch "$PROVIDER_CACHE" || echo "ERROR: Не могу создать файл!"
-        # >>>> КОНЕЦ ОТЛАДКИ <<<<
-        
         echo "$res" > "$PROVIDER_CACHE"
     else
 
