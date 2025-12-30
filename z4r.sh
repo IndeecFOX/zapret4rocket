@@ -131,7 +131,6 @@ provider_set_manual_menu() {
 STATS_FORM_ID="1FAIpQLScrUf7Pybm0n61aK8aZuxuAR8KhyNYZ-X0xjSUS8K72SmEhPw"
 ENTRY_UUID="entry.1346249141"
 ENTRY_ISP="entry.2008245653"
-ENTRY_VER="entry.641297608"
 ENTRY_UDP="entry.592144534"
 ENTRY_TCP="entry.1826276405"
 ENTRY_RKN="entry.1527830884"
@@ -230,10 +229,7 @@ send_stats() {
     local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
     local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
 
-    # 3. Версия скрипта (берем из переменной или ставим Unknown)
-    local my_ver="${DEFAULT_VER:-Unknown}"
-
-    # 4. Отправка в Google Forms (Тихий режим, в фоне &)
+    # 3. Отправка в Google Forms (Тихий режим, в фоне &)
     curl -sL --max-time 10 \
         -d "$ENTRY_UUID=$tel_uuid" \
         -d "$ENTRY_ISP=$my_isp" \
