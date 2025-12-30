@@ -41,7 +41,7 @@ _detect_api_simple() {
     # Формат ответа line:
     # Organization Name
     # CityName
-    local raw_data=$(curl -s --max-time 5 "http://ip-api.com/line?fields=org,city")
+    local raw_data=$(curl -s --max-time 5 "http://ip-api.com/line?fields=isp,city")
     
     if [ -n "$raw_data" ]; then
         # Читаем две строки: 1-я провайдер, 2-я город
