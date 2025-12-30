@@ -365,10 +365,7 @@ get_repo() {
  cp -f /opt/zapret/init.d/sysv/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all
  cp -f /opt/zapret/init.d/sysv/custom.d/50-discord-media /opt/zapret/init.d/openwrt/custom.d/50-discord-media
 
-# Provider detector
-curl -L -o /opt/zapret/extra_strats/provider_detector.sh \
-  https://raw.githubusercontent.com/AloofLibra/zapret4rocket/Local/extra_strats/provider_detector.sh
-chmod +x /opt/zapret/extra_strats/provider_detector.sh
+# cache
 mkdir -p /opt/zapret/extra_strats/cache
 
 }
