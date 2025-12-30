@@ -37,29 +37,46 @@ PROVIDER_INIT_DONE=0
 
 # Вспомогательная функция: делает запрос к API и пишет в файл
 _detect_api_simple() {
-    # Запрос к ip-api.com (поля: org, city)
-    # Формат ответа line:
-    # Organization Name
-    # CityName
-    local raw_data=$(curl -s --max-time 5 "http://ip-api.com/line?fields=isp,city")
+    # 1. Скачиваем ответ во временный файл (чтобы точно видеть, что пришло)
+    local tmp_file="/tmp/z4r_provider_debug.txt"
+    curl -s --max-time 10 "http://ip-api.com/line?fields=org,city" > "$tmp_file"
     
-    if [ -n "$raw_data" ]; then
-        # Читаем две строки: 1-я провайдер, 2-я город
-        local p_name=$(echo "$raw_data" | sed -n '1p')
-        local p_city=$(echo "$raw_data" | sed -n '2p')
-        
-        # Чистим от мусора
-        p_name=$(echo "$p_name" | tr -cd '[:alnum:] ._-' | head -c 50)
-        p_city=$(echo "$p_city" | tr -cd '[:alnum:] ._-' | head -c 30)
+    # Отладка: если файл пустой, пишем ошибку в консоль
+    if [ ! -s "$tmp_file" ]; then
+        echo "DEBUG: curl вернул пустоту!" >&2
+        return 1
+    fi
 
-        # Формируем строку "Provider - City"
-        local res="$p_name"
-        [ -n "$p_city" ] && res="$res - $p_city"
-        
-        # Сохраняем
+    # 2. Читаем построчно (без пайпов, чтобы не терять код возврата)
+    local p_name=$(head -n 1 "$tmp_file")
+    local p_city=$(head -n 2 "$tmp_file" | tail -n 1)
+
+    # 3. Чистим жестко (оставляем только латиницу, цифры и пробелы)
+    # Удаляем вообще все странные символы
+    p_name=$(echo "$p_name" | tr -cd 'a-zA-Z0-9 ._-')
+    p_city=$(echo "$p_city" | tr -cd 'a-zA-Z0-9 ._-')
+
+    # Убираем дублирование, если API вернул 1 строку
+    if [ "$p_city" = "$p_name" ]; then p_city=""; fi
+
+    # 4. Формируем результат
+    local res="$p_name"
+    if [ -n "$p_city" ]; then
+        res="$res - $p_city"
+    fi
+    
+    # 5. Проверка результата перед записью
+    if [ -n "$res" ]; then
         mkdir -p "$(dirname "$PROVIDER_CACHE")"
         echo "$res" > "$PROVIDER_CACHE"
+        # Отладка
+        # echo "DEBUG: Записали в кэш: $res" >&2
+    else
+        echo "DEBUG: Результат парсинга пустой! (Raw: $(cat $tmp_file))" >&2
     fi
+    
+    # Чистим за собой
+    rm -f "$tmp_file"
 }
 
 provider_init_once() {
