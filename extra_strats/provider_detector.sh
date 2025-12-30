@@ -6,370 +6,256 @@
 # Версия: 1.0
 # ═══════════════════════════════════════════════════════════════════
 
+set -u
+
 PROVIDER_CACHE="/opt/zapret/extra_strats/cache/provider.json"
 PROVIDER_CACHE_DIR="/opt/zapret/extra_strats/cache"
 
-# Цвета для вывода
-red='\033[0;31m'
-green='\033[0;32m'
-yellow='\033[1;33m'
-blue='\033[0;34m'
-cyan='\033[0;36m'
-plain='\033[0m'
+# Цвета: НЕ перезатираем, если z4r.sh уже определил их
+: "${red:='\033[0;31m'}"
+: "${green:='\033[0;32m'}"
+: "${yellow:='\033[1;33m'}"
+: "${blue:='\033[0;34m'}"
+: "${cyan:='\033[0;36m'}"
+: "${plain:='\033[0m'}"
 
-# База данных AS → Провайдер
+# База ASN → Провайдер
+# Ключи в формате "AS12345"
 declare -A AS_DATABASE=(
-    # Ростелеком
-    ["AS12389"]="Rostelecom"
-    ["AS42610"]="Rostelecom"
-    ["AS8369"]="Rostelecom"
-    ["AS20485"]="Rostelecom"
-    
-    # МТС
-    ["AS8359"]="MTS"
-    ["AS3216"]="MTS"
-    ["AS29280"]="MTS"
-    
-    # Билайн
-    ["AS8402"]="Beeline"
-    ["AS3267"]="Beeline"
-    ["AS13335"]="Beeline"
-    
-    # Теле2
-    ["AS41330"]="Tele2"
-    ["AS31163"]="Tele2"
-    
-    # МегаФон
-    ["AS25159"]="MegaFon"
-    ["AS25513"]="MegaFon"
-    ["AS31133"]="MegaFon"
-    
-    # Дом.ру
-    ["AS41733"]="Dom.ru"
-    ["AS51604"]="Dom.ru"
-    
-    # ТТК
-    ["AS20485"]="TTK"
-    
-    # Другие
-    ["AS47775"]="Yota"
-    ["AS203978"]="Akado"
-    ["AS31200"]="Enforta"
-    ["AS50928"]="Enforta"
+  # Ростелеком
+  ["AS12389"]="Rostelecom"
+  ["AS42610"]="Rostelecom"
+  ["AS8369"]="Rostelecom"
+
+  # МТС
+  ["AS8359"]="MTS"
+  ["AS3216"]="MTS"
+  ["AS29280"]="MTS"
+
+  # Билайн
+  ["AS8402"]="Beeline"
+  ["AS3267"]="Beeline"
+  ["AS13335"]="Beeline"
+
+  # Теле2
+  ["AS41330"]="Tele2"
+  ["AS31163"]="Tele2"
+
+  # МегаФон
+  ["AS25159"]="MegaFon"
+  ["AS25513"]="MegaFon"
+  ["AS31133"]="MegaFon"
+
+  # Дом.ру / ER-Telecom
+  ["AS41733"]="Dom.ru"
+  ["AS51604"]="Dom.ru"
+
+  # ТТК / TransTeleCom
+  ["AS20485"]="TTK"
+
+  # Другие
+  ["AS47775"]="Yota"
+  ["AS203978"]="Akado"
+  ["AS31200"]="Enforta"
+  ["AS50928"]="Enforta"
 )
 
-# ═══════════════════════════════════════════════════════════════════
-# Функция: Создание директории для кэша
-# ═══════════════════════════════════════════════════════════════════
 init_cache_dir() {
-    if [[ ! -d "$PROVIDER_CACHE_DIR" ]]; then
-        mkdir -p "$PROVIDER_CACHE_DIR"
-    fi
+  [ -d "$PROVIDER_CACHE_DIR" ] || mkdir -p "$PROVIDER_CACHE_DIR"
 }
 
-# ═══════════════════════════════════════════════════════════════════
-# Функция: Определение провайдера через ip-api.com
-# ═══════════════════════════════════════════════════════════════════
+have_jq() {
+  command -v jq >/dev/null 2>&1
+}
+
+# Универсальная безопасная запись JSON-кэша (через jq)
+# Аргументы:
+# 1 provider, 2 asn("ASxxxx" или пусто), 3 isp, 4 org, 5 city, 6 country, 7 ip, 8 source
+write_cache() {
+  local provider="${1:-}"
+  local asn="${2:-}"
+  local isp="${3:-}"
+  local org="${4:-}"
+  local city="${5:-}"
+  local country="${6:-}"
+  local ip="${7:-}"
+  local source="${8:-auto}"
+  local updated_at
+  updated_at="$(date -Iseconds)"
+
+  init_cache_dir
+
+  # jq обязателен, потому что дальше меню/скрипт читают JSON тоже через jq
+  if ! have_jq; then
+    return 1
+  fi
+
+  jq -n \
+    --arg provider "$provider" \
+    --arg asn "$asn" \
+    --arg isp "$isp" \
+    --arg org "$org" \
+    --arg city "$city" \
+    --arg country "$country" \
+    --arg ip "$ip" \
+    --arg source "$source" \
+    --arg updated_at "$updated_at" \
+    '{
+      provider: $provider,
+      asn: $asn,
+      isp: $isp,
+      org: $org,
+      city: $city,
+      country: $country,
+      ip: $ip,
+      source: $source,
+      updated_at: $updated_at
+    }' > "$PROVIDER_CACHE"
+}
+
+# save_to_cache provider asn isp org city country ip
+save_to_cache() {
+  write_cache "${1:-}" "${2:-}" "${3:-}" "${4:-}" "${5:-}" "${6:-}" "${7:-}" "auto"
+}
+
+get_external_ip() {
+  # ifconfig.me (HTTPS) + fallback
+  curl -fsS --max-time 7 https://ifconfig.me 2>/dev/null \
+    || curl -fsS --max-time 7 https://api.ipify.org 2>/dev/null
+}
+
+# Нормализуем строку для матчей
+_lc() { tr '[:upper:]' '[:lower:]' <<<"${1:-}"; }
+
+# Эвристики по ISP/ORG (если ASN не в базе)
+guess_provider_by_strings() {
+  local isp_lc="$(_lc "${1:-}")"
+  local org_lc="$(_lc "${2:-}")"
+  local s="${isp_lc} ${org_lc}"
+
+  case "$s" in
+    *rostelecom*|*ростелеком*|*rttk*) echo "Rostelecom" ;;
+    *mts*|*мтс*|*mgts*|*мгтс*)       echo "MTS" ;;
+    *beeline*|*vimpelcom*|*вымпел*)  echo "Beeline" ;;
+    *tele2*|*теле2*)                echo "Tele2" ;;
+    *megafon*|*мегафон*)            echo "MegaFon" ;;
+    *dom.ru*|*er-telecom*|*эр-телеком*) echo "Dom.ru" ;;
+    *ttk*|*transtel*|*trans telecom*|*ттк*|*транстелеком*) echo "TTK" ;;
+    *) echo "" ;;
+  esac
+}
+
+# Определение провайдера + город через ipwho.is (HTTPS)
 detect_provider_api() {
-    echo -e "${cyan}⏳ Определяю провайдера через API...${plain}" >&2
-    
-    # Получаем внешний IP
-    local external_ip=$(curl -s --max-time 5 ifconfig.me 2>/dev/null || curl -s --max-time 5 api.ipify.org 2>/dev/null)
-    
-    if [[ -z "$external_ip" ]]; then
-        echo -e "${red}❌ Не удалось получить внешний IP${plain}" >&2
-        echo "Unknown"
-        return 1
-    fi
-    
-    echo -e "${blue}   IP: $external_ip${plain}" >&2
-    
-    # Запрос к ip-api.com
-    local api_response=$(curl -s --max-time 10 "http://ip-api.com/json/$external_ip?fields=status,isp,org,as,city,country")
-    local status=$(echo "$api_response" | jq -r '.status' 2>/dev/null)
-    
-    if [[ "$status" == "success" ]]; then
-        local as_number=$(echo "$api_response" | jq -r '.as' 2>/dev/null | awk '{print $1}')
-        local isp=$(echo "$api_response" | jq -r '.isp' 2>/dev/null)
-        local org=$(echo "$api_response" | jq -r '.org' 2>/dev/null)
-        local city=$(echo "$api_response" | jq -r '.city' 2>/dev/null)
-        local country=$(echo "$api_response" | jq -r '.country' 2>/dev/null)
-        
-        echo -e "${blue}   ASN: $as_number${plain}" >&2
-        echo -e "${blue}   ISP: $isp${plain}" >&2
-        echo -e "${blue}   Город: $city, $country${plain}" >&2
-        
-        # Проверяем в базе AS
-        if [[ -n "${AS_DATABASE[$as_number]}" ]]; then
-            local provider="${AS_DATABASE[$as_number]}"
-            echo -e "${green}✅ Провайдер определён: $provider${plain}" >&2
-            
-            # Сохраняем в кэш
-            save_to_cache "$provider" "$as_number" "$isp" "$org" "$city" "$country" "$external_ip"
-            echo "$provider"
-            return 0
-        fi
-        
-        # Fallback: парсим ISP
-        case "$isp" in
-            *Rostelecom*|*RTTK*) 
-                local provider="Rostelecom"
-                save_to_cache "$provider" "$as_number" "$isp" "$org" "$city" "$country" "$external_ip"
-                echo "$provider"
-                return 0
-                ;;
-            *MTS*|*MGTS*) 
-                local provider="MTS"
-                save_to_cache "$provider" "$as_number" "$isp" "$org" "$city" "$country" "$external_ip"
-                echo "$provider"
-                return 0
-                ;;
-            *Beeline*|*VimpelCom*) 
-                local provider="Beeline"
-                save_to_cache "$provider" "$as_number" "$isp" "$org" "$city" "$country" "$external_ip"
-                echo "$provider"
-                return 0
-                ;;
-            *Tele2*) 
-                local provider="Tele2"
-                save_to_cache "$provider" "$as_number" "$isp" "$org" "$city" "$country" "$external_ip"
-                echo "$provider"
-                return 0
-                ;;
-            *MegaFon*) 
-                local provider="MegaFon"
-                save_to_cache "$provider" "$as_number" "$isp" "$org" "$city" "$country" "$external_ip"
-                echo "$provider"
-                return 0
-                ;;
-            *Dom.ru*|*ER-Telecom*) 
-                local provider="Dom.ru"
-                save_to_cache "$provider" "$as_number" "$isp" "$org" "$city" "$country" "$external_ip"
-                echo "$provider"
-                return 0
-                ;;
-            *TTK*) 
-                local provider="TTK"
-                save_to_cache "$provider" "$as_number" "$isp" "$org" "$city" "$country" "$external_ip"
-                echo "$provider"
-                return 0
-                ;;
-        esac
-        
-        # Не нашли в базе - возвращаем ISP как есть
-        echo -e "${yellow}⚠ Провайдер не определён точно, используем: $isp${plain}" >&2
-        save_to_cache "$isp" "$as_number" "$isp" "$org" "$city" "$country" "$external_ip"
-        echo "$isp"
-        return 0
-    fi
-    
-    # API не сработал
-    echo -e "${red}❌ API недоступен${plain}" >&2
+  if ! have_jq; then
     echo "Unknown"
     return 1
-}
+  fi
 
-# ═══════════════════════════════════════════════════════════════════
-# Функция: Сохранение в кэш
-# ═══════════════════════════════════════════════════════════════════
-save_to_cache() {
-    local provider="$1"
-    local asn="$2"
-    local isp="$3"
-    local org="$4"
-    local city="$5"
-    local country="$6"
-    local ip="$7"
-    
-    init_cache_dir
-    
-    cat > "$PROVIDER_CACHE" <<EOF
-{
-  "provider": "$provider",
-  "asn": "$asn",
-  "isp": "$isp",
-  "org": "$org",
-  "city": "$city",
-  "country": "$country",
-  "ip": "$ip",
-  "detected_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "method": "auto"
-}
-EOF
-    
-    echo -e "${green}💾 Информация сохранена в кэш${plain}" >&2
-}
+  echo -e "${cyan}Определяю провайдера...${plain}" >&2
 
-# ═══════════════════════════════════════════════════════════════════
-# Функция: Чтение из кэша
-# ═══════════════════════════════════════════════════════════════════
-get_cached_provider() {
-    if [[ ! -f "$PROVIDER_CACHE" ]]; then
-        return 1
-    fi
-    
-    # Проверяем валидность JSON
-    if ! jq empty "$PROVIDER_CACHE" 2>/dev/null; then
-        return 1
-    fi
-    
-    local provider=$(jq -r '.provider' "$PROVIDER_CACHE" 2>/dev/null)
-    
-    if [[ -n "$provider" && "$provider" != "null" ]]; then
-        echo "$provider"
-        return 0
-    fi
-    
+  local external_ip
+  external_ip="$(get_external_ip || true)"
+  if [ -z "${external_ip:-}" ]; then
+    echo -e "${red}Не удалось получить внешний IP${plain}" >&2
+    echo "Unknown"
     return 1
+  fi
+  echo -e "${blue}IP: ${external_ip}${plain}" >&2
+
+  # Берём только нужные поля
+  local url
+  url="https://ipwho.is/${external_ip}?fields=success,message,ip,city,country,connection.asn,connection.isp,connection.org"
+
+  local api_response success
+  api_response="$(curl -fsS --max-time 12 "$url" 2>/dev/null || true)"
+  success="$(jq -r '.success // false' <<<"$api_response" 2>/dev/null || echo "false")"
+
+  if [ "$success" != "true" ]; then
+    echo -e "${red}API ipwho.is недоступен или вернул ошибку${plain}" >&2
+    echo "Unknown"
+    return 1
+  fi
+
+  local asn_num asn_key isp org city country
+  asn_num="$(jq -r '.connection.asn // empty' <<<"$api_response" 2>/dev/null)"
+  isp="$(jq -r '.connection.isp // empty' <<<"$api_response" 2>/dev/null)"
+  org="$(jq -r '.connection.org // empty' <<<"$api_response" 2>/dev/null)"
+  city="$(jq -r '.city // empty' <<<"$api_response" 2>/dev/null)"
+  country="$(jq -r '.country // empty' <<<"$api_response" 2>/dev/null)"
+
+  if [ -n "${asn_num:-}" ] && [ "${asn_num:-}" != "null" ]; then
+    asn_key="AS${asn_num}"
+  else
+    asn_key=""
+  fi
+
+  echo -e "${blue}ASN: ${asn_key:-N/A}${plain}" >&2
+  echo -e "${blue}ISP: ${isp:-N/A}${plain}" >&2
+  echo -e "${blue}Город: ${city:-N/A}${plain}" >&2
+
+  local provider=""
+  if [ -n "${asn_key:-}" ] && [ -n "${AS_DATABASE[$asn_key]+x}" ]; then
+    provider="${AS_DATABASE[$asn_key]}"
+  fi
+
+  if [ -z "$provider" ]; then
+    provider="$(guess_provider_by_strings "$isp" "$org")"
+  fi
+
+  if [ -z "$provider" ]; then
+    # fallback: пусть будет ISP как “провайдер”, но это явно не точное определение
+    provider="${isp:-Unknown}"
+  fi
+
+  write_cache "$provider" "$asn_key" "$isp" "$org" "$city" "$country" "$external_ip" "auto" || true
+  echo "$provider"
+  return 0
 }
 
-# ═══════════════════════════════════════════════════════════════════
-# Функция: Получить провайдера с городом из кэша
-# ═══════════════════════════════════════════════════════════════════
+get_cached_provider() {
+  [ -f "$PROVIDER_CACHE" ] || return 1
+  have_jq || return 1
+  jq empty "$PROVIDER_CACHE" 2>/dev/null || return 1
+
+  local provider
+  provider="$(jq -r '.provider // empty' "$PROVIDER_CACHE" 2>/dev/null)"
+  [ -n "$provider" ] || return 1
+  echo "$provider"
+}
+
 get_provider_with_city() {
-    if [[ ! -f "$PROVIDER_CACHE" ]]; then
-        echo "Не определён"
-        return 1
-    fi
-    
-    # Проверяем валидность JSON
-    if ! jq empty "$PROVIDER_CACHE" 2>/dev/null; then
-        echo "Не определён"
-        return 1
-    fi
-    
-    local provider=$(jq -r '.provider' "$PROVIDER_CACHE" 2>/dev/null)
-    local city=$(jq -r '.city' "$PROVIDER_CACHE" 2>/dev/null)
-    
-    # Если провайдер не определён
-    if [[ -z "$provider" || "$provider" == "null" ]]; then
-        echo "Не определён"
-        return 1
-    fi
-    
-    # Если город есть и это не "N/A" и не "null"
-    if [[ -n "$city" && "$city" != "null" && "$city" != "N/A" ]]; then
-        echo "$provider - $city"
-    else
-        echo "$provider"
-    fi
-    
-    return 0
+  [ -f "$PROVIDER_CACHE" ] || { echo "Не определён"; return 1; }
+  have_jq || { echo "Не определён"; return 1; }
+  jq empty "$PROVIDER_CACHE" 2>/dev/null || { echo "Не определён"; return 1; }
+
+  local provider city
+  provider="$(jq -r '.provider // empty' "$PROVIDER_CACHE" 2>/dev/null)"
+  city="$(jq -r '.city // empty' "$PROVIDER_CACHE" 2>/dev/null)"
+
+  [ -n "$provider" ] || { echo "Не определён"; return 1; }
+
+  if [ -n "$city" ] && [ "$city" != "N/A" ]; then
+    echo "$provider - $city"
+  else
+    echo "$provider"
+  fi
 }
 
-
-# ═══════════════════════════════════════════════════════════════════
-# Функция: Получить полную информацию из кэша
-# ═══════════════════════════════════════════════════════════════════
 get_cached_info() {
-    if [[ ! -f "$PROVIDER_CACHE" ]]; then
-        return 1
-    fi
-    
-    if ! jq empty "$PROVIDER_CACHE" 2>/dev/null; then
-        return 1
-    fi
-    
-    cat "$PROVIDER_CACHE"
-    return 0
+  [ -f "$PROVIDER_CACHE" ] || return 1
+  have_jq || return 1
+  jq empty "$PROVIDER_CACHE" 2>/dev/null || return 1
+  cat "$PROVIDER_CACHE"
 }
 
-# ═══════════════════════════════════════════════════════════════════
-# Функция: Ручная установка провайдера
-# ═══════════════════════════════════════════════════════════════════
+# Ручная установка провайдера (можно дергать из меню напрямую)
+# set_provider_manual "MTS" "Moscow"
 set_provider_manual() {
-    local provider="$1"
-    
-    init_cache_dir
-    
-    cat > "$PROVIDER_CACHE" <<EOF
-{
-  "provider": "$provider",
-  "asn": "manual",
-  "isp": "$provider",
-  "org": "manual",
-  "city": "N/A",
-  "country": "N/A",
-  "ip": "N/A",
-  "detected_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "method": "manual"
-}
-EOF
-    
-    echo -e "${green}✅ Провайдер установлен вручную: $provider${plain}"
-}
+  local provider="${1:-}"
+  local city="${2:-}"
 
-# ═══════════════════════════════════════════════════════════════════
-# Функция: Очистка кэша
-# ═══════════════════════════════════════════════════════════════════
-clear_cache() {
-    if [[ -f "$PROVIDER_CACHE" ]]; then
-        rm -f "$PROVIDER_CACHE"
-        echo -e "${green}🗑️  Кэш очищен${plain}"
-    else
-        echo -e "${yellow}⚠ Кэш уже пуст${plain}"
-    fi
-}
+  [ -n "$provider" ] || return 1
 
-# ═══════════════════════════════════════════════════════════════════
-# Функция: Основная логика определения
-# ═══════════════════════════════════════════════════════════════════
-detect_provider() {
-    local force_update="$1"
-    
-    # Проверяем кэш
-    if [[ "$force_update" != "true" ]]; then
-        local cached=$(get_cached_provider)
-        if [[ $? -eq 0 ]]; then
-            echo "$cached"
-            return 0
-        fi
-    fi
-    
-    # Определяем провайдера
-    detect_provider_api
+  write_cache "$provider" "" "" "" "$city" "" "" "manual"
 }
-
-# ═══════════════════════════════════════════════════════════════════
-# Функция: Показать подробную информацию
-# ═══════════════════════════════════════════════════════════════════
-show_provider_info() {
-    if [[ ! -f "$PROVIDER_CACHE" ]]; then
-        echo -e "${yellow}⚠ Провайдер ещё не определён${plain}"
-        return 1
-    fi
-    
-    local info=$(get_cached_info)
-    if [[ $? -ne 0 ]]; then
-        echo -e "${red}❌ Ошибка чтения кэша${plain}"
-        return 1
-    fi
-    
-    local provider=$(echo "$info" | jq -r '.provider')
-    local asn=$(echo "$info" | jq -r '.asn')
-    local isp=$(echo "$info" | jq -r '.isp')
-    local city=$(echo "$info" | jq -r '.city')
-    local country=$(echo "$info" | jq -r '.country')
-    local detected_at=$(echo "$info" | jq -r '.detected_at')
-    local method=$(echo "$info" | jq -r '.method')
-    
-    echo -e "${blue}╔═══════════════════════════════════════════════╗${plain}"
-    echo -e "${blue}║        Информация о провайдере                ║${plain}"
-    echo -e "${blue}╠═══════════════════════════════════════════════╣${plain}"
-    echo -e "${blue}║${plain} Провайдер:  ${green}$provider${plain}"
-    echo -e "${blue}║${plain} ISP:         $isp"
-    echo -e "${blue}║${plain} AS Number:   $asn"
-    echo -e "${blue}║${plain} Локация:     $city, $country"
-    echo -e "${blue}║${plain} Метод:       $method"
-    echo -e "${blue}║${plain} Определён:   $detected_at"
-    echo -e "${blue}╚═══════════════════════════════════════════════╝${plain}"
-}
-
-# ═══════════════════════════════════════════════════════════════════
-# Экспорт функций (если скрипт вызывается через source)
-# ═══════════════════════════════════════════════════════════════════
-export -f detect_provider
-export -f get_cached_provider
-export -f set_provider_manual
-export -f clear_cache
-export -f show_provider_info
