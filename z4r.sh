@@ -785,7 +785,7 @@ init_telemetry
 '${green}'  ////|\\\\\\\\\      '${plain}'.   '${green}'/ '${Fcyan}'* . '${plain}'* . '${Fred}'* '${green}'\   '${plain}'.
 '${green}' /////|\\\\\\\\\\\        '${green}'/_____________\
 '${green}'//////|\\\\\\\\\\\\\      '${plain}'.     '${green}'[___]   '${plain}'.  .
-'"Провайдер/город: ${plain}${PROVIDER_MENU}${yellow}"'
+'"Город/провайдер: ${plain}${PROVIDER_MENU}${yellow}"'
 \033[32mВыберите необходимое действие:\033[33m
 Enter (без цифр) - переустановка/обновление zapret
 0. Выход
