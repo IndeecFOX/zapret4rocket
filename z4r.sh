@@ -27,6 +27,55 @@ Bblue='\033[44m'
 Bpink='\033[45m'
 Bcyan='\033[46m'
 
+
+
+# ---- Provider detector integration ----
+PROVIDER_DETECTOR="/opt/zapret/extra_strats/provider_detector.sh"
+PROVIDER_CACHE="/opt/zapret/extra_strats/cache/provider.json"
+PROVIDER_MENU="Не определён"
+PROVIDER_INIT_DONE=0
+
+provider_load() {
+  [ -f "$PROVIDER_DETECTOR" ] && source "$PROVIDER_DETECTOR"
+}
+
+provider_init_once() {
+  [ "$PROVIDER_INIT_DONE" = "1" ] && return 0
+  PROVIDER_INIT_DONE=1
+
+  provider_load
+
+  # если jq нет — просто показываем заглушку (сам детектор использует jq)
+  command -v jq >/dev/null 2>&1 || { PROVIDER_MENU="jq не установлен"; return 0; }
+
+  # если кэша нет/битый — делаем автоопределение один раз
+  if ! ( [ -f "$PROVIDER_CACHE" ] && jq empty "$PROVIDER_CACHE" >/dev/null 2>&1 ); then
+    detect_provider_api >/dev/null 2>&1 || true
+  fi
+
+  PROVIDER_MENU="$(get_provider_with_city 2>/dev/null || echo "Не определён")"
+}
+
+provider_force_redetect() {
+  provider_load
+  rm -f "$PROVIDER_CACHE"
+  detect_provider_api || true
+  PROVIDER_MENU="$(get_provider_with_city 2>/dev/null || echo "Не определён")"
+}
+
+provider_set_manual_menu() {
+  provider_load
+  read -re -p "Провайдер (например MTS/Beeline/Rostelecom): " p
+  read -re -p "Город (можно пусто): " c
+  mkdir -p "$(dirname "$PROVIDER_CACHE")"
+  cat >"$PROVIDER_CACHE" <<EOF
+{"provider":"$p","city":"$c","source":"manual","updated_at":"$(date -Iseconds)"}
+EOF
+  PROVIDER_MENU="$(get_provider_with_city 2>/dev/null || echo "$p${c:+ - $c}")"
+}
+# ---- /Provider detector integration ----
+
+
 #___Сначала идут анонсы функций____
 
 get_yt_cluster_domain() {
@@ -150,6 +199,13 @@ get_repo() {
  curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
  cp -f /opt/zapret/init.d/sysv/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all
  cp -f /opt/zapret/init.d/sysv/custom.d/50-discord-media /opt/zapret/init.d/openwrt/custom.d/50-discord-media
+
+# Provider detector
+curl -L -o /opt/zapret/extra_strats/provider_detector.sh \
+  https://raw.githubusercontent.com/AloofLibra/zapret4rocket/Local/extra_strats/provider_detector.sh
+chmod +x /opt/zapret/extra_strats/provider_detector.sh
+mkdir -p /opt/zapret/extra_strats/cache
+
 }
 
 #Функция для функции подбора стратегий
@@ -516,8 +572,28 @@ EOF
  echo -e "${plain}Выполнение установки завершено. ${green}Доступ по ip вашего роутера/VPS в формате ip:17681, например 192.168.1.1:17681 или mydomain.com:17681 ${yellow}логин: ${ttyd_login} пароль - не испольузется.${plain} Был выполнен выход из скрипта для сохранения состояния."
 }
 
+#Функция меню "14. Провайдер"
+provider_submenu() {
+  provider_init_once
+
+  echo -e "${yellow}Провайдер: ${plain}${PROVIDER_MENU}${yellow}
+${green}1.${yellow} Указать вручную
+${green}2.${yellow} Определить заново (сбросить кэш)
+${green}0.${yellow} Назад${plain}"
+  read -re -p "" answer_provider
+
+  case "$answer_provider" in
+    "1") provider_set_manual_menu ; exit_to_menu ;;
+    "2") provider_force_redetect ; exit_to_menu ;;
+    "0"|"") exit_to_menu ;;
+    *) exit_to_menu ;;
+  esac
+}
+
+
 #Меню, проверка состояний и вывод с чтением ответа
 get_menu() {
+provider_init_once
  echo -e '
 '${red}'      *
      ***            '${Fcyan}'by Dmitriy Utkin:
@@ -532,6 +608,7 @@ get_menu() {
 '${green}'  ////|\\\\\\\\\      '${plain}'.   '${green}'/ '${Fcyan}'* . '${plain}'* . '${Fred}'* '${green}'\   '${plain}'.
 '${green}' /////|\\\\\\\\\\\        '${green}'/_____________\
 '${green}'//////|\\\\\\\\\\\\\      '${plain}'.     '${green}'[___]   '${plain}'.  .
+Провайдер/город: '${plain}'${PROVIDER_MENU}'${yellow}'
 \033[32mВыберите необходимое действие:\033[33m
 Enter (без цифр) - переустановка/обновление zapret
 0. Выход
@@ -549,6 +626,7 @@ Enter (без цифр) - переустановка/обновление zapret
 11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '${plain}$(grep '^FLOWOFFLOAD=' /opt/zapret/config)${yellow}'
 12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '${plain}$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")${yellow}'
 13. Активировать доступ в меню через браузер (~3мб места)
+14. Провайдер
 777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Whoze, andric62, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, subzeero452, Grigaraz, Reconnaissance, comandante1928, umad, railwayfx, vtokarev1604, rudnev2028 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
  read -re -p '' answer_menu
  case "$answer_menu" in
@@ -741,6 +819,9 @@ Enter (без цифр) - переустановка/обновление zapret
   "13")
    ttyd_webssh
    exit 7
+   ;;
+  "14")
+   provider_submenu
    ;;
   "777")
    echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028, umad, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 активирован. Наверное. Так же благодарю поддержавших проект hey_enote, VssA, vladdrazz, Alexey_Tob, Bor1sBr1tva, Azamatstd, iMLT, Qu3Bee, SasayKudasay1, alexander_novikoff, MarsKVV, porfenon123, bobrishe_dazzle, kotov38, Levonkas, DA00001, trin4ik, geodomin, I_ZNA_I и анонимов${plain}"
