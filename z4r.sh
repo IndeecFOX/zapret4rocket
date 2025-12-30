@@ -39,7 +39,7 @@ PROVIDER_INIT_DONE=0
 _detect_api_simple() {
     # 1. Скачиваем ответ во временный файл (чтобы точно видеть, что пришло)
     local tmp_file="/tmp/z4r_provider_debug.txt"
-    curl -s --max-time 10 "http://ip-api.com/line?fields=org,city" > "$tmp_file"
+    curl -s --max-time 10 "http://ip-api.com/line?fields=isp,city" > "$tmp_file"
     
     # Отладка: если файл пустой, пишем ошибку в консоль
     if [ ! -s "$tmp_file" ]; then
