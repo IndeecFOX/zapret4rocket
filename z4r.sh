@@ -36,7 +36,16 @@ PROVIDER_MENU="Не определён"
 PROVIDER_INIT_DONE=0
 
 provider_load() {
-  [ -f "$PROVIDER_DETECTOR" ] && source "$PROVIDER_DETECTOR"
+  [ -f "$PROVIDER_DETECTOR" ] || return 0
+
+  # Сохраняем опции bash и восстанавливаем их после source
+  local _old_opts
+  _old_opts="$(set +o)"
+
+  set +e +u
+  source "$PROVIDER_DETECTOR" || true
+
+  eval "$_old_opts"
 }
 
 provider_init_once() {
