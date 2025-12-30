@@ -27,6 +27,220 @@ Bblue='\033[44m'
 Bpink='\033[45m'
 Bcyan='\033[46m'
 
+
+
+# ---- Provider detector integration ----
+# Используем provider.txt как основной источник правды (просто строка "Provider - City")
+PROVIDER_CACHE="/opt/zapret/extra_strats/cache/provider.txt"
+PROVIDER_MENU="Не определён"
+PROVIDER_INIT_DONE=0
+
+# Вспомогательная функция: делает запрос к API и пишет в файл
+_detect_api_simple() {
+    # 1. Скачиваем ответ во временный файл (чтобы точно видеть, что пришло)
+    local tmp_file="/tmp/z4r_provider_debug.txt"
+    curl -s --max-time 10 "http://ip-api.com/line?fields=isp,city" > "$tmp_file"
+    
+    # Отладка: если файл пустой, пишем ошибку в консоль
+    if [ ! -s "$tmp_file" ]; then
+        echo "DEBUG: curl вернул пустоту!" >&2
+        return 1
+    fi
+
+    # 2. Читаем построчно (без пайпов, чтобы не терять код возврата)
+    local p_name=$(head -n 1 "$tmp_file")
+    local p_city=$(head -n 2 "$tmp_file" | tail -n 1)
+
+    # 3. Чистим жестко (оставляем только латиницу, цифры и пробелы)
+    # Удаляем вообще все странные символы
+    p_name=$(echo "$p_name" | tr -cd 'a-zA-Z0-9 ._-')
+    p_city=$(echo "$p_city" | tr -cd 'a-zA-Z0-9 ._-')
+
+    # Убираем дублирование, если API вернул 1 строку
+    if [ "$p_city" = "$p_name" ]; then p_city=""; fi
+
+    # 4. Формируем результат
+    local res="$p_name"
+    if [ -n "$p_city" ]; then
+        res="$res - $p_city"
+    fi
+    
+       # 5. Проверка результата перед записью
+    if [ -n "$res" ]; then
+        mkdir -p "$(dirname "$PROVIDER_CACHE")"
+        
+        echo "$res" > "$PROVIDER_CACHE"
+    else
+
+        echo "DEBUG: Результат парсинга пустой! (Raw: $(cat $tmp_file))" >&2
+    fi
+    
+    # Чистим за собой
+    rm -f "$tmp_file"
+}
+
+provider_init_once() {
+  [ "$PROVIDER_INIT_DONE" = "1" ] && return 0
+  PROVIDER_INIT_DONE=1
+
+  # Если кэша нет или он пустой — пробуем определить
+  if [ ! -s "$PROVIDER_CACHE" ]; then
+    echo "Определяем провайдера..."
+    _detect_api_simple
+  fi
+
+  # Читаем результат в переменную меню
+  if [ -s "$PROVIDER_CACHE" ]; then
+      PROVIDER_MENU="$(cat "$PROVIDER_CACHE")"
+  else
+      PROVIDER_MENU="Не определён"
+  fi
+}
+
+provider_force_redetect() {
+  echo "Обновляем данные о провайдере..."
+  rm -f "$PROVIDER_CACHE"
+  _detect_api_simple
+  
+  if [ -s "$PROVIDER_CACHE" ]; then
+      PROVIDER_MENU="$(cat "$PROVIDER_CACHE")"
+  else
+      PROVIDER_MENU="Не удалось определить"
+  fi
+}
+
+provider_set_manual_menu() {
+  read -re -p "Провайдер (например MTS/Beeline): " p
+  read -re -p "Город (можно пусто): " c
+  
+  # Чистим ввод
+  p=$(echo "$p" | tr -cd '[:alnum:] ._-')
+  c=$(echo "$c" | tr -cd '[:alnum:] ._-')
+  
+  local res="$p"
+  [ -n "$c" ] && res="$res - $c"
+  
+  mkdir -p "$(dirname "$PROVIDER_CACHE")"
+  echo "$res" > "$PROVIDER_CACHE"
+  PROVIDER_MENU="$res"
+}
+# ---- /Provider detector integration ----
+
+# ---- Telemetry module integration ----
+# Настройки Google Forms
+STATS_FORM_ID="1FAIpQLScrUf7Pybm0n61aK8aZuxuAR8KhyNYZ-X0xjSUS8K72SmEhPw"
+ENTRY_UUID="entry.1346249141"
+ENTRY_ISP="entry.2008245653"
+ENTRY_UDP="entry.592144534"
+ENTRY_TCP="entry.1826276405"
+ENTRY_RKN="entry.1527830884"
+
+# 2. Пути к файлам (используем простые форматы)
+CACHE_DIR="/opt/zapret/extra_strats/cache"
+TELEMETRY_CFG="$CACHE_DIR/telemetry.config"
+PROVIDER_TXT="$CACHE_DIR/provider.txt"
+
+# Помощник: находит номер активной стратегии (ищет непустой файл 1.txt ... N.txt)
+get_active_strat_num() {
+    local dir="$1"
+    local max="$2"
+    for i in $(seq 1 "$max"); do 
+        if [ -s "$dir/$i.txt" ]; then 
+            echo "$i"
+            return
+        fi
+    done
+    echo "0"
+}
+
+# Функция инициализации (Спрашивает пользователя один раз)
+init_telemetry() {
+    mkdir -p "$CACHE_DIR"
+    local tel_enabled=""
+    local tel_uuid=""
+    
+    # 1. Загружаем конфиг, если он есть
+    [ -f "$TELEMETRY_CFG" ] && source "$TELEMETRY_CFG"
+
+    # 2. Если статус еще не задан — спрашиваем
+    if [ -z "$tel_enabled" ]; then
+        echo ""
+        echo -e "${Green}Хотите отправлять анонимную статистику (Провайдер + Стратегии)?${Color_Off}"
+        echo -e "Это поможет понять, какие стратегии работают лучше всего."
+        read -p "Разрешить? (y/n): " stats_yn
+        case "$stats_yn" in
+            [Yy]*) tel_enabled="1" ;;
+            *) tel_enabled="0" ;;
+        esac
+        
+        # Сразу сохраняем выбор
+        echo "tel_enabled=$tel_enabled" > "$TELEMETRY_CFG"
+        echo "tel_uuid=$tel_uuid" >> "$TELEMETRY_CFG"
+        
+        if [ "$tel_enabled" == "1" ]; then
+             echo -e "${Green}Спасибо! Статистика включена.${Color_Off}"
+        else
+             echo -e "${Red}Статистика отключена.${Color_Off}"
+        fi
+        sleep 1
+    fi
+
+    # 3. Генерация UUID (если включено и его нет)
+    if [ "$tel_enabled" == "1" ] && [ -z "$tel_uuid" ]; then
+        # Пытаемся взять системный UUID или генерируем md5 от времени
+        if [ -f /proc/sys/kernel/random/uuid ]; then
+            tel_uuid=$(cat /proc/sys/kernel/random/uuid | cut -c1-8)
+        else
+            tel_uuid=$(date +%s%N | md5sum | head -c 8)
+        fi
+        # Перезаписываем конфиг с новым UUID
+        echo "tel_enabled=$tel_enabled" > "$TELEMETRY_CFG"
+        echo "tel_uuid=$tel_uuid" >> "$TELEMETRY_CFG"
+    fi
+}
+
+# Функция отправки статистики
+send_stats() {
+    # Если конфига нет, значит init_telemetry не запускался — выходим
+    [ ! -f "$TELEMETRY_CFG" ] && return 0
+    
+    # Читаем переменные (tel_enabled, tel_uuid)
+    source "$TELEMETRY_CFG"
+    
+    # Если пользователь запретил — выходим
+    if [ "$tel_enabled" != "1" ]; then
+        return 0
+    fi
+
+    # 1. Провайдер (Читаем из provider.txt, который создает Provider detector)
+    local my_isp="Unknown"
+    if [ -s "$PROVIDER_TXT" ]; then
+        my_isp=$(cat "$PROVIDER_TXT")
+    else
+        # Фолбек: если provider.txt еще нет, пробуем быстро узнать
+        my_isp=$(curl -s --max-time 3 "http://ip-api.com/line?fields=org" | tr -cd '[:alnum:] ._-')
+    fi
+    # Обрезаем до 60 символов и ставим заглушку если пусто
+    my_isp=$(echo "$my_isp" | head -c 60)
+    [ -z "$my_isp" ] && my_isp="Unknown"
+
+    # 2. Определяем номера стратегий
+    local s_udp=$(get_active_strat_num "/opt/zapret/extra_strats/UDP/YT" 8)
+    local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
+    local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
+
+    # 3. Отправка в Google Forms (Тихий режим, в фоне &)
+    curl -sL --max-time 10 \
+        -d "$ENTRY_UUID=$tel_uuid" \
+        -d "$ENTRY_ISP=$my_isp" \
+        -d "$ENTRY_UDP=$s_udp" \
+        -d "$ENTRY_TCP=$s_tcp" \
+        -d "$ENTRY_RKN=$s_rkn" \
+        "https://docs.google.com/forms/d/e/$STATS_FORM_ID/formResponse" > /dev/null 2>&1 &
+}
+# ---- /Telemetry module integration ----
+
+
 #___Сначала идут анонсы функций____
 
 get_yt_cluster_domain() {
@@ -150,6 +364,10 @@ get_repo() {
  curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
  cp -f /opt/zapret/init.d/sysv/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all
  cp -f /opt/zapret/init.d/sysv/custom.d/50-discord-media /opt/zapret/init.d/openwrt/custom.d/50-discord-media
+
+# cache
+mkdir -p /opt/zapret/extra_strats/cache
+
 }
 
 #Функция для функции подбора стратегий
@@ -192,6 +410,7 @@ try_strategies() {
         read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - следующий вариант, \"0\" - выйти сбросив подбор к дефолтной стратегии): " answer_strat
         if [[ "$answer_strat" == "1" ]]; then
             echo "Стратегия $strat_num сохранена. Выходим."
+			send_stats
 			answer_strat=""
             eval "$final_action"
             return
@@ -516,8 +735,29 @@ EOF
  echo -e "${plain}Выполнение установки завершено. ${green}Доступ по ip вашего роутера/VPS в формате ip:17681, например 192.168.1.1:17681 или mydomain.com:17681 ${yellow}логин: ${ttyd_login} пароль - не испольузется.${plain} Был выполнен выход из скрипта для сохранения состояния."
 }
 
+#Функция меню "14. Провайдер"
+provider_submenu() {
+  provider_init_once
+
+  echo -e "${yellow}Провайдер: ${plain}${PROVIDER_MENU}${yellow}
+${green}1.${yellow} Указать вручную
+${green}2.${yellow} Определить заново (сбросить кэш)
+${green}0.${yellow} Назад${plain}"
+  read -re -p "" answer_provider
+
+  case "$answer_provider" in
+    "1") provider_set_manual_menu ; exit_to_menu ;;
+    "2") provider_force_redetect ; exit_to_menu ;;
+    "0"|"") exit_to_menu ;;
+    *) exit_to_menu ;;
+  esac
+}
+
+
 #Меню, проверка состояний и вывод с чтением ответа
 get_menu() {
+provider_init_once
+init_telemetry
  echo -e '
 '${red}'      *
      ***            '${Fcyan}'by Dmitriy Utkin:
@@ -532,6 +772,7 @@ get_menu() {
 '${green}'  ////|\\\\\\\\\      '${plain}'.   '${green}'/ '${Fcyan}'* . '${plain}'* . '${Fred}'* '${green}'\   '${plain}'.
 '${green}' /////|\\\\\\\\\\\        '${green}'/_____________\
 '${green}'//////|\\\\\\\\\\\\\      '${plain}'.     '${green}'[___]   '${plain}'.  .
+'"Город/провайдер: ${plain}${PROVIDER_MENU}${yellow}"'
 \033[32mВыберите необходимое действие:\033[33m
 Enter (без цифр) - переустановка/обновление zapret
 0. Выход
@@ -549,6 +790,7 @@ Enter (без цифр) - переустановка/обновление zapret
 11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '${plain}$(grep '^FLOWOFFLOAD=' /opt/zapret/config)${yellow}'
 12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '${plain}$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")${yellow}'
 13. Активировать доступ в меню через браузер (~3мб места)
+14. Провайдер
 777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Whoze, andric62, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, subzeero452, Grigaraz, Reconnaissance, comandante1928, umad, railwayfx, vtokarev1604, rudnev2028 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
  read -re -p '' answer_menu
  case "$answer_menu" in
@@ -741,6 +983,9 @@ Enter (без цифр) - переустановка/обновление zapret
   "13")
    ttyd_webssh
    exit 7
+   ;;
+  "14")
+   provider_submenu
    ;;
   "777")
    echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028, umad, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 активирован. Наверное. Так же благодарю поддержавших проект hey_enote, VssA, vladdrazz, Alexey_Tob, Bor1sBr1tva, Azamatstd, iMLT, Qu3Bee, SasayKudasay1, alexander_novikoff, MarsKVV, porfenon123, bobrishe_dazzle, kotov38, Levonkas, DA00001, trin4ik, geodomin, I_ZNA_I и анонимов${plain}"
