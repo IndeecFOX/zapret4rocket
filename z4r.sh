@@ -536,7 +536,7 @@ get_menu() {
 Enter (без цифр) - переустановка/обновление zapret
 0. Выход
 01. Проверить доступность сервисов (Тест не точен)
-1. Сменить стратегии или добавить домен в хост-лист
+1. Сменить стратегии или добавить домен в хост-лист. Текущие: '${plain}$(num=$(for i in {1..8}; do f="/opt/zapret/extra_strats/UDP/YT/$i.txt"; [ -s "$f" ] && { echo "$i"; break; }; done); [ -n "$num" ] && echo "$num" || echo "0") $(num=$(for i in {1..17}; do f="/opt/zapret/extra_strats/TCP/YT/$i.txt"; [ -s "$f" ] && { echo "$i"; break; }; done); [ -n "$num" ] && echo "$num" || echo "0") $(num=$(for i in {1..17}; do f="/opt/zapret/extra_strats/TCP/RKN/$i.txt"; [ -s "$f" ] && { echo "$i"; break; }; done); [ -n "$num" ] && echo "$num" || echo "0")${yellow}'
 2. Стоп/пере(запуск) zapret (сейчас: '$(pidof nfqws >/dev/null && echo "${green}Запущен${yellow}" || echo "${red}Остановлен${yellow}")')
 3. Тут могла быть ваша реклама :D (Функция перенесена во 2 пункт. Резерв)
 4. Удалить zapret
