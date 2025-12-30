@@ -30,59 +30,203 @@ Bcyan='\033[46m'
 
 
 # ---- Provider detector integration ----
-PROVIDER_DETECTOR="/opt/zapret/extra_strats/provider_detector.sh"
-PROVIDER_CACHE="/opt/zapret/extra_strats/cache/provider.json"
+# Используем provider.txt как основной источник правды (просто строка "Provider - City")
+PROVIDER_CACHE="/opt/zapret/extra_strats/cache/provider.txt"
 PROVIDER_MENU="Не определён"
 PROVIDER_INIT_DONE=0
 
-provider_load() {
-  [ -f "$PROVIDER_DETECTOR" ] || return 0
+# Вспомогательная функция: делает запрос к API и пишет в файл
+_detect_api_simple() {
+    # Запрос к ip-api.com (поля: org, city)
+    # Формат ответа line:
+    # Organization Name
+    # CityName
+    local raw_data=$(curl -s --max-time 5 "http://ip-api.com/line?fields=org,city")
+    
+    if [ -n "$raw_data" ]; then
+        # Читаем две строки: 1-я провайдер, 2-я город
+        local p_name=$(echo "$raw_data" | sed -n '1p')
+        local p_city=$(echo "$raw_data" | sed -n '2p')
+        
+        # Чистим от мусора
+        p_name=$(echo "$p_name" | tr -cd '[:alnum:] ._-' | head -c 50)
+        p_city=$(echo "$p_city" | tr -cd '[:alnum:] ._-' | head -c 30)
 
-  # Сохраняем опции bash и восстанавливаем их после source
-  local _old_opts
-  _old_opts="$(set +o)"
-
-  set +e +u
-  source "$PROVIDER_DETECTOR" || true
-
-  eval "$_old_opts"
+        # Формируем строку "Provider - City"
+        local res="$p_name"
+        [ -n "$p_city" ] && res="$res - $p_city"
+        
+        # Сохраняем
+        mkdir -p "$(dirname "$PROVIDER_CACHE")"
+        echo "$res" > "$PROVIDER_CACHE"
+    fi
 }
 
 provider_init_once() {
   [ "$PROVIDER_INIT_DONE" = "1" ] && return 0
   PROVIDER_INIT_DONE=1
 
-  provider_load
-
-  # если jq нет — просто показываем заглушку (сам детектор использует jq)
-  command -v jq >/dev/null 2>&1 || { PROVIDER_MENU="jq не установлен"; return 0; }
-
-  # если кэша нет/битый — делаем автоопределение один раз
-  if ! ( [ -f "$PROVIDER_CACHE" ] && jq empty "$PROVIDER_CACHE" >/dev/null 2>&1 ); then
-    detect_provider_api >/dev/null 2>&1 || true
+  # Если кэша нет или он пустой — пробуем определить
+  if [ ! -s "$PROVIDER_CACHE" ]; then
+    echo "Определяем провайдера..."
+    _detect_api_simple
   fi
 
-  PROVIDER_MENU="$(get_provider_with_city 2>/dev/null || echo "Не определён")"
+  # Читаем результат в переменную меню
+  if [ -s "$PROVIDER_CACHE" ]; then
+      PROVIDER_MENU="$(cat "$PROVIDER_CACHE")"
+  else
+      PROVIDER_MENU="Не определён"
+  fi
 }
 
 provider_force_redetect() {
-  provider_load
+  echo "Обновляем данные о провайдере..."
   rm -f "$PROVIDER_CACHE"
-  detect_provider_api || true
-  PROVIDER_MENU="$(get_provider_with_city 2>/dev/null || echo "Не определён")"
+  _detect_api_simple
+  
+  if [ -s "$PROVIDER_CACHE" ]; then
+      PROVIDER_MENU="$(cat "$PROVIDER_CACHE")"
+  else
+      PROVIDER_MENU="Не удалось определить"
+  fi
 }
 
 provider_set_manual_menu() {
-  provider_load
-  read -re -p "Провайдер (например MTS/Beeline/Rostelecom): " p
+  read -re -p "Провайдер (например MTS/Beeline): " p
   read -re -p "Город (можно пусто): " c
+  
+  # Чистим ввод
+  p=$(echo "$p" | tr -cd '[:alnum:] ._-')
+  c=$(echo "$c" | tr -cd '[:alnum:] ._-')
+  
+  local res="$p"
+  [ -n "$c" ] && res="$res - $c"
+  
   mkdir -p "$(dirname "$PROVIDER_CACHE")"
-  cat >"$PROVIDER_CACHE" <<EOF
-{"provider":"$p","city":"$c","source":"manual","updated_at":"$(date -Iseconds)"}
-EOF
-  PROVIDER_MENU="$(get_provider_with_city 2>/dev/null || echo "$p${c:+ - $c}")"
+  echo "$res" > "$PROVIDER_CACHE"
+  PROVIDER_MENU="$res"
 }
 # ---- /Provider detector integration ----
+
+# ---- Telemetry module integration ----
+# Настройки Google Forms
+STATS_FORM_ID="1FAIpQLScrUf7Pybm0n61aK8aZuxuAR8KhyNYZ-X0xjSUS8K72SmEhPw"
+ENTRY_UUID="entry.1346249141"
+ENTRY_ISP="entry.2008245653"
+ENTRY_VER="entry.641297608"
+ENTRY_UDP="entry.592144534"
+ENTRY_TCP="entry.1826276405"
+ENTRY_RKN="entry.1527830884"
+
+# 2. Пути к файлам (используем простые форматы)
+CACHE_DIR="/opt/zapret/extra_strats/cache"
+TELEMETRY_CFG="$CACHE_DIR/telemetry.config"
+PROVIDER_TXT="$CACHE_DIR/provider.txt"
+
+# Помощник: находит номер активной стратегии (ищет непустой файл 1.txt ... N.txt)
+get_active_strat_num() {
+    local dir="$1"
+    local max="$2"
+    for i in $(seq 1 "$max"); do 
+        if [ -s "$dir/$i.txt" ]; then 
+            echo "$i"
+            return
+        fi
+    done
+    echo "0"
+}
+
+# Функция инициализации (Спрашивает пользователя один раз)
+init_telemetry() {
+    mkdir -p "$CACHE_DIR"
+    local tel_enabled=""
+    local tel_uuid=""
+    
+    # 1. Загружаем конфиг, если он есть
+    [ -f "$TELEMETRY_CFG" ] && source "$TELEMETRY_CFG"
+
+    # 2. Если статус еще не задан — спрашиваем
+    if [ -z "$tel_enabled" ]; then
+        echo ""
+        echo -e "${Green}Хотите отправлять анонимную статистику (Провайдер + Стратегии)?${Color_Off}"
+        echo -e "Это поможет понять, какие стратегии работают лучше всего."
+        read -p "Разрешить? (y/n): " stats_yn
+        case "$stats_yn" in
+            [Yy]*) tel_enabled="1" ;;
+            *) tel_enabled="0" ;;
+        esac
+        
+        # Сразу сохраняем выбор
+        echo "tel_enabled=$tel_enabled" > "$TELEMETRY_CFG"
+        echo "tel_uuid=$tel_uuid" >> "$TELEMETRY_CFG"
+        
+        if [ "$tel_enabled" == "1" ]; then
+             echo -e "${Green}Спасибо! Статистика включена.${Color_Off}"
+        else
+             echo -e "${Red}Статистика отключена.${Color_Off}"
+        fi
+        sleep 1
+    fi
+
+    # 3. Генерация UUID (если включено и его нет)
+    if [ "$tel_enabled" == "1" ] && [ -z "$tel_uuid" ]; then
+        # Пытаемся взять системный UUID или генерируем md5 от времени
+        if [ -f /proc/sys/kernel/random/uuid ]; then
+            tel_uuid=$(cat /proc/sys/kernel/random/uuid | cut -c1-8)
+        else
+            tel_uuid=$(date +%s%N | md5sum | head -c 8)
+        fi
+        # Перезаписываем конфиг с новым UUID
+        echo "tel_enabled=$tel_enabled" > "$TELEMETRY_CFG"
+        echo "tel_uuid=$tel_uuid" >> "$TELEMETRY_CFG"
+    fi
+}
+
+# Функция отправки статистики
+send_stats() {
+    # Если конфига нет, значит init_telemetry не запускался — выходим
+    [ ! -f "$TELEMETRY_CFG" ] && return 0
+    
+    # Читаем переменные (tel_enabled, tel_uuid)
+    source "$TELEMETRY_CFG"
+    
+    # Если пользователь запретил — выходим
+    if [ "$tel_enabled" != "1" ]; then
+        return 0
+    fi
+
+    # 1. Провайдер (Читаем из provider.txt, который создает Provider detector)
+    local my_isp="Unknown"
+    if [ -s "$PROVIDER_TXT" ]; then
+        my_isp=$(cat "$PROVIDER_TXT")
+    else
+        # Фолбек: если provider.txt еще нет, пробуем быстро узнать
+        my_isp=$(curl -s --max-time 3 "http://ip-api.com/line?fields=org" | tr -cd '[:alnum:] ._-')
+    fi
+    # Обрезаем до 60 символов и ставим заглушку если пусто
+    my_isp=$(echo "$my_isp" | head -c 60)
+    [ -z "$my_isp" ] && my_isp="Unknown"
+
+    # 2. Определяем номера стратегий
+    local s_udp=$(get_active_strat_num "/opt/zapret/extra_strats/UDP/YT" 8)
+    local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
+    local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
+
+    # 3. Версия скрипта (берем из переменной или ставим Unknown)
+    local my_ver="${DEFAULT_VER:-Unknown}"
+
+    # 4. Отправка в Google Forms (Тихий режим, в фоне &)
+    curl -sL --max-time 10 \
+        -d "$ENTRY_UUID=$tel_uuid" \
+        -d "$ENTRY_ISP=$my_isp" \
+        -d "$ENTRY_VER=$my_ver" \
+        -d "$ENTRY_UDP=$s_udp" \
+        -d "$ENTRY_TCP=$s_tcp" \
+        -d "$ENTRY_RKN=$s_rkn" \
+        "https://docs.google.com/forms/d/e/$STATS_FORM_ID/formResponse" > /dev/null 2>&1 &
+}
+# ---- /Telemetry module integration ----
 
 
 #___Сначала идут анонсы функций____
@@ -257,6 +401,7 @@ try_strategies() {
         read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - следующий вариант, \"0\" - выйти сбросив подбор к дефолтной стратегии): " answer_strat
         if [[ "$answer_strat" == "1" ]]; then
             echo "Стратегия $strat_num сохранена. Выходим."
+			send_stats
 			answer_strat=""
             eval "$final_action"
             return
@@ -603,6 +748,7 @@ ${green}0.${yellow} Назад${plain}"
 #Меню, проверка состояний и вывод с чтением ответа
 get_menu() {
 provider_init_once
+init_telemetry
  echo -e '
 '${red}'      *
      ***            '${Fcyan}'by Dmitriy Utkin:
