@@ -233,7 +233,6 @@ send_stats() {
     curl -sL --max-time 10 \
         -d "$ENTRY_UUID=$tel_uuid" \
         -d "$ENTRY_ISP=$my_isp" \
-        -d "$ENTRY_VER=$my_ver" \
         -d "$ENTRY_UDP=$s_udp" \
         -d "$ENTRY_TCP=$s_tcp" \
         -d "$ENTRY_RKN=$s_rkn" \
