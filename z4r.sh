@@ -65,13 +65,18 @@ _detect_api_simple() {
         res="$res - $p_city"
     fi
     
-    # 5. Проверка результата перед записью
+       # 5. Проверка результата перед записью
     if [ -n "$res" ]; then
         mkdir -p "$(dirname "$PROVIDER_CACHE")"
+        
+        # >>>> ОТЛАДКА <<<<
+        echo "DEBUG: Пытаюсь записать '$res' в '$PROVIDER_CACHE'"
+        touch "$PROVIDER_CACHE" || echo "ERROR: Не могу создать файл!"
+        # >>>> КОНЕЦ ОТЛАДКИ <<<<
+        
         echo "$res" > "$PROVIDER_CACHE"
-        # Отладка
-        # echo "DEBUG: Записали в кэш: $res" >&2
     else
+
         echo "DEBUG: Результат парсинга пустой! (Raw: $(cat $tmp_file))" >&2
     fi
     
