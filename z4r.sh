@@ -165,7 +165,7 @@ init_telemetry() {
     # 2. Если статус еще не задан — спрашиваем
     if [ -z "$tel_enabled" ]; then
         echo ""
-        echo -e "${Green}Хотите отправлять анонимную статистику (Провайдер + Стратегии)?${Color_Off}"
+        echo -e "${green}Хотите отправлять анонимную статистику (Провайдер + Стратегии)?${plain}"
         echo -e "Это поможет понять, какие стратегии работают лучше всего."
         read -p "Разрешить? (y/n): " stats_yn
         case "$stats_yn" in
@@ -178,9 +178,9 @@ init_telemetry() {
         echo "tel_uuid=$tel_uuid" >> "$TELEMETRY_CFG"
         
         if [ "$tel_enabled" == "1" ]; then
-             echo -e "${Green}Спасибо! Статистика включена.${Color_Off}"
+             echo -e "${green}Спасибо! Статистика включена.${plain}"
         else
-             echo -e "${Red}Статистика отключена.${Color_Off}"
+             echo -e "${red}Статистика отключена.${plain}"
         fi
         sleep 1
     fi
@@ -823,9 +823,9 @@ ${green}0.${yellow} Назад${plain}"
         rm -f "$RECS_FILE"
         update_recommendations
         if [ -s "$RECS_FILE" ]; then
-            echo -e "${Green}База успешно обновлена!${Color_Off}"
+            echo -e "${green}База успешно обновлена!${plain}"
         else
-            echo -e "${Red}Ошибка обновления базы.${Color_Off}"
+            echo -e "${red}Ошибка обновления базы.${plain}"
         fi
         sleep 1
         exit_to_menu 
