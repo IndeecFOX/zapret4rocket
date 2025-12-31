@@ -432,52 +432,84 @@ try_strategies() {
     local base_path="$2"
     local list_file="$3"
     local final_action="$4"
-	read -re -p "Введите номер стратегии к которой перейти или Enter: " strat_num
-	if (( strat_num < 1 || strat_num > 17 )); then
-		echo "Введено значение не из диапазона 1-17. Начинаем с 1 стратегии"
-		strat_num=1
-	fi
-	#Очистка файлов если есть лист в папке
-	for ((clr_txt=1; clr_txt<=count; clr_txt++)); do
-		echo -n > "$base_path/${clr_txt}.txt"
-	done
+    
+    read -re -p "Введите номер стратегии к которой перейти или Enter: " strat_num
+    if (( strat_num < 1 || strat_num > count )); then
+        echo "Введено значение не из диапазона. Начинаем с 1 стратегии"
+        strat_num=1
+    fi
+
+    # Предварительная очистка всех файлов стратегий в папке
+    for ((clr_txt=1; clr_txt<=count; clr_txt++)); do
+        echo -n > "$base_path/${clr_txt}.txt"
+    done
+
+    # Основной цикл перебора
     for ((strat_num=strat_num; strat_num<=count; strat_num++)); do
+        
+        # Очищаем файл предыдущей стратегии (чтобы не было дублей)
         if [[ $strat_num -ge 2 ]]; then
             prev=$((strat_num - 1))
             echo -n > "$base_path/${prev}.txt"
         fi
 
+        # Запись в файл текущей стратегии
         if [[ "$list_file" != "/dev/null" ]]; then
+            # Режим списка (копируем весь файл)
             cp "$list_file" "$base_path/${strat_num}.txt"
         else
+            # Режим одного домена
             echo "$user_domain" > "$base_path/${strat_num}.txt"
         fi
+        
         echo "Стратегия номер $strat_num активирована"
-		
-		if [[ "$count" == "17" ]]; then
-		 if [[ -n "$user_domain" ]]; then
-			local TestURL="https://$user_domain"
-		 else
-			local TestURL="https://$(get_yt_cluster_domain)"
-		 fi
-		 check_access $TestURL
-		fi
-			
-        read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - следующий вариант, \"0\" - выйти сбросив подбор к дефолтной стратегии): " answer_strat
+        
+        # Блок проверки доступности (curl)
+        # Работает только для TCP стратегий
+        if [[ "$count" == "17" ]]; then
+             local TestURL=""
+             
+             # ЛОГИКА ВЫБОРА ДОМЕНА ДЛЯ ПРОВЕРКИ
+             if [[ "$user_domain" == "googlevideo.com" ]]; then
+                # 1. Если это GVideo - ищем живой кластер для проверки видеопотока
+                local cluster
+                cluster=$(get_yt_cluster_domain)
+                TestURL="https://$cluster"
+                echo "Проверка доступности (кластер): $cluster"
+                
+             elif [[ -z "$user_domain" ]]; then
+                # 2. Если домен пустой (обычный режим YT) - проверяем доступ к самому сайту
+                TestURL="https://www.youtube.com"
+                
+             else
+                # 3. Для кастомных доменов и RKN проверяем сам введенный домен
+                TestURL="https://$user_domain"
+             fi
+             
+             check_access "$TestURL"
+        fi
+            
+        read -re -p "Проверьте работу (1 - сохранить, 0 - отмена, Enter - далее): " answer_strat
+        
         if [[ "$answer_strat" == "1" ]]; then
-            echo "Стратегия $strat_num сохранена. Выходим."
-			send_stats
-			answer_strat=""
-            eval "$final_action"
+            echo "Стратегия $strat_num сохранена."
+            send_stats  # Отправка телеметрии (если включена)
+            
+            # Если передано дополнительное действие (final_action), выполняем его
+            if [[ -n "$final_action" ]]; then
+                eval "$final_action"
+            fi
             return
-		elif [[ "$answer_strat" == "0" ]]; then
-			echo -n > "$base_path/${strat_num}.txt"
-			answer_strat=""
-			echo "Изменения отменены. Выход."
-			return
+            
+        elif [[ "$answer_strat" == "0" ]]; then
+            # Сброс текущей стратегии при отмене
+            echo -n > "$base_path/${strat_num}.txt"
+            echo "Изменения отменены."
+            return
         fi
     done
 
+    # Если цикл закончился, а пользователь ничего не выбрал
     echo -n > "$base_path/${count}.txt"
     echo "Все стратегии испробованы. Ничего не подошло."
     exit_to_menu
