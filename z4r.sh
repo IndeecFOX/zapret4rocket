@@ -298,6 +298,44 @@ show_hint() {
 # ---- /Recomendations module ----
 
 #___Сначала идут анонсы функций____
+# Функция определяет номер активной стратегии в указанной папке
+# Использование: get_active_strat_num "/path/to/folder" MAX_COUNT
+get_active_strat_num() {
+    local folder="$1"
+    local max="$2"
+    local i
+    
+    # Перебираем файлы от 1 до MAX
+    for ((i=1; i<=max; i++)); do
+        if [ -s "${folder}/${i}.txt" ]; then
+            echo "$i"
+            return
+        fi
+    done
+    
+    # Если ничего не найдено - 0
+    echo "0"
+}
+
+# Функция для генерации строки статуса стратегий
+get_current_strategies_info() {
+    local s_udp=$(get_active_strat_num "/opt/zapret/extra_strats/UDP/YT" 8)
+    local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
+    local s_gv=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/GV" 17)
+    local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
+    
+    # Формируем красивую строку. Цвета можно менять.
+    # Функция для окраски: 0 - серый, >0 - зеленый
+    colorize_num() {
+        if [ "$1" == "0" ]; then
+            echo "${gray}Def${plain}"
+        else
+            echo "${green}$1${plain}"
+        fi
+    }
+
+    echo -e "UDP:$(colorize_num "$s_udp") TCP:$(colorize_num "$s_tcp") GV:$(colorize_num "$s_gv") RKN:$(colorize_num "$s_rkn")"
+}
 
 get_yt_cluster_domain() {
     local letters_list_a=('u' 'z' 'p' 'k' 'f' 'a' '5' '0' 'v' 'q' 'l' 'g' 'b' '6' '1' 'w' 'r' 'm' 'h' 'c' '7' '2' 'x' 's' 'n' 'i' 'd' '8' '3' 'y' 't' 'o' 'j' 'e' '9' '4' '-')
@@ -885,6 +923,7 @@ ${green}0.${yellow} Назад${plain}"
 
 #Меню, проверка состояний и вывод с чтением ответа
 get_menu() {
+local strategies_status=$(get_current_strategies_info)
 provider_init_once
 init_telemetry
 update_recommendations
@@ -907,7 +946,7 @@ update_recommendations
 Enter (без цифр) - переустановка/обновление zapret
 0. Выход
 01. Проверить доступность сервисов (Тест не точен)
-1. Сменить стратегии или добавить домен в хост-лист. Текущие: '${plain}$(num=$(for i in {1..8}; do f="/opt/zapret/extra_strats/UDP/YT/$i.txt"; [ -s "$f" ] && { echo "$i"; break; }; done); [ -n "$num" ] && echo "$num" || echo "0") $(num=$(for i in {1..17}; do f="/opt/zapret/extra_strats/TCP/YT/$i.txt"; [ -s "$f" ] && { echo "$i"; break; }; done); [ -n "$num" ] && echo "$num" || echo "0") $(num=$(for i in {1..17}; do f="/opt/zapret/extra_strats/TCP/RKN/$i.txt"; [ -s "$f" ] && { echo "$i"; break; }; done); [ -n "$num" ] && echo "$num" || echo "0")${yellow}'
+1. Сменить стратегии или добавить домен в хост-лист. Текущие: '${plain}[ ${strategies_status} ]${yellow}'
 2. Стоп/пере(запуск) zapret (сейчас: '$(pidof nfqws >/dev/null && echo "${green}Запущен${yellow}" || echo "${red}Остановлен${yellow}")')
 3. Тут могла быть ваша реклама :D (Функция перенесена во 2 пункт. Резерв)
 4. Удалить zapret
