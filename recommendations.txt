@@ -1,0 +1,2 @@
+Moscow - MARYNONET|UDP:0, 1|TCP:3|RKN:5
+Nizhniy Novgorod - NMTS|UDP:0|TCP:2|RKN:0
