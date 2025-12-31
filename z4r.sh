@@ -804,14 +804,38 @@ provider_submenu() {
   echo -e "${yellow}Провайдер: ${plain}${PROVIDER_MENU}${yellow}
 ${green}1.${yellow} Указать вручную
 ${green}2.${yellow} Определить заново (сбросить кэш)
+${green}3.${yellow} Обновить базу рекомендаций (Подсказки)
 ${green}0.${yellow} Назад${plain}"
   read -re -p "" answer_provider
 
   case "$answer_provider" in
-    "1") provider_set_manual_menu ; exit_to_menu ;;
-    "2") provider_force_redetect ; exit_to_menu ;;
-    "0"|"") exit_to_menu ;;
-    *) exit_to_menu ;;
+    "1") 
+        provider_set_manual_menu 
+        exit_to_menu 
+        ;;
+    "2") 
+        provider_force_redetect 
+        exit_to_menu 
+        ;;
+    "3") 
+        echo "Обновляем базу рекомендаций..."
+        # Принудительно удаляем старый файл, чтобы update_recommendations скачал новый
+        rm -f "$RECS_FILE"
+        update_recommendations
+        if [ -s "$RECS_FILE" ]; then
+            echo -e "${Green}База успешно обновлена!${Color_Off}"
+        else
+            echo -e "${Red}Ошибка обновления базы.${Color_Off}"
+        fi
+        sleep 1
+        exit_to_menu 
+        ;;
+    "0"|"") 
+        exit_to_menu 
+        ;;
+    *) 
+        exit_to_menu 
+        ;;
   esac
 }
 
