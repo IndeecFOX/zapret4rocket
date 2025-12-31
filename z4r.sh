@@ -513,6 +513,15 @@ Strats_Tryer() {
             try_strategies 17 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
             ;;
         "3")
+			echo "Подбор для GVideo (Видеопоток YT). Ранее заданная стратегия этого листа сброшена в дефолт."
+			#Переиспользовал существующий "Режим кастомного домена" чтобы не плодить сущности
+			user_domain="googlevideo.com"
+			#вывод подсказки
+			#закомментировал, т.к. пока не поддерживается бэком
+			#show_hint "TCP"
+            try_strategies 17 "/opt/zapret/extra_strats/TCP/GV" "/dev/null" ""
+            ;;
+		"4")
             echo "Подбор для хост-листа основных доменов блока RKN. Проверка доступности задана на домен meduza.io. Ранее заданная стратегия этого листа сброшена в дефолт."
 			for numRKN in {1..17}; do
 				echo -n > "/opt/zapret/extra_strats/TCP/RKN/${numRKN}.txt"
@@ -522,7 +531,7 @@ Strats_Tryer() {
 			show_hint "RKN"
             try_strategies 17 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
             ;;
-        "4")
+        "5")
             echo "Режим кастомного домена"
 			if [ -z "$mode_domain" ]; then
 				read -re -p "Введите домен (например, mydomain.com): " user_domain
