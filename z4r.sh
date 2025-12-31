@@ -240,6 +240,62 @@ send_stats() {
 }
 # ---- /Telemetry module integration ----
 
+# ---- Recomendations module ----
+RECS_URL="https://raw.githubusercontent.com/AloofLibra/zapret4rocket/main/recommendations.txt" 
+RECS_FILE="/opt/zapret/extra_strats/cache/recommendations.txt"
+
+# 1. Функция обновления базы (в фоне)
+update_recommendations() {
+    mkdir -p "$(dirname "$RECS_FILE")"
+
+    # Проверка: если файл существует И он моложе 1 дня (24 часа) - выходим.
+    # -mtime -1 означает "изменен менее 1 дня назад"
+    if [ -f "$RECS_FILE" ] && [ -n "$(find "$RECS_FILE" -mtime -1 2>/dev/null)" ]; then
+        # Файл свежий, обновлять не нужно
+        return 0
+    fi
+
+    # Если файла нет или он старый - качаем
+    curl -s --max-time 5 "$RECS_URL" -o "$RECS_FILE" || rm -f "$RECS_FILE"
+}
+
+# 2. Функция показа подсказки (Logic + UI)
+show_hint() {
+    local strat_type="$1" # UDP, TCP или RKN
+    local my_isp=""
+    
+    # А. Узнаем провайдера
+    if [ -s "/opt/zapret/extra_strats/cache/provider.txt" ]; then
+        my_isp=$(cat "/opt/zapret/extra_strats/cache/provider.txt")
+    fi
+    
+    # Б. Проверяем наличие базы
+    if [ -z "$my_isp" ] || [ ! -f "$RECS_FILE" ]; then
+        return
+    fi
+    
+    # В. Ищем строку (grep -F для безопасности спецсимволов)
+    local line=$(grep -F "$my_isp|" "$RECS_FILE" | head -n 1)
+    [ -z "$line" ] && return
+    
+    # Г. Парсим
+    # Формат: ISP|UDP:x|TCP:y|RKN:z
+    local part=""
+    case "$strat_type" in
+        "UDP") part=$(echo "$line" | cut -d'|' -f2 | cut -d':' -f2) ;;
+        "TCP") part=$(echo "$line" | cut -d'|' -f3 | cut -d':' -f2) ;;
+        "RKN") part=$(echo "$line" | cut -d'|' -f4 | cut -d':' -f2) ;;
+    esac
+    
+    # Д. Выводим
+    if [ -n "$part" ] && [ "$part" != "-" ]; then
+        echo ""
+        echo -e "${Cyan}💡 Подсказка:${Color_Off} Пользователи ${Green}$my_isp${Color_Off} часто выбирают: ${Yellow}$part${Color_Off}"
+        echo -e "Попробуйте начать с них."
+        echo ""
+    fi
+}
+# ---- /Recomendations module ----
 
 #___Сначала идут анонсы функций____
 
@@ -446,10 +502,14 @@ Strats_Tryer() {
     case "$answer_strat_mode" in
         "1")
             echo "Подбор для хост-листа YouTube (UDP QUIC - браузеры, моб. приложения). Ранее заданная стратегия этого листа сброшена в дефолт."
+			#вывод подсказки
+			show_hint "UDP"
             try_strategies 8 "/opt/zapret/extra_strats/UDP/YT" "/opt/zapret/extra_strats/UDP/YT/List.txt" ""
             ;;
         "2")
             echo "Подбор для хост-листа YouTube (TCP - основной). Ранее заданная стратегия этого листа сброшена в дефолт."
+			#вывод подсказки
+			show_hint "TCP"
             try_strategies 17 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
             ;;
         "3")
@@ -458,6 +518,8 @@ Strats_Tryer() {
 				echo -n > "/opt/zapret/extra_strats/TCP/RKN/${numRKN}.txt"
 			done
 			user_domain="meduza.io"
+			#вывод подсказки
+			show_hint "RKN"
             try_strategies 17 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
             ;;
         "4")
@@ -758,6 +820,7 @@ ${green}0.${yellow} Назад${plain}"
 get_menu() {
 provider_init_once
 init_telemetry
+update_recommendations
  echo -e '
 '${red}'      *
      ***            '${Fcyan}'by Dmitriy Utkin:
