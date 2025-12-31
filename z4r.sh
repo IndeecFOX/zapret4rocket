@@ -40,12 +40,6 @@ _detect_api_simple() {
     # 1. Скачиваем ответ во временный файл (чтобы точно видеть, что пришло)
     local tmp_file="/tmp/z4r_provider_debug.txt"
     curl -s --max-time 10 "http://ip-api.com/line?fields=isp,city" > "$tmp_file"
-    
-    # Отладка: если файл пустой, пишем ошибку в консоль
-    if [ ! -s "$tmp_file" ]; then
-        echo "DEBUG: curl вернул пустоту!" >&2
-        return 1
-    fi
 
     # 2. Читаем построчно (без пайпов, чтобы не терять код возврата)
     local p_name=$(head -n 1 "$tmp_file")
