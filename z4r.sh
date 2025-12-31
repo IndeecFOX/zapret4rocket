@@ -290,7 +290,7 @@ show_hint() {
     # Д. Выводим
     if [ -n "$part" ] && [ "$part" != "-" ]; then
         echo ""
-        echo -e "${Cyan}💡 Подсказка:${Color_Off} Пользователи ${Green}$my_isp${Color_Off} часто выбирают: ${Yellow}$part${Color_Off}"
+        echo -e "${cyan}💡 Подсказка:${plain} Пользователи ${green}$my_isp${plain} часто выбирают: ${yellow}$part${plain}"
         echo -e "Попробуйте начать с них."
         echo ""
     fi
