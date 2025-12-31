@@ -485,6 +485,8 @@ try_strategies() {
 
 #Сама функция подбора стратегий
 Strats_Tryer() {
+	echo "DEBUG: New Strats_Tryer Loaded"
+sleep 2
 	local mode_domain="$1"
 	
 	if [ -z "$mode_domain" ]; then
