@@ -1,0 +1,28 @@
+name: Update Recommendations
+on:
+  schedule:
+    - cron: '0 4 * * *' # Раз в сутки в 4 утра
+  workflow_dispatch: # Кнопка ручного запуска
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Download Data
+        run: |
+          # Качаем CSV с листа Export_TXT
+          curl -L "https://docs.google.com/spreadsheets/d/e/2PACX-1vRuTn6FKfGYrs1p2fjUSRTelUDeA14bDjMePXQWfSUtQEzZ4NPJc5ZqNHtkx1OMUjJSvP6ER9kkDKaO/pub?gid=2004936343&single=true&output=csv" -o recommendations.txt
+          
+          # Удаляем кавычки, если Google их добавил (CSV иногда квотирует строки)
+          sed -i 's/"//g' recommendations.txt
+          
+      - name: Commit & Push
+        run: |
+          git config user.name "Stats Bot"
+          git config user.email "bot@noreply.github.com"
+          git add recommendations.txt
+          # Коммитим только если есть изменения
+          git commit -m "Update recommendations" || exit 0
+          git push

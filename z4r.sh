@@ -27,7 +27,309 @@ Bblue='\033[44m'
 Bpink='\033[45m'
 Bcyan='\033[46m'
 
+
+
+# ---- Provider detector integration ----
+# Используем provider.txt как основной источник правды (просто строка "Provider - City")
+PROVIDER_CACHE="/opt/zapret/extra_strats/cache/provider.txt"
+PROVIDER_MENU="Не определён"
+PROVIDER_INIT_DONE=0
+
+# Вспомогательная функция: делает запрос к API и пишет в файл
+_detect_api_simple() {
+    # 1. Скачиваем ответ во временный файл (чтобы точно видеть, что пришло)
+    local tmp_file="/tmp/z4r_provider_debug.txt"
+    curl -s --max-time 10 "http://ip-api.com/line?fields=isp,city" > "$tmp_file"
+
+    # 2. Читаем построчно (без пайпов, чтобы не терять код возврата)
+    local p_name=$(head -n 1 "$tmp_file")
+    local p_city=$(head -n 2 "$tmp_file" | tail -n 1)
+
+    # 3. Чистим жестко (оставляем только латиницу, цифры и пробелы)
+    # Удаляем вообще все странные символы
+    p_name=$(echo "$p_name" | tr -cd 'a-zA-Z0-9 ._-')
+    p_city=$(echo "$p_city" | tr -cd 'a-zA-Z0-9 ._-')
+
+    # Убираем дублирование, если API вернул 1 строку
+    if [ "$p_city" = "$p_name" ]; then p_city=""; fi
+
+    # 4. Формируем результат
+    local res="$p_name"
+    if [ -n "$p_city" ]; then
+        res="$res - $p_city"
+    fi
+    
+       # 5. Проверка результата перед записью
+    if [ -n "$res" ]; then
+        mkdir -p "$(dirname "$PROVIDER_CACHE")"
+        
+        echo "$res" > "$PROVIDER_CACHE"
+    else
+
+        echo "DEBUG: Результат парсинга пустой! (Raw: $(cat $tmp_file))" >&2
+    fi
+    
+    # Чистим за собой
+    rm -f "$tmp_file"
+}
+
+provider_init_once() {
+  [ "$PROVIDER_INIT_DONE" = "1" ] && return 0
+  PROVIDER_INIT_DONE=1
+
+  # Если кэша нет или он пустой — пробуем определить
+  if [ ! -s "$PROVIDER_CACHE" ]; then
+    echo "Определяем провайдера..."
+    _detect_api_simple
+  fi
+
+  # Читаем результат в переменную меню
+  if [ -s "$PROVIDER_CACHE" ]; then
+      PROVIDER_MENU="$(cat "$PROVIDER_CACHE")"
+  else
+      PROVIDER_MENU="Не определён"
+  fi
+}
+
+provider_force_redetect() {
+  echo "Обновляем данные о провайдере..."
+  rm -f "$PROVIDER_CACHE"
+  _detect_api_simple
+  
+  if [ -s "$PROVIDER_CACHE" ]; then
+      PROVIDER_MENU="$(cat "$PROVIDER_CACHE")"
+  else
+      PROVIDER_MENU="Не удалось определить"
+  fi
+}
+
+provider_set_manual_menu() {
+  read -re -p "Провайдер (например MTS/Beeline): " p
+  read -re -p "Город (можно пусто): " c
+  
+  # Чистим ввод
+  p=$(echo "$p" | tr -cd '[:alnum:] ._-')
+  c=$(echo "$c" | tr -cd '[:alnum:] ._-')
+  
+  local res="$p"
+  [ -n "$c" ] && res="$res - $c"
+  
+  mkdir -p "$(dirname "$PROVIDER_CACHE")"
+  echo "$res" > "$PROVIDER_CACHE"
+  PROVIDER_MENU="$res"
+}
+# ---- /Provider detector integration ----
+
+# ---- Telemetry module integration ----
+# Настройки Google Forms
+STATS_FORM_ID="1FAIpQLScrUf7Pybm0n61aK8aZuxuAR8KhyNYZ-X0xjSUS8K72SmEhPw"
+ENTRY_UUID="entry.1346249141"
+ENTRY_ISP="entry.2008245653"
+ENTRY_UDP="entry.592144534"
+ENTRY_TCP="entry.1826276405"
+ENTRY_RKN="entry.1527830884"
+
+# 2. Пути к файлам (используем простые форматы)
+CACHE_DIR="/opt/zapret/extra_strats/cache"
+TELEMETRY_CFG="$CACHE_DIR/telemetry.config"
+PROVIDER_TXT="$CACHE_DIR/provider.txt"
+
+# Помощник: находит номер активной стратегии (ищет непустой файл 1.txt ... N.txt)
+get_active_strat_num() {
+    local dir="$1"
+    local max="$2"
+    for i in $(seq 1 "$max"); do 
+        if [ -s "$dir/$i.txt" ]; then 
+            echo "$i"
+            return
+        fi
+    done
+    echo "0"
+}
+
+# Функция инициализации (Спрашивает пользователя один раз)
+init_telemetry() {
+    mkdir -p "$CACHE_DIR"
+    local tel_enabled=""
+    local tel_uuid=""
+    
+    # 1. Загружаем конфиг, если он есть
+    [ -f "$TELEMETRY_CFG" ] && source "$TELEMETRY_CFG"
+
+    # 2. Если статус еще не задан — спрашиваем
+    if [ -z "$tel_enabled" ]; then
+        echo ""
+        echo -e "${green}Хотите отправлять анонимную статистику (Провайдер + Стратегии)?${plain}"
+        echo -e "Это поможет понять, какие стратегии работают лучше всего."
+        read -p "Разрешить? (y/n): " stats_yn
+        case "$stats_yn" in
+            [Yy]*) tel_enabled="1" ;;
+            *) tel_enabled="0" ;;
+        esac
+        
+        # Сразу сохраняем выбор
+        echo "tel_enabled=$tel_enabled" > "$TELEMETRY_CFG"
+        echo "tel_uuid=$tel_uuid" >> "$TELEMETRY_CFG"
+        
+        if [ "$tel_enabled" == "1" ]; then
+             echo -e "${green}Спасибо! Статистика включена.${plain}"
+        else
+             echo -e "${red}Статистика отключена.${plain}"
+        fi
+        sleep 1
+    fi
+
+    # 3. Генерация UUID (если включено и его нет)
+    if [ "$tel_enabled" == "1" ] && [ -z "$tel_uuid" ]; then
+        # Пытаемся взять системный UUID или генерируем md5 от времени
+        if [ -f /proc/sys/kernel/random/uuid ]; then
+            tel_uuid=$(cat /proc/sys/kernel/random/uuid | cut -c1-8)
+        else
+            tel_uuid=$(date +%s%N | md5sum | head -c 8)
+        fi
+        # Перезаписываем конфиг с новым UUID
+        echo "tel_enabled=$tel_enabled" > "$TELEMETRY_CFG"
+        echo "tel_uuid=$tel_uuid" >> "$TELEMETRY_CFG"
+    fi
+}
+
+# Функция отправки статистики
+send_stats() {
+    # Если конфига нет, значит init_telemetry не запускался — выходим
+    [ ! -f "$TELEMETRY_CFG" ] && return 0
+    
+    # Читаем переменные (tel_enabled, tel_uuid)
+    source "$TELEMETRY_CFG"
+    
+    # Если пользователь запретил — выходим
+    if [ "$tel_enabled" != "1" ]; then
+        return 0
+    fi
+
+    # 1. Провайдер (Читаем из provider.txt, который создает Provider detector)
+    local my_isp="Unknown"
+    if [ -s "$PROVIDER_TXT" ]; then
+        my_isp=$(cat "$PROVIDER_TXT")
+    else
+        # Фолбек: если provider.txt еще нет, пробуем быстро узнать
+        my_isp=$(curl -s --max-time 3 "http://ip-api.com/line?fields=org" | tr -cd '[:alnum:] ._-')
+    fi
+    # Обрезаем до 60 символов и ставим заглушку если пусто
+    my_isp=$(echo "$my_isp" | head -c 60)
+    [ -z "$my_isp" ] && my_isp="Unknown"
+
+    # 2. Определяем номера стратегий
+    local s_udp=$(get_active_strat_num "/opt/zapret/extra_strats/UDP/YT" 8)
+    local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
+    local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
+
+    # 3. Отправка в Google Forms (Тихий режим, в фоне &)
+    curl -sL --max-time 10 \
+        -d "$ENTRY_UUID=$tel_uuid" \
+        -d "$ENTRY_ISP=$my_isp" \
+        -d "$ENTRY_UDP=$s_udp" \
+        -d "$ENTRY_TCP=$s_tcp" \
+        -d "$ENTRY_RKN=$s_rkn" \
+        "https://docs.google.com/forms/d/e/$STATS_FORM_ID/formResponse" > /dev/null 2>&1 &
+}
+# ---- /Telemetry module integration ----
+
+# ---- Recomendations module ----
+RECS_URL="https://raw.githubusercontent.com/AloofLibra/zapret4rocket/master/recommendations.txt"
+RECS_FILE="/opt/zapret/extra_strats/cache/recommendations.txt"
+
+# 1. Функция обновления базы (в фоне)
+update_recommendations() {
+    mkdir -p "$(dirname "$RECS_FILE")"
+
+    # Проверка: если файл существует И он моложе 1 дня (24 часа) - выходим.
+    # -mtime -1 означает "изменен менее 1 дня назад"
+    if [ -f "$RECS_FILE" ] && [ -n "$(find "$RECS_FILE" -mtime -1 2>/dev/null)" ]; then
+        # Файл свежий, обновлять не нужно
+        return 0
+    fi
+
+    # Если файла нет или он старый - качаем
+    curl -s --max-time 5 "$RECS_URL" -o "$RECS_FILE" || rm -f "$RECS_FILE"
+}
+
+# 2. Функция показа подсказки (Logic + UI)
+show_hint() {
+    local strat_type="$1" # UDP, TCP или RKN
+    local my_isp=""
+    
+    # А. Узнаем провайдера
+    if [ -s "/opt/zapret/extra_strats/cache/provider.txt" ]; then
+        my_isp=$(cat "/opt/zapret/extra_strats/cache/provider.txt")
+    fi
+    
+    # Б. Проверяем наличие базы
+    if [ -z "$my_isp" ] || [ ! -f "$RECS_FILE" ]; then
+        return
+    fi
+    
+    # В. Ищем строку (grep -F для безопасности спецсимволов)
+    local line=$(grep -F "$my_isp|" "$RECS_FILE" | head -n 1)
+    [ -z "$line" ] && return
+    
+    # Г. Парсим
+    # Формат: ISP|UDP:x|TCP:y|RKN:z
+    local part=""
+    case "$strat_type" in
+        "UDP") part=$(echo "$line" | cut -d'|' -f2 | cut -d':' -f2) ;;
+        "TCP") part=$(echo "$line" | cut -d'|' -f3 | cut -d':' -f2) ;;
+        "RKN") part=$(echo "$line" | cut -d'|' -f4 | cut -d':' -f2) ;;
+    esac
+    
+    # Д. Выводим
+    if [ -n "$part" ] && [ "$part" != "-" ]; then
+        echo ""
+        echo -e "${cyan}💡 Подсказка:${plain} Пользователи ${green}$my_isp${plain} часто выбирают: ${yellow}$part${plain}"
+        echo -e "Попробуйте начать с них."
+        echo ""
+    fi
+}
+# ---- /Recomendations module ----
+
 #___Сначала идут анонсы функций____
+# Функция определяет номер активной стратегии в указанной папке
+# Использование: get_active_strat_num "/path/to/folder" MAX_COUNT
+get_active_strat_num() {
+    local folder="$1"
+    local max="$2"
+    local i
+    
+    # Перебираем файлы от 1 до MAX
+    for ((i=1; i<=max; i++)); do
+        if [ -s "${folder}/${i}.txt" ]; then
+            echo "$i"
+            return
+        fi
+    done
+    
+    # Если ничего не найдено - 0
+    echo "0"
+}
+
+# Функция для генерации строки статуса стратегий
+get_current_strategies_info() {
+    local s_udp=$(get_active_strat_num "/opt/zapret/extra_strats/UDP/YT" 8)
+    local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
+    local s_gv=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/GV" 17)
+    local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
+    
+    # Формируем красивую строку. Цвета можно менять.
+    # Функция для окраски: 0 - серый, >0 - зеленый
+    colorize_num() {
+        if [ "$1" == "0" ]; then
+            echo "${gray}Def${plain}"
+        else
+            echo "${green}$1${plain}"
+        fi
+    }
+
+    echo -e "UDP:$(colorize_num "$s_udp") TCP:$(colorize_num "$s_tcp") GV:$(colorize_num "$s_gv") RKN:$(colorize_num "$s_rkn")"
+}
 
 get_yt_cluster_domain() {
     local letters_list_a=('u' 'z' 'p' 'k' 'f' 'a' '5' '0' 'v' 'q' 'l' 'g' 'b' '6' '1' 'w' 'r' 'm' 'h' 'c' '7' '2' 'x' 's' 'n' 'i' 'd' '8' '3' 'y' 't' 'o' 'j' 'e' '9' '4' '-')
@@ -125,13 +427,13 @@ change_user() {
 
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
- mkdir -p /opt/zapret/lists /opt/zapret/extra_strats/TCP/{RKN,User,YT,temp} /opt/zapret/extra_strats/UDP/YT
+ mkdir -p /opt/zapret/lists /opt/zapret/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret/extra_strats/UDP/YT
  for listfile in cloudflare-ipset.txt cloudflare-ipset_v6.txt netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do curl -L -o /opt/zapret/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/lists/$listfile; done
  curl -L "https://github.com/IndeecFOX/zapret4rocket/raw/master/fake_files.tar.gz" | tar -xz -C /opt/zapret/files/fake
  curl -L -o /opt/zapret/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt
- touch /opt/zapret/lists/autohostlist.txt /opt/zapret/extra_strats/UDP/YT/{1..8}.txt /opt/zapret/extra_strats/TCP/RKN/{1..17}.txt /opt/zapret/extra_strats/TCP/User/{1..17}.txt /opt/zapret/extra_strats/TCP/YT/{1..17}.txt /opt/zapret/extra_strats/TCP/temp/{1..17}.txt
+ touch /opt/zapret/lists/autohostlist.txt /opt/zapret/extra_strats/UDP/YT/{1..8}.txt /opt/zapret/extra_strats/TCP/RKN/{1..17}.txt /opt/zapret/extra_strats/TCP/User/{1..17}.txt /opt/zapret/extra_strats/TCP/YT/{1..17}.txt /opt/zapret/extra_strats/TCP/GV/{1..17}.txt /opt/zapret/extra_strats/TCP/temp/{1..17}.txt
  if [ -d /opt/extra_strats ]; then
   rm -rf /opt/zapret/extra_strats
   mv /opt/extra_strats /opt/zapret/
@@ -150,6 +452,10 @@ get_repo() {
  curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
  cp -f /opt/zapret/init.d/sysv/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all
  cp -f /opt/zapret/init.d/sysv/custom.d/50-discord-media /opt/zapret/init.d/openwrt/custom.d/50-discord-media
+
+# cache
+mkdir -p /opt/zapret/extra_strats/cache
+
 }
 
 #Функция для функции подбора стратегий
@@ -158,51 +464,84 @@ try_strategies() {
     local base_path="$2"
     local list_file="$3"
     local final_action="$4"
-	read -re -p "Введите номер стратегии к которой перейти или Enter: " strat_num
-	if (( strat_num < 1 || strat_num > 17 )); then
-		echo "Введено значение не из диапазона 1-17. Начинаем с 1 стратегии"
-		strat_num=1
-	fi
-	#Очистка файлов если есть лист в папке
-	for ((clr_txt=1; clr_txt<=count; clr_txt++)); do
-		echo -n > "$base_path/${clr_txt}.txt"
-	done
+    
+    read -re -p "Введите номер стратегии к которой перейти или Enter: " strat_num
+    if (( strat_num < 1 || strat_num > count )); then
+        echo "Введено значение не из диапазона. Начинаем с 1 стратегии"
+        strat_num=1
+    fi
+
+    # Предварительная очистка всех файлов стратегий в папке
+    for ((clr_txt=1; clr_txt<=count; clr_txt++)); do
+        echo -n > "$base_path/${clr_txt}.txt"
+    done
+
+    # Основной цикл перебора
     for ((strat_num=strat_num; strat_num<=count; strat_num++)); do
+        
+        # Очищаем файл предыдущей стратегии (чтобы не было дублей)
         if [[ $strat_num -ge 2 ]]; then
             prev=$((strat_num - 1))
             echo -n > "$base_path/${prev}.txt"
         fi
 
+        # Запись в файл текущей стратегии
         if [[ "$list_file" != "/dev/null" ]]; then
+            # Режим списка (копируем весь файл)
             cp "$list_file" "$base_path/${strat_num}.txt"
         else
+            # Режим одного домена
             echo "$user_domain" > "$base_path/${strat_num}.txt"
         fi
+        
         echo "Стратегия номер $strat_num активирована"
-		
-		if [[ "$count" == "17" ]]; then
-		 if [[ -n "$user_domain" ]]; then
-			local TestURL="https://$user_domain"
-		 else
-			local TestURL="https://$(get_yt_cluster_domain)"
-		 fi
-		 check_access $TestURL
-		fi
-			
-        read -re -p "Проверьте работоспособность, например, в браузере и введите (\"1\" - сохранить и выйти, Enter - следующий вариант, \"0\" - выйти сбросив подбор к дефолтной стратегии): " answer_strat
+        
+        # Блок проверки доступности (curl)
+        # Работает только для TCP стратегий
+        if [[ "$count" == "17" ]]; then
+             local TestURL=""
+             
+             # ЛОГИКА ВЫБОРА ДОМЕНА ДЛЯ ПРОВЕРКИ
+             if [[ "$user_domain" == "googlevideo.com" ]]; then
+                # 1. Если это GVideo - ищем живой кластер для проверки видеопотока
+                local cluster
+                cluster=$(get_yt_cluster_domain)
+                TestURL="https://$cluster"
+                echo "Проверка доступности (кластер): $cluster"
+                
+             elif [[ -z "$user_domain" ]]; then
+                # 2. Если домен пустой (обычный режим YT) - проверяем доступ к самому сайту
+                TestURL="https://www.youtube.com"
+                
+             else
+                # 3. Для кастомных доменов и RKN проверяем сам введенный домен
+                TestURL="https://$user_domain"
+             fi
+             
+             check_access "$TestURL"
+        fi
+            
+        read -re -p "Проверьте работу (1 - сохранить, 0 - отмена, Enter - далее): " answer_strat
+        
         if [[ "$answer_strat" == "1" ]]; then
-            echo "Стратегия $strat_num сохранена. Выходим."
-			answer_strat=""
-            eval "$final_action"
+            echo "Стратегия $strat_num сохранена."
+            send_stats  # Отправка телеметрии (если включена)
+            
+            # Если передано дополнительное действие (final_action), выполняем его
+            if [[ -n "$final_action" ]]; then
+                eval "$final_action"
+            fi
             return
-		elif [[ "$answer_strat" == "0" ]]; then
-			echo -n > "$base_path/${strat_num}.txt"
-			answer_strat=""
-			echo "Изменения отменены. Выход."
-			return
+            
+        elif [[ "$answer_strat" == "0" ]]; then
+            # Сброс текущей стратегии при отмене
+            echo -n > "$base_path/${strat_num}.txt"
+            echo "Изменения отменены."
+            return
         fi
     done
 
+    # Если цикл закончился, а пользователь ничего не выбрал
     echo -n > "$base_path/${count}.txt"
     echo "Все стратегии испробованы. Ничего не подошло."
     exit_to_menu
@@ -214,7 +553,7 @@ Strats_Tryer() {
 	
 	if [ -z "$mode_domain" ]; then
 		# если аргумент не передан — спрашиваем вручную
-		read -re -p $'\033[33mПодобрать стратегию? Все 3 листа подбираемы отдельно, а не заменяют друг-друга. (1-4 или Enter для отмены подбора):\033[0m\n\033[32m1. Для хост-листа YouTube (UDP QUIC - браузеры, моб. приложения). 8 вариантов\n2. Для хост-листа YouTube (TCP - основной). 17 вариантов\n3. Для хост-листа основных доменов блока RKN. 17 вариантов\n4. Кастомный домен 17 вариантов\033[0m\n' answer_strat_mode
+		read -re -p $'\033[33mПодобрать стратегию? (1-5 или Enter для отмены):\033[0m\n\033[32m1. YouTube (UDP QUIC). 8 вариантов\n2. YouTube (TCP - интерфейс). 17 вариантов\n3. GVideo (TCP - видеопоток). 17 вариантов (NEW)\n4. RKN (Обход блокировок). 17 вариантов\n5. Кастомный домен 17 вариантов\033[0m\n' answer_strat_mode
 	else
 		if [ "${#mode_domain}" -gt 1 ]; then
 			answer_strat_mode="4"
@@ -227,21 +566,38 @@ Strats_Tryer() {
     case "$answer_strat_mode" in
         "1")
             echo "Подбор для хост-листа YouTube (UDP QUIC - браузеры, моб. приложения). Ранее заданная стратегия этого листа сброшена в дефолт."
+			#вывод подсказки
+			show_hint "UDP"
             try_strategies 8 "/opt/zapret/extra_strats/UDP/YT" "/opt/zapret/extra_strats/UDP/YT/List.txt" ""
             ;;
         "2")
             echo "Подбор для хост-листа YouTube (TCP - основной). Ранее заданная стратегия этого листа сброшена в дефолт."
+			#вывод подсказки
+			show_hint "TCP"
             try_strategies 17 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
             ;;
         "3")
+			echo "Подбор для GVideo (Видеопоток YT). Ранее заданная стратегия этого листа сброшена в дефолт."
+			#на всякий случай убираем GV из листа YT
+			[ -f "/opt/zapret/extra_strats/TCP/YT/List.txt" ] && \
+    			sed -i '/googlevideo.com/d' "/opt/zapret/extra_strats/TCP/YT/List.txt"
+			user_domain="googlevideo.com"
+			#вывод подсказки
+			#закомментировал, т.к. пока не поддерживается бэком
+			#show_hint "TCP"
+            try_strategies 17 "/opt/zapret/extra_strats/TCP/GV" "/dev/null" ""
+            ;;
+		"4")
             echo "Подбор для хост-листа основных доменов блока RKN. Проверка доступности задана на домен meduza.io. Ранее заданная стратегия этого листа сброшена в дефолт."
 			for numRKN in {1..17}; do
 				echo -n > "/opt/zapret/extra_strats/TCP/RKN/${numRKN}.txt"
 			done
 			user_domain="meduza.io"
+			#вывод подсказки
+			show_hint "RKN"
             try_strategies 17 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
             ;;
-        "4")
+        "5")
             echo "Режим кастомного домена"
 			if [ -z "$mode_domain" ]; then
 				read -re -p "Введите домен (например, mydomain.com): " user_domain
@@ -516,8 +872,55 @@ EOF
  echo -e "${plain}Выполнение установки завершено. ${green}Доступ по ip вашего роутера/VPS в формате ip:17681, например 192.168.1.1:17681 или mydomain.com:17681 ${yellow}логин: ${ttyd_login} пароль - не испольузется.${plain} Был выполнен выход из скрипта для сохранения состояния."
 }
 
+#Функция меню "14. Провайдер"
+provider_submenu() {
+  provider_init_once
+
+  echo -e "${yellow}Провайдер: ${plain}${PROVIDER_MENU}${yellow}
+${green}1.${yellow} Указать вручную
+${green}2.${yellow} Определить заново (сбросить кэш)
+${green}3.${yellow} Обновить базу рекомендаций (Подсказки)
+${green}0.${yellow} Назад${plain}"
+  read -re -p "" answer_provider
+
+  case "$answer_provider" in
+    "1") 
+        provider_set_manual_menu 
+        exit_to_menu 
+        ;;
+    "2") 
+        provider_force_redetect 
+        exit_to_menu 
+        ;;
+    "3") 
+        echo "Обновляем базу рекомендаций..."
+        # Принудительно удаляем старый файл, чтобы update_recommendations скачал новый
+        rm -f "$RECS_FILE"
+        update_recommendations
+        if [ -s "$RECS_FILE" ]; then
+            echo -e "${green}База успешно обновлена!${plain}"
+        else
+            echo -e "${red}Ошибка обновления базы.${plain}"
+        fi
+        sleep 1
+        exit_to_menu 
+        ;;
+    "0"|"") 
+        exit_to_menu 
+        ;;
+    *) 
+        exit_to_menu 
+        ;;
+  esac
+}
+
+
 #Меню, проверка состояний и вывод с чтением ответа
 get_menu() {
+local strategies_status=$(get_current_strategies_info)
+provider_init_once
+init_telemetry
+update_recommendations
  echo -e '
 '${red}'      *
      ***            '${Fcyan}'by Dmitriy Utkin:
@@ -532,11 +935,12 @@ get_menu() {
 '${green}'  ////|\\\\\\\\\      '${plain}'.   '${green}'/ '${Fcyan}'* . '${plain}'* . '${Fred}'* '${green}'\   '${plain}'.
 '${green}' /////|\\\\\\\\\\\        '${green}'/_____________\
 '${green}'//////|\\\\\\\\\\\\\      '${plain}'.     '${green}'[___]   '${plain}'.  .
+'"Город/провайдер: ${plain}${PROVIDER_MENU}${yellow}"'
 \033[32mВыберите необходимое действие:\033[33m
 Enter (без цифр) - переустановка/обновление zapret
 0. Выход
 01. Проверить доступность сервисов (Тест не точен)
-1. Сменить стратегии или добавить домен в хост-лист. Текущие: '${plain}$(num=$(for i in {1..8}; do f="/opt/zapret/extra_strats/UDP/YT/$i.txt"; [ -s "$f" ] && { echo "$i"; break; }; done); [ -n "$num" ] && echo "$num" || echo "0") $(num=$(for i in {1..17}; do f="/opt/zapret/extra_strats/TCP/YT/$i.txt"; [ -s "$f" ] && { echo "$i"; break; }; done); [ -n "$num" ] && echo "$num" || echo "0") $(num=$(for i in {1..17}; do f="/opt/zapret/extra_strats/TCP/RKN/$i.txt"; [ -s "$f" ] && { echo "$i"; break; }; done); [ -n "$num" ] && echo "$num" || echo "0")${yellow}'
+1. Сменить стратегии или добавить домен в хост-лист. Текущие: '${plain}[ ${strategies_status} ]${yellow}'
 2. Стоп/пере(запуск) zapret (сейчас: '$(pidof nfqws >/dev/null && echo "${green}Запущен${yellow}" || echo "${red}Остановлен${yellow}")')
 3. Тут могла быть ваша реклама :D (Функция перенесена во 2 пункт. Резерв)
 4. Удалить zapret
@@ -549,6 +953,7 @@ Enter (без цифр) - переустановка/обновление zapret
 11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '${plain}$(grep '^FLOWOFFLOAD=' /opt/zapret/config)${yellow}'
 12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '${plain}$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")${yellow}'
 13. Активировать доступ в меню через браузер (~3мб места)
+14. Провайдер
 777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Whoze, andric62, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, subzeero452, Grigaraz, Reconnaissance, comandante1928, umad, railwayfx, vtokarev1604, rudnev2028 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
  read -re -p '' answer_menu
  case "$answer_menu" in
@@ -741,6 +1146,9 @@ Enter (без цифр) - переустановка/обновление zapret
   "13")
    ttyd_webssh
    exit 7
+   ;;
+  "14")
+   provider_submenu
    ;;
   "777")
    echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028, umad, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 активирован. Наверное. Так же благодарю поддержавших проект hey_enote, VssA, vladdrazz, Alexey_Tob, Bor1sBr1tva, Azamatstd, iMLT, Qu3Bee, SasayKudasay1, alexander_novikoff, MarsKVV, porfenon123, bobrishe_dazzle, kotov38, Levonkas, DA00001, trin4ik, geodomin, I_ZNA_I и анонимов${plain}"

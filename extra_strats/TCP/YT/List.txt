@@ -1,4 +1,3 @@
-googlevideo.com
 youtube.com
 yt.be
 youtu.be
@@ -17,3 +16,4 @@ youtube.googleapis.com
 youtubei.googleapis.com
 yt-video-upload.l.google.com
 wide-youtube.l.google.com
+
