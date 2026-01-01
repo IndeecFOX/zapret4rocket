@@ -327,6 +327,7 @@ zefeer_premium_777() {
 
   local title
   title="$(premium_get_or_set_title)"
+  echo -e "Premium активирован ${green}ヽ(o^ ^o)ﾉ ${plain}"
   echo -e "Присвоен титул: ${pink}${title}${plain}"
 
   : > "$PREMIUM_FLAG"
@@ -1039,6 +1040,10 @@ ${green}0.${yellow} Назад${plain}"
 #Меню, проверка состояний и вывод с чтением ответа
 get_menu() {
 local strategies_status=$(get_current_strategies_info)
+TITLE_MENU_LINE=""
+if [[ -s "$PREMIUM_TITLE_FILE" ]]; then
+  TITLE_MENU_LINE="\n${pink}Титул:${plain} $(cat "$PREMIUM_TITLE_FILE")${yellow}\n"
+fi
 provider_init_once
 init_telemetry
 update_recommendations
@@ -1057,6 +1062,7 @@ update_recommendations
 '${green}' /////|\\\\\\\\\\\        '${green}'/_____________\
 '${green}'//////|\\\\\\\\\\\\\      '${plain}'.     '${green}'[___]   '${plain}'.  .
 '"Город/провайдер: ${plain}${PROVIDER_MENU}${yellow}"'
+'"${TITLE_MENU_LINE}"'
 \033[32mВыберите необходимое действие:\033[33m
 Enter (без цифр) - переустановка/обновление zapret
 0. Выход
