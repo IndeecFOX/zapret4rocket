@@ -158,15 +158,15 @@ else
     wget -q -T 3 -O "$TEMP_JSON" "$API_URL" 2>/dev/null || echo "[]" > "$TEMP_JSON"
 fi
 
-# Быстрый парсинг через grep - извлекаем все .sh файлы за один проход
-LIB_FILES=$(grep -o '"name":"[^"]*\.sh"' "$TEMP_JSON" 2>/dev/null | sed 's/"name":"//;s/"//g' | tr '\n' ' ')
+# Busybox-совместимый парсинг: ищем строки с "name" и извлекаем .sh файлы
+LIB_FILES=$(grep '"name":' "$TEMP_JSON" 2>/dev/null | grep '\.sh"' | sed 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' | tr '\n' ' ')
 rm -f "$TEMP_JSON"
 
 # Fallback если API не ответил
-[ -z "$LIB_FILES" ] && {
+if [ -z "$LIB_FILES" ] || [ "$LIB_FILES" = " " ]; then
     echo "⚠ Не удалось получить список, использую стандартный набор"
     LIB_FILES="actions.sh netcheck.sh provider.sh recommendations.sh strategies.sh submenus.sh telemetry.sh ui.sh"
-}
+fi
 
 # Параллельная загрузка библиотек
 echo "Загрузка библиотек..."
