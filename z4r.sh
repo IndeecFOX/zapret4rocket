@@ -454,83 +454,126 @@ Enter (без цифр) - переустановка/обновление zapret
     if [[ -f "$PREMIUM_FLAG" ]]; then
       echo -e "${red}999. Секретный пункт. Нажимать на свой страх и риск${plain}"
     fi
-    read -re -p '' answer_menu
+  read -r -p "" answer_menu
     case "$answer_menu" in
-      "0")
-        echo "Выход выполнен"
-        exit 0
-        ;;
-      "01")
-        check_access_list
-        ;;
-      "1")
-        echo "Режим подбора других стратегий"
-        strategies_submenu
-        ;;
-      "2")
-        if pidof nfqws >/dev/null; then
-          /opt/zapret/init.d/sysv/zapret stop
-          echo -e "${green}Выполнена команда остановки zapret${plain}"
-        else
-          /opt/zapret/init.d/sysv/zapret restart
-          echo -e "${green}Выполнена команда перезапуска zapret${plain}"
-        fi
-        exit_to_menu
-        ;;
-      "3") exit_to_menu ;;
-      "4")
-        remove_zapret
-        echo -e "${yellow}zapret удалён${plain}"
-        exit_to_menu
-        ;;
-      "5") menu_action_update_config_reset ;;
-      "6")
-        read -re -p "Введите домен, который добавить в исключения (например, mydomain.com): " user_domain
-        if [ -n "$user_domain" ]; then
-          echo "$user_domain" >> /opt/zapret/lists/netrogat.txt
-          echo -e "Домен ${yellow}$user_domain${plain} добавлен в исключения (netrogat.txt). zapret перезапущен."
-        else
-          echo "Ввод пустой, ничего не добавлено"
-        fi
-        exit_to_menu
-        ;;
-      "7")
-        if [[ "$OSystem" == "VPS" ]]; then
-          apt install nano
-        else
-          opkg remove nano 2>/dev/null || apk del nano 2>/dev/null && opkg install nano-full 2>/dev/null || apk add nano-full 2>/dev/null
-        fi
-        nano /opt/zapret/config
-        exit_to_menu
-        ;;
-      "8")
-        menu_action_toggle_bolvan_ports
-        ;;
-      "9")
-        menu_action_toggle_fwtype
-        exit_to_menu
-        ;;
-      "10")
-        menu_action_toggle_udp_range
-        exit_to_menu
-        ;;
-      "11") flowoffload_submenu ;;
-      "12") tcp443_submenu ;;
-      "13")
-        ttyd_webssh
-        exit 7
-        ;;
-      "14") provider_submenu ;;
-      "777")
-        echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028, umad, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 активирован. Наверное. Так же благодарю поддержавших проект hey_enote, VssA, vladdrazz, Alexey_Tob, Bor1sBr1tva, Azamatstd, iMLT, Qu3Bee, SasayKudasay1, alexander_novikoff, MarsKVV, porfenon123, bobrishe_dazzle, kotov38, Levonkas, DA00001, trin4ik, geodomin, I_ZNA_I и анонимов${plain}"
-        zefeer_premium_777
-        exit_to_menu
-        ;;
-      "999")
-        zefeer_space_999
-        exit_to_menu
-        ;;
-    esac
+    "")
+    # Enter (без цифр) -> выходим из меню и продолжаем выполнение скрипта (установка/обновление)
+    return 0
+    ;; 
+  "0")
+    echo "Выход выполнен"
+    exit 0
+    ;;
+
+  "01")
+    check_access_list
+    # check_access_list уже делает pause_enter внутри,
+    # поэтому тут дополнительная пауза не нужна.
+    ;;
+
+  "1")
+    echo "Режим подбора других стратегий"
+    strategies_submenu     # strategies_submenu сам в цикле и выходит через return
+    ;;
+
+  "2")
+    if pidof nfqws >/dev/null; then
+      /opt/zapret/init.d/sysv/zapret stop
+      echo -e "${green}Выполнена команда остановки zapret${plain}"
+    else
+      /opt/zapret/init.d/sysv/zapret restart
+      echo -e "${green}Выполнена команда перезапуска zapret${plain}"
+    fi
+    pause_enter
+    ;;
+
+  "3")
+    # Резерв: просто вернемся в меню
+    ;;
+
+  "4")
+    remove_zapret
+    echo -e "${yellow}zapret удалён${plain}"
+    pause_enter
+    ;;
+
+  "5")
+    menu_action_update_config_reset
+    pause_enter
+    ;;
+
+  "6")
+    read -r -p "Введите домен, который добавить в исключения (например, mydomain.com): " user_domain
+    if [ -n "$user_domain" ]; then
+      echo "$user_domain" >> /opt/zapret/lists/netrogat.txt
+      /opt/zapret/init.d/sysv/zapret restart
+      echo -e "Домен ${yellow}$user_domain${plain} добавлен в исключения (netrogat.txt). zapret перезапущен."
+    else
+      echo "Ввод пустой, ничего не добавлено"
+    fi
+    pause_enter
+    ;;
+
+  "7")
+    if [[ "$OSystem" == "VPS" ]]; then
+      apt install nano
+    else
+      opkg remove nano 2>/dev/null || apk del nano 2>/dev/null
+      opkg install nano-full 2>/dev/null || apk add nano-full 2>/dev/null
+    fi
+    nano /opt/zapret/config
+    # после выхода из nano
+    ;;
+
+  "8")
+    menu_action_toggle_bolvan_ports
+    pause_enter
+    ;;
+
+  "9")
+    menu_action_toggle_fwtype
+    pause_enter
+    ;;
+
+  "10")
+    menu_action_toggle_udp_range
+    pause_enter
+    ;;
+
+  "11")
+    flowoffload_submenu   # сабменю само в цикле и выходит через return
+    ;;
+
+  "12")
+    tcp443_submenu        # сабменю само в цикле и выходит через return
+    ;;
+
+  "13")
+    ttyd_webssh
+    pause_enter
+    ;;
+
+  "14")
+    provider_submenu      # сабменю само в цикле и выходит через return
+    ;;
+
+  "777")
+    echo -e "${green}... premium ...${plain}"
+    zefeer_premium_777
+    pause_enter
+    ;;
+
+  "999")
+    zefeer_space_999
+    pause_enter
+    ;;
+
+  *)
+    echo -e "${yellow}Неверный ввод.${plain}"
+    sleep 1
+    ;;
+esac
+
   done
 }
 
