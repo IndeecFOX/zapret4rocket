@@ -44,38 +44,6 @@ source "$SCRIPT_DIR/lib/strategies.sh"
 source "$SCRIPT_DIR/lib/submenus.sh"
 source "$SCRIPT_DIR/lib/actions.sh"
 
-#Запрос на резервирование настроек в подборе стратегий
-backup_strats() {
-  if [ -d /opt/zapret/extra_strats ]; then
-    read -re -p $'\033[0;33mХотите сохранить текущие настройки ручного подбора стратегий? Не рекомендуется. (5 - сохранить, Enter - нет\n0 - прервать операцию): \033[0m' answer_backup
-    if [[ "$answer_backup" == "5" ]]; then
-		cp -rf /opt/zapret/extra_strats /opt/
-  		echo "Настройки подбора резервированы."
-	elif [[ "$answer_backup" == "0" ]]; then
-		exit_to_menu
-	fi
-	answer_backup=""
-	read -re -p $'\033[0;33mХотите сохранить добавленные в лист исключений домены? Не рекомендуется. (\"5\" - сохранить, Enter - нет): \033[0m' answer_backup
-	if [[ "$answer_backup" == "5" ]]; then
-		cp -f /opt/zapret/lists/netrogat.txt /opt/
-       	echo "Лист исключений резервирован."
-  	fi	
-  fi
-}
-
-#Раскомменчивание юзера под keenetic или merlin
-change_user() {
-   if /opt/zapret/nfq/nfqws --dry-run --user="nobody" 2>&1 | grep -q "queue"; then
-    echo "WS_USER=nobody"
-	sed -i 's/^#\(WS_USER=nobody\)/\1/' /opt/zapret/config.default
-   elif /opt/zapret/nfq/nfqws --dry-run --user="$(head -n1 /etc/passwd | cut -d: -f1)" 2>&1 | grep -q "queue"; then
-    echo "WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)"
-    sed -i "s/^#WS_USER=nobody$/WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)/" "/opt/zapret/config.default"
-   else
-    echo -e "${yellow}WS_USER не подошёл. Скорее всего будут проблемы. Если что - пишите в саппорт${plain}"
-   fi
-}
-
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
  mkdir -p /opt/zapret/lists /opt/zapret/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret/extra_strats/UDP/YT
