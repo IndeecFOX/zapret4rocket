@@ -16,7 +16,7 @@ strategies_submenu() {
     submenu_item "0" "Назад"
     echo ""
 
-    read -r -p "Ваш выбор: " ans
+    read -re -p "Ваш выбор: " ans
 
     case "$ans" in
       "1"|"2"|"3"|"4")
@@ -25,7 +25,7 @@ strategies_submenu() {
         ;;
       "5")
         local user_domain=""
-        read -r -p "Введите домен (например mydomain.com) или Enter для выхода: " user_domain
+        read -re -p "Введите домен (например mydomain.com) или Enter для выхода: " user_domain
         [ -z "$user_domain" ] && continue
         Strats_Tryer "$user_domain"
         pause_enter
@@ -55,7 +55,7 @@ flowoffload_submenu() {
     submenu_item "0" "Назад"
     echo ""
 
-    read -r -p "Ваш выбор: " ans
+    read -re -p "Ваш выбор: " ans
 
     case "$ans" in
       "1")
@@ -113,7 +113,7 @@ tcp443_submenu() {
     echo "Enter Назад"
     echo ""
 
-    read -r -p "Ваш выбор: " ans
+    read -re -p "Ваш выбор: " ans
 
     case "$ans" in
       "" )
@@ -179,7 +179,7 @@ provider_submenu() {
     submenu_item "0" "Назад"
     echo ""
 
-    read -r -p "Ваш выбор: " ans
+    read -re -p "Ваш выбор: " ans
 
     case "$ans" in
       "1")
