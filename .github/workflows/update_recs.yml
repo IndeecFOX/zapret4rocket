@@ -25,4 +25,5 @@ jobs:
           git add recommendations.txt
           # Коммитим только если есть изменения
           git commit -m "Update recommendations" || exit 0
+          git pull --rebase
           git push
