@@ -1,5 +1,4 @@
 #!/bin/sh
-# Используем /bin/sh вместо /bin/bash для максимальной совместимости
 
 BRANCH="GV-Fix"
 RAW_URL="https://raw.githubusercontent.com/AloofLibra/zapret4rocket/${BRANCH}"
@@ -7,86 +6,51 @@ API_URL="https://api.github.com/repos/AloofLibra/zapret4rocket/contents/lib?ref=
 INSTALL_DIR="/opt"
 INSTALLER_URL="${RAW_URL}/install_z4r.sh"
 
-# Определение правильного пути для команды z4r
-# Приоритет путей для различных систем
+# Определение пути для команды z4r
 if [ -d /opt/bin ]; then
-    # Keenetic/Entware, OpenWRT с Entware
     BIN_PATH="/opt/bin/z4r"
-    IS_EMBEDDED=1
 elif [ -d /jffs/scripts ]; then
-    # Asus Merlin, DD-WRT
     BIN_PATH="/jffs/scripts/z4r"
-    IS_EMBEDDED=1
 elif [ -d /usr/local/bin ] && [ -w /usr/local/bin ]; then
-    # Стандартные Linux системы, предпочтительно /usr/local/bin
     BIN_PATH="/usr/local/bin/z4r"
-    IS_EMBEDDED=0
 elif [ -d /usr/bin ] && [ -w /usr/bin ]; then
-    # Fallback на /usr/bin
     BIN_PATH="/usr/bin/z4r"
-    IS_EMBEDDED=0
 else
     echo "Ошибка: не найдено подходящее место для установки"
     exit 1
 fi
 
-# Включить для отладки
-DEBUG=0
-
-debug_log() {
-    if [ "$DEBUG" = "1" ]; then
-        echo "[DEBUG] $1"
-    fi
-}
-
-# Проверка прав root (где это применимо)
-if [ "$(id -u)" != "0" ] && [ "$IS_EMBEDDED" = "0" ]; then 
+# Проверка прав root для стандартных систем
+if [ "$(id -u)" != "0" ] && [ ! -d /opt/bin ] && [ ! -d /jffs/scripts ]; then 
     echo "Ошибка: Скрипт должен быть запущен с правами root (используйте sudo)"
     exit 1
 fi
 
-debug_log "Целевой путь установки: $BIN_PATH"
-debug_log "Embedded режим: $IS_EMBEDDED"
-
 # Проверка wget или curl
-if command -v wget >/dev/null 2>&1; then
-    DOWNLOADER="wget"
-    DL_CMD="wget -q -O"
-    debug_log "Используется wget"
-elif command -v curl >/dev/null 2>&1; then
-    DOWNLOADER="curl"
+if command -v curl >/dev/null 2>&1; then
     DL_CMD="curl -sS -L -o"
-    debug_log "Используется curl"
+elif command -v wget >/dev/null 2>&1; then
+    DL_CMD="wget -q -O"
 else
     echo "Ошибка: wget или curl не найдены"
     exit 1
 fi
 
-# Определение откуда запущен скрипт (совместимо с busybox)
-get_script_path() {
-    if [ -n "$BASH_SOURCE" ]; then
-        echo "$BASH_SOURCE"
-    elif command -v readlink >/dev/null 2>&1; then
-        readlink -f "$0" 2>/dev/null || echo "$0"
-    elif command -v realpath >/dev/null 2>&1; then
-        realpath "$0" 2>/dev/null || echo "$0"
-    else
-        # Fallback для систем без readlink/realpath
-        echo "$0"
-    fi
-}
+# Определение откуда запущен скрипт
+if command -v readlink >/dev/null 2>&1; then
+    SCRIPT_PATH=$(readlink -f "$0" 2>/dev/null || echo "$0")
+elif command -v realpath >/dev/null 2>&1; then
+    SCRIPT_PATH=$(realpath "$0" 2>/dev/null || echo "$0")
+else
+    SCRIPT_PATH="$0"
+fi
 
-SCRIPT_PATH="$(get_script_path)"
-debug_log "Путь скрипта: $SCRIPT_PATH"
-
-# Если скрипт запущен из установленной команды z4r - проверяем обновления
-if [ "$SCRIPT_PATH" = "$BIN_PATH" ] || [ "$(basename "$SCRIPT_PATH")" = "z4r" ]; then
-    debug_log "Запуск из установленной команды z4r"
+# Если запущен из установленной команды - проверяем обновления
+if [ "$SCRIPT_PATH" = "$BIN_PATH" ]; then
     echo "Проверка обновлений установщика..."
+    TEMP_INSTALLER="/tmp/z4r_inst_$$"
 
-    TEMP_INSTALLER="$(mktemp 2>/dev/null || echo "/tmp/z4r_inst_$$")"
     if $DL_CMD "$TEMP_INSTALLER" "$INSTALLER_URL" 2>/dev/null; then
-        # Сравниваем с текущей версией (busybox-compatible)
         if ! cmp "$SCRIPT_PATH" "$TEMP_INSTALLER" >/dev/null 2>&1; then
             echo "✓ Найдено обновление установщика"
             cp "$TEMP_INSTALLER" "$BIN_PATH"
@@ -95,60 +59,44 @@ if [ "$SCRIPT_PATH" = "$BIN_PATH" ] || [ "$(basename "$SCRIPT_PATH")" = "z4r" ];
             echo "✓ Установщик обновлен, перезапуск..."
             echo ""
             exec "$BIN_PATH" "$@"
-        else
-            debug_log "Установщик актуален"
         fi
         rm -f "$TEMP_INSTALLER"
-    else
-        debug_log "Не удалось проверить обновления установщика"
     fi
 else
-    # Первый запуск - устанавливаем себя
-    debug_log "Первый запуск, выполняется установка"
-    
-    if [ "$IS_EMBEDDED" = "1" ]; then
-        echo "Обнаружена embedded система, установка в $BIN_PATH..."
-    else
-        echo "Установка команды z4r в систему..."
-    fi
-    
-    # Создаем директорию если не существует
+    # Первый запуск - установка
+    echo "Установка команды z4r в $BIN_PATH..."
     mkdir -p "$(dirname "$BIN_PATH")"
-    
-    # При запуске через pipe просто скачиваем себя в нужное место
-    if $DL_CMD "$BIN_PATH" "$INSTALLER_URL" 2>/dev/null; then
-        chmod +x "$BIN_PATH"
-        echo "✓ Команда z4r установлена в $BIN_PATH"
+
+    # Копируем файл или скачиваем
+    if [ -f "$SCRIPT_PATH" ]; then
+        cp "$SCRIPT_PATH" "$BIN_PATH"
     else
-        echo "⚠ Не удалось установить команду z4r"
-        echo "Основной z4r.sh будет работать из /opt/z4r.sh"
+        $DL_CMD "$BIN_PATH" "$INSTALLER_URL" 2>/dev/null || {
+            echo "⚠ Не удалось установить команду z4r"
+        }
     fi
+
+    [ -f "$BIN_PATH" ] && chmod +x "$BIN_PATH" && echo "✓ Команда z4r установлена"
     echo ""
 fi
 
-
 echo "=== Обновление zapret4rocket ==="
 
-# Создание директорий
+# Создание директорий и загрузка основного скрипта
 mkdir -p "${INSTALL_DIR}/lib"
-debug_log "Создана директория ${INSTALL_DIR}/lib"
-
-# Скачивание основного скрипта
 echo "Загрузка z4r.sh..."
-debug_log "URL: ${RAW_URL}/z4r.sh"
-if $DL_CMD "${INSTALL_DIR}/z4r.sh" "${RAW_URL}/z4r.sh"; then
+
+if $DL_CMD "${INSTALL_DIR}/z4r.sh" "${RAW_URL}/z4r.sh" 2>/dev/null; then
     chmod +x "${INSTALL_DIR}/z4r.sh"
     echo "✓ z4r.sh загружен"
+elif [ ! -f "${INSTALL_DIR}/z4r.sh" ]; then
+    echo "Ошибка: z4r.sh отсутствует"
+    exit 1
 else
-    echo "⚠ Не удалось загрузить z4r.sh"
-    if [ ! -f "${INSTALL_DIR}/z4r.sh" ]; then
-        echo "Ошибка: z4r.sh отсутствует"
-        exit 1
-    fi
-    echo "Использую существующую версию"
+    echo "⚠ Не удалось загрузить z4r.sh, использую существующую версию"
 fi
 
-# Получение списка файлов из lib
+# Получение списка библиотек
 echo "Загрузка списка библиотек..."
 TEMP_JSON="/tmp/z4r_json_$$"
 
@@ -158,13 +106,12 @@ else
     wget -q -T 3 -O "$TEMP_JSON" "$API_URL" 2>/dev/null || echo "[]" > "$TEMP_JSON"
 fi
 
-# Busybox-совместимый парсинг: ищем строки с "name" и извлекаем .sh файлы
+# Парсинг JSON
 LIB_FILES=$(grep '"name":' "$TEMP_JSON" 2>/dev/null | grep '\.sh"' | sed 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/' | tr '\n' ' ')
 rm -f "$TEMP_JSON"
 
-# Fallback если API не ответил
+# Fallback на стандартный набор
 if [ -z "$LIB_FILES" ] || [ "$LIB_FILES" = " " ]; then
-    echo "⚠ Не удалось получить список, использую стандартный набор"
     LIB_FILES="actions.sh netcheck.sh provider.sh recommendations.sh strategies.sh submenus.sh telemetry.sh ui.sh"
 fi
 
@@ -177,8 +124,6 @@ for file in $LIB_FILES; do
         fi
     } &
 done
-
-# Ждем завершения всех фоновых процессов
 wait
 
 # Подсчет загруженных файлов
@@ -188,30 +133,20 @@ echo ""
 
 # Запуск z4r.sh
 echo "=== Запуск z4r.sh ==="
-debug_log "Рабочая директория: ${INSTALL_DIR}"
-
 cd "${INSTALL_DIR}" || exit 1
 
-# Определяем какой shell использовать
+# Определяем shell
 if command -v bash >/dev/null 2>&1; then
-    SHELL_CMD="$(command -v bash)"
-    debug_log "Найден bash: $SHELL_CMD"
+    SHELL_CMD="bash"
 elif command -v ash >/dev/null 2>&1; then
-    SHELL_CMD="$(command -v ash)"
-    debug_log "Найден ash: $SHELL_CMD"
+    SHELL_CMD="ash"
 else
-    SHELL_CMD="/bin/sh"
-    debug_log "Используется sh"
+    SHELL_CMD="sh"
 fi
-
-debug_log "Используемый shell: $SHELL_CMD"
-debug_log "Команда: $SHELL_CMD ${INSTALL_DIR}/z4r.sh"
 
 # Перенаправляем stdin на терминал если запущено через pipe
 if [ -t 0 ]; then
-    debug_log "stdin подключен к терминалу"
     exec $SHELL_CMD ./z4r.sh "$@"
 else
-    debug_log "stdin это pipe, переподключение к /dev/tty"
     exec $SHELL_CMD ./z4r.sh "$@" < /dev/tty
 fi
