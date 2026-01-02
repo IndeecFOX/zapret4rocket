@@ -123,15 +123,45 @@ z4r_self_update 0 "$@"
 
 #Определяем путь скрипта, подгружаем функции
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/lib/ui.sh"
-source "$SCRIPT_DIR/lib/provider.sh"
-source "$SCRIPT_DIR/lib/telemetry.sh"
-source "$SCRIPT_DIR/lib/recommendations.sh"
+
+# UI helpers (пауза/печать пунктов меню/совместимость старого кода)
+# Функции: pause_enter, submenu_item, exit_to_menu
+source "$SCRIPT_DIR/lib/ui.sh" 
+
+# Определение провайдера/города + ручная установка/сброс кэша
+# Функции: provider_init_once, provider_force_redetect, provider_set_manual_menu
+# (внутр.: _detect_api_simple)
+source "$SCRIPT_DIR/lib/provider.sh" 
+
+# Телеметрия (вкл/выкл один раз + отправка статистики в Google Forms)
+# Функции: init_telemetry, send_stats
+source "$SCRIPT_DIR/lib/telemetry.sh" 
+
+# База подсказок по стратегиям (скачивание + вывод подсказки по провайдеру)
+# Функции: update_recommendations, show_hint
+source "$SCRIPT_DIR/lib/recommendations.sh" 
+
+# Проверка доступности ресурсов/сети (TLS 1.2/1.3) + получение домена кластера youtube (googlevideo)
+# Функции: get_yt_cluster_domain, check_access, check_access_list
 source "$SCRIPT_DIR/lib/netcheck.sh"
-source "$SCRIPT_DIR/lib/premium.sh"
-source "$SCRIPT_DIR/lib/strategies.sh"
-source "$SCRIPT_DIR/lib/submenus.sh"
-source "$SCRIPT_DIR/lib/actions.sh"
+
+# “Premium” пункты 777/999 и их вспомогательные эффекты (рандом, спиннер, титулы)
+# Функции: rand_from_list, spinner_for_seconds, premium_get_or_set_title, zefeer_premium_777, zefeer_space_999
+source "$SCRIPT_DIR/lib/premium.sh" 
+
+# Логика стратегий: определение активной стратегии, статус строкой, перебор стратегий, быстрый подбор
+# Функции: get_active_strat_num, get_current_strategies_info, try_strategies, Strats_Tryer
+source "$SCRIPT_DIR/lib/strategies.sh" 
+
+# Подменю (UI-обвязка над Strats_Tryer + доп. меню управления: FLOWOFFLOAD, TCP443, провайдер)
+# Функции: strategies_submenu, flowoffload_submenu, tcp443_submenu, provider_submenu
+source "$SCRIPT_DIR/lib/submenus.sh" 
+
+# Действия меню (бэкапы/сбросы/переключатели)
+# Функции: backup_strats, menu_action_update_config_reset, menu_action_toggle_bolvan_ports,
+#          menu_action_toggle_fwtype, menu_action_toggle_udp_range
+source "$SCRIPT_DIR/lib/actions.sh" 
+
 
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
