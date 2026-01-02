@@ -1,3 +1,31 @@
+backup_strats() {
+  # Бэкап папки стратегий
+  if [ -d /opt/zapret/extra_strats ]; then
+    echo -e "${yellow}Сделать бэкап /opt/zapret/extra_strats ?${plain}"
+    echo -e "${yellow}5 - Да, Enter - Нет${plain}"
+    read -r ans
+    if [ "$ans" = "5" ] || [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
+      rm -rf /opt/extra_strats 2>/dev/null || true
+      cp -rf /opt/zapret/extra_strats /opt/ || true
+      echo -e "${green}Бэкап extra_strats сохранён в /opt/extra_strats${plain}"
+    fi
+  fi
+
+  # Бэкап листа исключений
+  if [ -f /opt/zapret/lists/netrogat.txt ]; then
+    echo -e "${yellow}Сделать бэкап /opt/zapret/lists/netrogat.txt ?${plain}"
+    echo -e "${yellow}5 - Да, Enter - Нет${plain}"
+    read -r ans2
+    if [ "$ans2" = "5" ] || [ "$ans2" = "y" ] || [ "$ans2" = "Y" ]; then
+      cp -f /opt/zapret/lists/netrogat.txt /opt/netrogat.txt || true
+      echo -e "${green}Бэкап netrogat.txt сохранён в /opt/netrogat.txt${plain}"
+    fi
+  fi
+
+  return 0
+}
+
+
 menu_action_update_config_reset() {
   echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
 
