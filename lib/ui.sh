@@ -1,7 +1,7 @@
 # UI helpers
 
 pause_enter() {
-  read -r -p "Enter для продолжения" _
+  read -re -p "Enter для продолжения" _
 }
 
 submenu_item() {
