@@ -403,7 +403,7 @@ show_hint() {
         "UDP") part=$(echo "$line" | cut -d'|' -f2 | cut -d':' -f2) ;;
         "TCP") part=$(echo "$line" | cut -d'|' -f3 | cut -d':' -f2) ;;
         "GV")  part=$(echo "$line" | cut -d'|' -f4 | cut -d':' -f2) ;;
-        "RKN") part=$(echo "$line" | cut -d'|' -f4 | cut -d':' -f2) ;;
+        "RKN") part=$(echo "$line" | cut -d'|' -f5 | cut -d':' -f2) ;;
     esac
     
     # Д. Выводим
