@@ -21,16 +21,18 @@ else
 fi
 
 # Проверка прав root для стандартных систем
-if [ "$(id -u)" != "0" ] && [ ! -d /opt/bin ] && [ ! -d /jffs/scripts ]; then 
+[ "$(id -u)" != "0" ] && [ ! -d /opt/bin ] && [ ! -d /jffs/scripts ] && {
     echo "Ошибка: Скрипт должен быть запущен с правами root (используйте sudo)"
     exit 1
-fi
+}
 
 # Проверка wget или curl
 if command -v curl >/dev/null 2>&1; then
     DL_CMD="curl -sS -L -o"
+    DL_TIMEOUT="--max-time 3"
 elif command -v wget >/dev/null 2>&1; then
     DL_CMD="wget -q -O"
+    DL_TIMEOUT="-T 3"
 else
     echo "Ошибка: wget или curl не найдены"
     exit 1
@@ -50,7 +52,7 @@ if [ "$SCRIPT_PATH" = "$BIN_PATH" ]; then
     echo "Проверка обновлений установщика..."
     TEMP_INSTALLER="/tmp/z4r_inst_$$"
 
-    if $DL_CMD "$TEMP_INSTALLER" "$INSTALLER_URL" 2>/dev/null; then
+    if $DL_CMD "$TEMP_INSTALLER" $DL_TIMEOUT "$INSTALLER_URL" 2>/dev/null; then
         if ! cmp "$SCRIPT_PATH" "$TEMP_INSTALLER" >/dev/null 2>&1; then
             echo "✓ Найдено обновление установщика"
             cp "$TEMP_INSTALLER" "$BIN_PATH"
@@ -67,13 +69,11 @@ else
     echo "Установка команды z4r в $BIN_PATH..."
     mkdir -p "$(dirname "$BIN_PATH")"
 
-    # Копируем файл или скачиваем
     if [ -f "$SCRIPT_PATH" ]; then
         cp "$SCRIPT_PATH" "$BIN_PATH"
     else
-        $DL_CMD "$BIN_PATH" "$INSTALLER_URL" 2>/dev/null || {
+        $DL_CMD "$BIN_PATH" $DL_TIMEOUT "$INSTALLER_URL" 2>/dev/null || 
             echo "⚠ Не удалось установить команду z4r"
-        }
     fi
 
     [ -f "$BIN_PATH" ] && chmod +x "$BIN_PATH" && echo "✓ Команда z4r установлена"
@@ -81,29 +81,38 @@ else
 fi
 
 echo "=== Обновление zapret4rocket ==="
-
-# Создание директорий и загрузка основного скрипта
 mkdir -p "${INSTALL_DIR}/lib"
-echo "Загрузка z4r.sh..."
 
-if $DL_CMD "${INSTALL_DIR}/z4r.sh" "${RAW_URL}/z4r.sh" 2>/dev/null; then
-    chmod +x "${INSTALL_DIR}/z4r.sh"
-    echo "✓ z4r.sh загружен"
-elif [ ! -f "${INSTALL_DIR}/z4r.sh" ]; then
-    echo "Ошибка: z4r.sh отсутствует"
-    exit 1
-else
-    echo "⚠ Не удалось загрузить z4r.sh, использую существующую версию"
-fi
-
-# Получение списка библиотек
-echo "Загрузка списка библиотек..."
+# ОПТИМИЗАЦИЯ: Параллельная загрузка z4r.sh и списка библиотек
+echo "Загрузка компонентов..."
 TEMP_JSON="/tmp/z4r_json_$$"
 
-if command -v curl >/dev/null 2>&1; then
-    curl -sS -L --max-time 3 -o "$TEMP_JSON" "$API_URL" 2>/dev/null || echo "[]" > "$TEMP_JSON"
-else
-    wget -q -T 3 -O "$TEMP_JSON" "$API_URL" 2>/dev/null || echo "[]" > "$TEMP_JSON"
+{
+    # Загрузка основного скрипта в фоне
+    if $DL_CMD "${INSTALL_DIR}/z4r.sh" "$RAW_URL/z4r.sh" 2>/dev/null; then
+        chmod +x "${INSTALL_DIR}/z4r.sh"
+        echo "✓ z4r.sh загружен"
+    else
+        [ ! -f "${INSTALL_DIR}/z4r.sh" ] && echo "ERROR_Z4R" > /tmp/z4r_error_$$
+    fi
+} &
+Z4R_PID=$!
+
+{
+    # Загрузка списка библиотек в фоне
+    $DL_CMD "$TEMP_JSON" $DL_TIMEOUT "$API_URL" 2>/dev/null || echo "[]" > "$TEMP_JSON"
+} &
+API_PID=$!
+
+# Ждем завершения обеих загрузок
+wait $Z4R_PID
+wait $API_PID
+
+# Проверка критической ошибки
+if [ -f /tmp/z4r_error_$$ ]; then
+    rm -f /tmp/z4r_error_$$
+    echo "Ошибка: z4r.sh отсутствует"
+    exit 1
 fi
 
 # Парсинг JSON
@@ -111,24 +120,19 @@ LIB_FILES=$(grep '"name":' "$TEMP_JSON" 2>/dev/null | grep '\.sh"' | sed 's/.*"n
 rm -f "$TEMP_JSON"
 
 # Fallback на стандартный набор
-if [ -z "$LIB_FILES" ] || [ "$LIB_FILES" = " " ]; then
-    LIB_FILES="actions.sh netcheck.sh provider.sh recommendations.sh strategies.sh submenus.sh telemetry.sh ui.sh"
-fi
+[ -z "$LIB_FILES" ] && LIB_FILES="actions.sh netcheck.sh provider.sh recommendations.sh strategies.sh submenus.sh telemetry.sh ui.sh"
 
 # Параллельная загрузка библиотек
 echo "Загрузка библиотек..."
 for file in $LIB_FILES; do
     {
-        if $DL_CMD "${INSTALL_DIR}/lib/${file}" "${RAW_URL}/lib/${file}" 2>/dev/null; then
+        $DL_CMD "${INSTALL_DIR}/lib/${file}" "$RAW_URL/lib/${file}" 2>/dev/null && 
             chmod +x "${INSTALL_DIR}/lib/${file}"
-        fi
     } &
 done
 wait
 
-# Подсчет загруженных файлов
-LIB_UPDATED=$(ls -1 "${INSTALL_DIR}/lib"/*.sh 2>/dev/null | wc -l)
-echo "✓ Загружено библиотек: $LIB_UPDATED"
+echo "✓ Компоненты загружены"
 echo ""
 
 # Запуск z4r.sh
@@ -145,8 +149,4 @@ else
 fi
 
 # Перенаправляем stdin на терминал если запущено через pipe
-if [ -t 0 ]; then
-    exec $SHELL_CMD ./z4r.sh "$@"
-else
-    exec $SHELL_CMD ./z4r.sh "$@" < /dev/tty
-fi
+[ -t 0 ] && exec $SHELL_CMD ./z4r.sh "$@" || exec $SHELL_CMD ./z4r.sh "$@" < /dev/tty
