@@ -8,8 +8,7 @@ BIN_PATH="/usr/bin/z4r"
 INSTALLER_URL="${RAW_URL}/install_z4r.sh"
 
 # Включить для отладки
-DEBUG=1
-
+DEBUG=0
 debug_log() {
     if [ "$DEBUG" = "1" ]; then
         echo "[DEBUG] $1"
