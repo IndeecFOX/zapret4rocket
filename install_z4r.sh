@@ -105,22 +105,27 @@ if [ "$SCRIPT_PATH" = "$BIN_PATH" ] || [ "$(basename "$SCRIPT_PATH")" = "z4r" ];
 else
     # Первый запуск - устанавливаем себя
     debug_log "Первый запуск, выполняется установка"
-    if [ -f "$SCRIPT_PATH" ]; then
-        if [ "$IS_EMBEDDED" = "1" ]; then
-            echo "Обнаружена embedded система, установка в $BIN_PATH..."
-        else
-            echo "Установка команды z4r в систему..."
-        fi
-
-        # Создаем директорию если не существует
-        mkdir -p "$(dirname "$BIN_PATH")"
-
-        cp "$SCRIPT_PATH" "$BIN_PATH"
+    
+    if [ "$IS_EMBEDDED" = "1" ]; then
+        echo "Обнаружена embedded система, установка в $BIN_PATH..."
+    else
+        echo "Установка команды z4r в систему..."
+    fi
+    
+    # Создаем директорию если не существует
+    mkdir -p "$(dirname "$BIN_PATH")"
+    
+    # При запуске через pipe просто скачиваем себя в нужное место
+    if $DL_CMD "$BIN_PATH" "$INSTALLER_URL" 2>/dev/null; then
         chmod +x "$BIN_PATH"
         echo "✓ Команда z4r установлена в $BIN_PATH"
-        echo ""
+    else
+        echo "⚠ Не удалось установить команду z4r"
+        echo "Основной z4r.sh будет работать из /opt/z4r.sh"
     fi
+    echo ""
 fi
+
 
 echo "=== Обновление zapret4rocket ==="
 
