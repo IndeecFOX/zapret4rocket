@@ -30,6 +30,70 @@ Bcyan='\033[46m'
 
 #___Сначала идут анонсы функций____
 
+##Автообновление (ну типа)##
+Z4R_RAW_BASE="https://raw.githubusercontent.com/AloofLibra/zapret4rocket/GV-Fix"
+Z4R_LAUNCHER_URL="https://raw.githubusercontent.com/AloofLibra/z4r/main/z4r"
+Z4R_SELFUPDATE_STAMP="/opt/.z4r_selfupdate_stamp"
+
+_z4r_fetch() {
+  # $1 = relative path in repo, $2 = destination file
+  local rel="$1" dst="$2" tmp="${dst}.tmp"
+  curl -fsSL --max-time 20 "$Z4R_RAW_BASE/$rel" | sed 's/\r$//' > "$tmp" && mv -f "$tmp" "$dst"
+}
+
+z4r_self_update() {
+  local force="${1:-0}"
+
+  # раз в сутки (чтобы не дёргать сеть на каждом запуске)
+  if [ "$force" != "1" ] && [ -f "$Z4R_SELFUPDATE_STAMP" ] && find "$Z4R_SELFUPDATE_STAMP" -mtime -1 >/dev/null 2>&1; then
+    return 0
+  fi
+  : > "$Z4R_SELFUPDATE_STAMP" 2>/dev/null || true
+
+  mkdir -p /opt/lib
+
+  # 1) качаем новый z4r.sh во временный файл
+  local new="/tmp/z4r.sh.new.$$"
+  curl -fsSL --max-time 20 "$Z4R_RAW_BASE/z4r.sh" | sed 's/\r$//' > "$new" || { rm -f "$new"; return 0; }
+  chmod +x "$new"
+
+  # 2) сравниваем с текущим (если есть)
+  if [ -f /opt/z4r.sh ] && command -v sha256sum >/dev/null 2>&1; then
+    local oldsum newsum
+    oldsum="$(sha256sum /opt/z4r.sh | awk '{print $1}')"
+    newsum="$(sha256sum "$new" | awk '{print $1}')"
+    if [ "$oldsum" = "$newsum" ] && [ "$force" != "1" ]; then
+      rm -f "$new"
+      return 0
+    fi
+  fi
+
+  # 3) ставим новый z4r.sh
+  mv -f "$new" /opt/z4r.sh
+  chmod +x /opt/z4r.sh
+
+  # 4) подтягиваем lib/*.sh, которые перечислены в новом z4r.sh
+  local mods
+  mods="$(sed -n 's|^[[:space:]]*source[[:space:]]\\+\"\\$SCRIPT_DIR/lib/\\([^\"]\\+\\)\".*|\\1|p' /opt/z4r.sh)"
+  for m in $mods; do
+    _z4r_fetch "lib/$m" "/opt/lib/$m" || true
+  done
+
+  # 5) перезапуск уже обновлённого скрипта (чтобы подхватились новые модули/логика)
+  exec bash /opt/z4r.sh "$@"
+}
+
+# --- self-update call ---
+if [[ "${1:-}" == "--self-update" ]]; then
+  shift
+  z4r_self_update 1 "$@"
+fi
+
+# автообновление (раз в сутки)
+z4r_self_update 0 "$@"
+# --- /self-update call ---
+
+
 #Определяем путь скрипта, подгружаем функции
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/lib/ui.sh"
@@ -476,12 +540,12 @@ Enter (без цифр) - переустановка/обновление zapret
 if [ -d /opt/bin ]; then
     if [ ! -f /opt/bin/z4r ] || ! grep -q 'opt/z4r.sh "$@"' /opt/bin/z4r; then	
 		echo "Скачиваем /opt/bin/z4r"
-        curl -L -o /opt/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
+        curl -L -o /opt/bin/z4r "$Z4R_LAUNCHER_URL"
         chmod +x /opt/bin/z4r
     fi
 elif [ ! -f /usr/bin/z4r ] || ! grep -q 'opt/z4r.sh "$@"' /usr/bin/z4r; then
 	echo "Скачиваем /usr/bin/z4r"
-    curl -L -o /usr/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
+    curl -L -o /usr/bin/z4r "$Z4R_LAUNCHER_URL"
     chmod +x /usr/bin/z4r
 fi
 
