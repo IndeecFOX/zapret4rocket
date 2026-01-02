@@ -151,19 +151,19 @@ Strats_Tryer() {
 
   case "$answer_strat_mode" in
     "1")
-      echo "Подбор для хост-листа YouTube (UDP QUIC - браузеры, моб. приложения). Ранее заданная стратегия этого листа сброшена в дефолт."
+      echo "Подбор для хост-листа YouTube с видеопотоком (UDP QUIC - браузеры, моб. приложения). Ранее заданная стратегия этого листа сброшена в дефолт."
       #вывод подсказки
       show_hint "UDP"
       try_strategies 8 "/opt/zapret/extra_strats/UDP/YT" "/opt/zapret/extra_strats/UDP/YT/List.txt" ""
       ;;
     "2")
-      echo "Подбор для хост-листа YouTube (TCP - основной). Ранее заданная стратегия этого листа сброшена в дефолт."
+      echo "Подбор для хост-листа YouTube (TCP - сам интерфейс. Без видео-домена). Ранее заданная стратегия этого листа сброшена в дефолт."
       #вывод подсказки
       show_hint "TCP"
       try_strategies 17 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
       ;;
     "3")
-      echo "Подбор для GVideo (Видеопоток YT). Ранее заданная стратегия этого листа сброшена в дефолт."
+      echo "Подбор для googlevideo.com (Видеопоток YouTube). Ранее заданная стратегия этого листа сброшена в дефолт."
       #на всякий случай убираем GV из листа YT
       [ -f "/opt/zapret/extra_strats/TCP/YT/List.txt" ] && \
         sed -i '/googlevideo.com/d' "/opt/zapret/extra_strats/TCP/YT/List.txt"
@@ -183,7 +183,7 @@ Strats_Tryer() {
       try_strategies 17 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
       ;;
     "5")
-      echo "Режим кастомного домена"
+      echo "Режим ручного указания домена"
       # раньше домен спрашивался тут, но теперь ввод домена делается в сабменю
       if [ -z "$user_domain" ]; then
         echo "Домен не задан. Отмена."
