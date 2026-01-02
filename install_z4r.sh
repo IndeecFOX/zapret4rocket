@@ -168,35 +168,22 @@ rm -f "$TEMP_JSON"
     LIB_FILES="actions.sh netcheck.sh provider.sh recommendations.sh strategies.sh submenus.sh telemetry.sh ui.sh"
 }
 
-# Подсчет количества файлов
-LIB_COUNT=0
-for f in $LIB_FILES; do
-    LIB_COUNT=$((LIB_COUNT + 1))
-done
-
-echo "Найдено библиотек для загрузки: $LIB_COUNT"
-if [ "$DEBUG" = "1" ]; then
-    echo "Список файлов:"
-    for f in $LIB_FILES; do
-        echo "  - $f"
-    done
-fi
-
-# Скачивание библиотек
+# Параллельная загрузка библиотек
 echo "Загрузка библиотек..."
-LIB_UPDATED=0
 for file in $LIB_FILES; do
-    debug_log "Загрузка: ${RAW_URL}/lib/${file}"
-    if $DL_CMD "${INSTALL_DIR}/lib/${file}" "${RAW_URL}/lib/${file}" 2>/dev/null; then
-        chmod +x "${INSTALL_DIR}/lib/${file}"
-        LIB_UPDATED=$((LIB_UPDATED + 1))
-        debug_log "✓ $file загружен"
-    else
-        debug_log "✗ $file не загружен"
-    fi
+    {
+        if $DL_CMD "${INSTALL_DIR}/lib/${file}" "${RAW_URL}/lib/${file}" 2>/dev/null; then
+            chmod +x "${INSTALL_DIR}/lib/${file}"
+        fi
+    } &
 done
 
-echo "✓ Загружено библиотек: ${LIB_UPDATED}/${LIB_COUNT}"
+# Ждем завершения всех фоновых процессов
+wait
+
+# Подсчет загруженных файлов
+LIB_UPDATED=$(ls -1 "${INSTALL_DIR}/lib"/*.sh 2>/dev/null | wc -l)
+echo "✓ Загружено библиотек: $LIB_UPDATED"
 echo ""
 
 # Запуск z4r.sh
