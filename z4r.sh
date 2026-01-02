@@ -46,49 +46,69 @@ z4r_self_update() {
   #   z4r_self_update 0 "$@"   # auto: at most once per day
   #   z4r_self_update 1 "$@"   # force
   local force="${1:-0}"
-  shift || true   # важно: убираем force из $@, дальше остаются реальные аргументы пользователя
+  shift || true  # убрать force из $@
 
-  # раз в сутки (чтобы не дергать сеть на каждом запуске)
+  ensure_lib_from() {
+    local script_path="$1"
+    local mods m
+
+    mkdir -p /opt/lib
+
+    # берём список модулей из source "$SCRIPT_DIR/lib/xxx.sh"
+    mods="$(sed -n 's|^[[:space:]]*source[[:space:]]\+\"\$SCRIPT_DIR/lib/\([^\"]\+\)\".*|\1|p' "$script_path")"
+
+    for m in $mods; do
+      [ -s "/opt/lib/$m" ] || _z4r_fetch "lib/$m" "/opt/lib/$m" || {
+        echo "Не удалось скачать модуль: /opt/lib/$m" >&2
+        return 1
+      }
+    done
+    return 0
+  }
+
+  # Если уже запускались недавно — сеть не трогаем, но lib гарантируем
   if [ "$force" != "1" ] && [ -f "$Z4R_SELFUPDATE_STAMP" ] && find "$Z4R_SELFUPDATE_STAMP" -mtime -1 >/dev/null 2>&1; then
+    ensure_lib_from /opt/z4r.sh || exit 1
     return 0
   fi
   : > "$Z4R_SELFUPDATE_STAMP" 2>/dev/null || true
 
-  mkdir -p /opt/lib
-
-  # 1) качаем новый z4r.sh во временный файл
+  # Скачиваем новый z4r.sh во временный файл
   local new="/tmp/z4r.sh.new.$$"
   if ! curl -fsSL --max-time 20 "$Z4R_RAW_BASE/z4r.sh" | sed 's/\r$//' > "$new"; then
     rm -f "$new"
+    # сети нет — но попробуем хотя бы lib из текущего /opt/z4r.sh
+    ensure_lib_from /opt/z4r.sh || exit 1
     return 0
   fi
   chmod +x "$new"
 
-  # 2) сравниваем (если доступен sha256sum и уже есть /opt/z4r.sh)
-  if [ -f /opt/z4r.sh ] && command -v sha256sum >/dev/null 2>&1; then
-    local oldsum newsum
-    oldsum="$(sha256sum /opt/z4r.sh | awk '{print $1}')"
-    newsum="$(sha256sum "$new" | awk '{print $1}')"
-    if [ "$oldsum" = "$newsum" ] && [ "$force" != "1" ]; then
-      rm -f "$new"
-      return 0
+  # Проверяем, изменился ли файл
+  local same="0"
+  if [ -f /opt/z4r.sh ]; then
+    if command -v sha256sum >/dev/null 2>&1; then
+      [ "$(sha256sum /opt/z4r.sh | awk '{print $1}')" = "$(sha256sum "$new" | awk '{print $1}')" ] && same="1"
+    elif command -v cmp >/dev/null 2>&1; then
+      cmp -s /opt/z4r.sh "$new" && same="1"
     fi
   fi
 
-  # 3) ставим новый z4r.sh
+  # Если не изменился — не заменяем z4r.sh, но lib докачиваем
+  if [ "$same" = "1" ] && [ "$force" != "1" ]; then
+    rm -f "$new"
+    ensure_lib_from /opt/z4r.sh || exit 1
+    return 0
+  fi
+
+  # Ставим новый z4r.sh
   mv -f "$new" /opt/z4r.sh
   chmod +x /opt/z4r.sh
 
-  # 4) подтягиваем lib/*.sh, которые перечислены в новом z4r.sh
-  local mods m
-  mods="$(sed -n 's|^[[:space:]]*source[[:space:]]\\+\"\\$SCRIPT_DIR/lib/\\([^\"]\\+\\)\".*|\\1|p' /opt/z4r.sh)"
-  for m in $mods; do
-    _z4r_fetch "lib/$m" "/opt/lib/$m" || true
-  done
-
-  # 5) перезапуск уже обновленного скрипта (подхватить новый код + модули)
+  # Докачиваем lib под новый z4r.sh и перезапускаемся
+  ensure_lib_from /opt/z4r.sh || exit 1
   exec bash /opt/z4r.sh "$@"
 }
+
 
 # --- self-update call ---
 if [[ "${1:-}" == "--self-update" ]]; then
