@@ -150,47 +150,23 @@ fi
 
 # Получение списка файлов из lib
 echo "Загрузка списка библиотек..."
-debug_log "API URL: $API_URL"
+TEMP_JSON="/tmp/z4r_json_$$"
 
-TEMP_JSON="$(mktemp 2>/dev/null || echo "/tmp/z4r_json_$$")"
-debug_log "Временный файл: $TEMP_JSON"
-
-if [ "$DOWNLOADER" = "wget" ]; then
-    wget -q -O "$TEMP_JSON" "$API_URL" 2>/dev/null || echo "[]" > "$TEMP_JSON"
+if command -v curl >/dev/null 2>&1; then
+    curl -sS -L --max-time 3 -o "$TEMP_JSON" "$API_URL" 2>/dev/null || echo "[]" > "$TEMP_JSON"
 else
-    curl -sS -L -o "$TEMP_JSON" "$API_URL" 2>/dev/null || echo "[]" > "$TEMP_JSON"
+    wget -q -T 3 -O "$TEMP_JSON" "$API_URL" 2>/dev/null || echo "[]" > "$TEMP_JSON"
 fi
 
-debug_log "Содержимое JSON (первые 500 символов):"
-if [ "$DEBUG" = "1" ]; then
-    head -c 500 "$TEMP_JSON" 2>/dev/null || dd if="$TEMP_JSON" bs=500 count=1 2>/dev/null
-    echo ""
-fi
-
-# Улучшенный парсинг JSON (busybox-compatible)
-LIB_FILES=""
-while IFS= read -r line; do
-    case "$line" in
-        *'"name"'*)
-            # Извлекаем имя файла (busybox-compatible sed)
-            filename=$(echo "$line" | sed 's/.*"name"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/')
-            case "$filename" in
-                *.sh)
-                    LIB_FILES="$LIB_FILES $filename"
-                    debug_log "Найден файл: $filename"
-                    ;;
-            esac
-            ;;
-    esac
-done < "$TEMP_JSON"
-
+# Быстрый парсинг через grep - извлекаем все .sh файлы за один проход
+LIB_FILES=$(grep -o '"name":"[^"]*\.sh"' "$TEMP_JSON" 2>/dev/null | sed 's/"name":"//;s/"//g' | tr '\n' ' ')
 rm -f "$TEMP_JSON"
 
-# Фолбэк на стандартный набор
-if [ -z "$LIB_FILES" ]; then
-    echo "⚠ Список файлов пуст, использую стандартный набор"
+# Fallback если API не ответил
+[ -z "$LIB_FILES" ] && {
+    echo "⚠ Не удалось получить список, использую стандартный набор"
     LIB_FILES="actions.sh netcheck.sh provider.sh recommendations.sh strategies.sh submenus.sh telemetry.sh ui.sh"
-fi
+}
 
 # Подсчет количества файлов
 LIB_COUNT=0
