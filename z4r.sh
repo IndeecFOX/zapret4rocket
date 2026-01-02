@@ -355,7 +355,6 @@ zefeer_space_999() {
 }
 # ---- /ZEFEER PREMIUM ----
 
-
 # ---- Recomendations module ----
 RECS_URL="https://raw.githubusercontent.com/AloofLibra/zapret4rocket/master/recommendations.txt"
 RECS_FILE="/opt/zapret/extra_strats/cache/recommendations.txt"
