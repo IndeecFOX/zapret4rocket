@@ -1,10 +1,23 @@
+Barnaul - JSC ER-Telecom Holding|UDP:2|TCP:5|GV:4|RKN:4
 Beeline Broadband|UDP:0|TCP:0|GV:0|RKN:1
-Dynamic distribution IPs for broadband services|UDP:0|TCP:0|GV:0|RKN:10
+Blagoveshchensk - Rostelecom networks|UDP:0|TCP:2|GV:1|RKN:2
 Elektrostal - Flex ISP|UDP:0|TCP:1|GV:0|RKN:2
+Gertsena - CJSC ER-Telecom Holding Kirov branch|UDP:5|TCP:3|GV:0|RKN:10
+h1Not Foundh1The requested URL linefieldsispcity was not fou|UDP:1|TCP:3|GV:0|RKN:13
+Krasnodar - PAO Rostelecom|UDP:0|TCP:4|GV:1|RKN:4
 Moscow - Hostkey B.V.|UDP:5|TCP:6|GV:0|RKN:4
 Moscow - JSC ER-Telecom Holding|UDP:4|TCP:3|GV:0|RKN:4
-Moscow - MARYNONET|UDP:1|TCP:3|GV:0|RKN:5
+Moscow - MARYNONET|UDP:1|TCP:3|GV:0, 3|RKN:5
 Moscow - Moscow Local Telephone Network OAO MGTS|UDP:1|TCP:0|GV:0|RKN:4
 Nizhniy Novgorod - NMTS|UDP:0|TCP:2|GV:0|RKN:0
 OAO Mgts|UDP:1|TCP:1|GV:0|RKN:6
-Stavropol - PJSC Vimpelcom|UDP:0|TCP:1|GV:0|RKN:8
+Omsk - CJSC ER-Telecom Holding Omsk branch|UDP:1|TCP:11|GV:|RKN:5
+Orenburg - JSC ER-Telecom Holding|UDP:2|TCP:3|GV:|RKN:4
+Rostov-on-Don - Viter Evgeniy Vasilevich|UDP:1|TCP:1|GV:|RKN:2
+Sevastopol - Lancom Ltd.|UDP:2|TCP:5|GV:|RKN:5
+St Petersburg - Z-Telecom|UDP:1|TCP:5|GV:|RKN:5
+Stavropol - PJSC Vimpelcom|UDP:0|TCP:1|GV:|RKN:8
+Tolyatti - Infoline networks|UDP:6|TCP:1|GV:|RKN:2
+Tyumen - MKS75 Network|UDP:0|TCP:0|GV:|RKN:6
+Ufa - JSC Ufanet|UDP:6|TCP:5|GV:|RKN:0
+Yekaterinburg - Rostelecom networks|UDP:0|TCP:1|GV:|RKN:17
