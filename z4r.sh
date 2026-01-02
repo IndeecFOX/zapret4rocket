@@ -467,8 +467,7 @@ Enter (без цифр) - переустановка/обновление zapret
 
   "01")
     check_access_list
-    # check_access_list уже делает pause_enter внутри,
-    # поэтому тут дополнительная пауза не нужна.
+    pause_enter
     ;;
 
   "1")
