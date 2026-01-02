@@ -687,7 +687,7 @@ Strats_Tryer() {
 		read -re -p "" answer_strat_mode
 	else
 		if [ "${#mode_domain}" -gt 1 ]; then
-			answer_strat_mode="4"
+			answer_strat_mode="5"
 			user_domain="$mode_domain"
 		else
 			answer_strat_mode="$mode_domain"
