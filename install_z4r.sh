@@ -9,6 +9,7 @@ INSTALLER_URL="${RAW_URL}/install_z4r.sh"
 
 # Включить для отладки
 DEBUG=0
+
 debug_log() {
     if [ "$DEBUG" = "1" ]; then
         echo "[DEBUG] $1"
@@ -160,6 +161,20 @@ echo "✓ Загружено библиотек: ${LIB_UPDATED}/${#LIB_FILES[@]}
 echo ""
 
 # Запуск z4r.sh
-debug_log "Запуск: /bin/bash ${INSTALL_DIR}/z4r.sh"
-cd "${INSTALL_DIR}"
-exec /bin/bash ./z4r.sh "$@"
+echo "=== Запуск z4r.sh ==="
+debug_log "Рабочая директория: ${INSTALL_DIR}"
+debug_log "Команда: /bin/bash ${INSTALL_DIR}/z4r.sh"
+
+cd "${INSTALL_DIR}" || exit 1
+
+# Перенаправляем stdin на терминал, чтобы z4r.sh мог читать ввод пользователя
+# Это критично при запуске через curl | bash
+if [ -t 0 ]; then
+    # Stdin уже терминал - обычный запуск
+    debug_log "stdin подключен к терминалу"
+    exec /bin/bash ./z4r.sh "$@"
+else
+    # Stdin это pipe (запуск через curl | bash) - переподключаем к терминалу
+    debug_log "stdin это pipe, переподключение к /dev/tty"
+    exec /bin/bash ./z4r.sh "$@" < /dev/tty
+fi
