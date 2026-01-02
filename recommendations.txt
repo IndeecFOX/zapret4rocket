@@ -1,2 +1,10 @@
-Moscow - MARYNONET|UDP:0, 1|TCP:3|RKN:5
-Nizhniy Novgorod - NMTS|UDP:0|TCP:2|RKN:0
+Beeline Broadband|UDP:0|TCP:0|GV:0|RKN:1
+Dynamic distribution IPs for broadband services|UDP:0|TCP:0|GV:0|RKN:10
+Elektrostal - Flex ISP|UDP:0|TCP:1|GV:0|RKN:2
+Moscow - Hostkey B.V.|UDP:5|TCP:6|GV:0|RKN:4
+Moscow - JSC ER-Telecom Holding|UDP:4|TCP:3|GV:0|RKN:4
+Moscow - MARYNONET|UDP:1|TCP:3|GV:0|RKN:5
+Moscow - Moscow Local Telephone Network OAO MGTS|UDP:1|TCP:0|GV:0|RKN:4
+Nizhniy Novgorod - NMTS|UDP:0|TCP:2|GV:0|RKN:0
+OAO Mgts|UDP:1|TCP:1|GV:0|RKN:6
+Stavropol - PJSC Vimpelcom|UDP:0|TCP:1|GV:0|RKN:8
