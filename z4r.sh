@@ -420,7 +420,7 @@ Enter (без цифр) - переустановка/обновление zapret
     if [[ -f "$PREMIUM_FLAG" ]]; then
       echo -e "${red}999. Секретный пункт. Нажимать на свой страх и риск${plain}"
     fi
-  read -r -p "" answer_menu
+  read -re -p "" answer_menu
     case "$answer_menu" in
     "")
     # Enter (без цифр) -> выходим из меню и продолжаем выполнение скрипта (установка/обновление)
@@ -468,7 +468,7 @@ Enter (без цифр) - переустановка/обновление zapret
     ;;
 
   "6")
-    read -r -p "Введите домен, который добавить в исключения (например, mydomain.com): " user_domain
+    read -re -p "Введите домен, который добавить в исключения (например, mydomain.com): " user_domain
     if [ -n "$user_domain" ]; then
       echo "$user_domain" >> /opt/zapret/lists/netrogat.txt
       /opt/zapret/init.d/sysv/zapret restart
