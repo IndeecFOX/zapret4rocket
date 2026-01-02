@@ -544,19 +544,6 @@ esac
 
 #___Само выполнение скрипта начинается тут____
 
-#Добавление ссылки на быстрый вызов скрипта, проверка на актуальность сначала если есть
-if [ -d /opt/bin ]; then
-    if [ ! -f /opt/bin/z4r ] || ! grep -q 'opt/z4r.sh "$@"' /opt/bin/z4r; then	
-		echo "Скачиваем /opt/bin/z4r"
-        curl -L -o /opt/bin/z4r "$Z4R_LAUNCHER_URL"
-        chmod +x /opt/bin/z4r
-    fi
-elif [ ! -f /usr/bin/z4r ] || ! grep -q 'opt/z4r.sh "$@"' /usr/bin/z4r; then
-	echo "Скачиваем /usr/bin/z4r"
-    curl -L -o /usr/bin/z4r "$Z4R_LAUNCHER_URL"
-    chmod +x /usr/bin/z4r
-fi
-
 #Проверка ОС
 if [[ -f /etc/os-release ]]; then
     source /etc/os-release
