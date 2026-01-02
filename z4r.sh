@@ -127,6 +127,7 @@ ENTRY_UUID="entry.1346249141"
 ENTRY_ISP="entry.2008245653"
 ENTRY_UDP="entry.592144534"
 ENTRY_TCP="entry.1826276405"
+ENTRY_GV="entry.1549076812"
 ENTRY_RKN="entry.1527830884"
 
 # 2. Пути к файлам (используем простые форматы)
@@ -221,6 +222,7 @@ send_stats() {
     # 2. Определяем номера стратегий
     local s_udp=$(get_active_strat_num "/opt/zapret/extra_strats/UDP/YT" 8)
     local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
+    local s_gv=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/GV" 17)
     local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
 
     # 3. Отправка в Google Forms (Тихий режим, в фоне &)
@@ -229,6 +231,7 @@ send_stats() {
         -d "$ENTRY_ISP=$my_isp" \
         -d "$ENTRY_UDP=$s_udp" \
         -d "$ENTRY_TCP=$s_tcp" \
+        -d "$ENTRY_GV=$s_gv" \
         -d "$ENTRY_RKN=$s_rkn" \
         "https://docs.google.com/forms/d/e/$STATS_FORM_ID/formResponse" > /dev/null 2>&1 &
 }
@@ -399,6 +402,7 @@ show_hint() {
     case "$strat_type" in
         "UDP") part=$(echo "$line" | cut -d'|' -f2 | cut -d':' -f2) ;;
         "TCP") part=$(echo "$line" | cut -d'|' -f3 | cut -d':' -f2) ;;
+        "GV")  part=$(echo "$line" | cut -d'|' -f4 | cut -d':' -f2) ;;
         "RKN") part=$(echo "$line" | cut -d'|' -f4 | cut -d':' -f2) ;;
     esac
     
@@ -704,8 +708,7 @@ Strats_Tryer() {
     			sed -i '/googlevideo.com/d' "/opt/zapret/extra_strats/TCP/YT/List.txt"
 			user_domain="googlevideo.com"
 			#вывод подсказки
-			#закомментировал, т.к. пока не поддерживается бэком
-			#show_hint "TCP"
+			#show_hint "GV"
             try_strategies 17 "/opt/zapret/extra_strats/TCP/GV" "/dev/null" ""
             ;;
 		"4")
