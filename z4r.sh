@@ -29,7 +29,7 @@ Bcyan='\033[46m'
 
 
 
-# ---- Provider detector integration ----
+# ---- Provider detector integration by AloofLibra ----
 # Используем provider.txt как основной источник правды (просто строка "Provider - City")
 PROVIDER_CACHE="/opt/zapret/extra_strats/cache/provider.txt"
 PROVIDER_MENU="Не определён"
@@ -118,9 +118,9 @@ provider_set_manual_menu() {
   echo "$res" > "$PROVIDER_CACHE"
   PROVIDER_MENU="$res"
 }
-# ---- /Provider detector integration ----
+# ---- /Provider detector integration by AloofLibra ----
 
-# ---- Telemetry module integration ----
+# ---- Telemetry module integration by AloofLibra ----
 # Настройки Google Forms
 STATS_FORM_ID="1FAIpQLScrUf7Pybm0n61aK8aZuxuAR8KhyNYZ-X0xjSUS8K72SmEhPw"
 ENTRY_UUID="entry.1346249141"
@@ -235,10 +235,10 @@ send_stats() {
         -d "$ENTRY_RKN=$s_rkn" \
         "https://docs.google.com/forms/d/e/$STATS_FORM_ID/formResponse" > /dev/null 2>&1 &
 }
-# ---- /Telemetry module integration ----
+# ---- /Telemetry module integration by AloofLibra ----
 
 # ---- ZEFEER PREMIUM (777/999) ----
-# Сделано исключительно ради мемов. Практического смысла не несёт. 
+# Сделано исключительно ради мемов. Практического смысла не несёт. (code by AloofLibra)
 PREMIUM_FLAG="$CACHE_DIR/premium.enabled"
 PREMIUM_TITLE_FILE="$CACHE_DIR/premium.title"
 
@@ -356,9 +356,9 @@ zefeer_space_999() {
 
   echo -e "${red}Ошибка связи:${plain} ${yellow}${excuse}${plain}"
 }
-# ---- /ZEFEER PREMIUM ----
+# ---- /ZEFEER PREMIUM by AloofLibra ----
 
-# ---- Recomendations module ----
+# ---- Recomendations module by AloofLibra ----
 RECS_URL="https://raw.githubusercontent.com/AloofLibra/zapret4rocket/master/recommendations.txt"
 RECS_FILE="/opt/zapret/extra_strats/cache/recommendations.txt"
 
@@ -414,7 +414,7 @@ show_hint() {
         echo ""
     fi
 }
-# ---- /Recomendations module ----
+# ---- /Recomendations module by AloofLibra ----
 
 #___Сначала идут анонсы функций____
 # Функция определяет номер активной стратегии в указанной папке
@@ -678,7 +678,13 @@ Strats_Tryer() {
 	
 	if [ -z "$mode_domain" ]; then
 		# если аргумент не передан — спрашиваем вручную
-		read -re -p $'\033[33mПодобрать стратегию? (1-5 или Enter для отмены):\033[0m\n\033[32m1. YouTube (UDP QUIC). 8 вариантов\n2. YouTube (TCP - интерфейс). 17 вариантов\n3. GVideo (TCP - видеопоток). 17 вариантов (NEW)\n4. RKN (Обход блокировок). 17 вариантов\n5. Кастомный домен 17 вариантов\033[0m\n' answer_strat_mode
+		echo -e '\033[33mПодобрать стратегию? (1-5 или Enter для отмены):\033[32m
+	1. YouTube с видеопотоком (UDP QUIC). \033[0m8 вариантов\033[32m
+	2. YouTube (TCP. Интерфейс). \033[0m17 вариантов\033[32m
+	3. YouTube (TCP. Видеопоток/GV домен). \033[0m17 вариантов\033[32m
+	4. RKN (Популярные блокированные сайты. Дискорд в т.ч.). \033[0m17 вариантов\033[32m
+	5. Отдельный домен. \033[0m17 вариантов'	
+		read -re -p "" answer_strat_mode
 	else
 		if [ "${#mode_domain}" -gt 1 ]; then
 			answer_strat_mode="4"
@@ -690,25 +696,25 @@ Strats_Tryer() {
 	
     case "$answer_strat_mode" in
         "1")
-            echo "Подбор для хост-листа YouTube (UDP QUIC - браузеры, моб. приложения). Ранее заданная стратегия этого листа сброшена в дефолт."
+            echo "Подбор для хост-листа YouTube с видеопотоком (UDP QUIC - браузеры, моб. приложения). Ранее заданная стратегия этого листа сброшена в дефолт."
 			#вывод подсказки
 			show_hint "UDP"
             try_strategies 8 "/opt/zapret/extra_strats/UDP/YT" "/opt/zapret/extra_strats/UDP/YT/List.txt" ""
             ;;
         "2")
-            echo "Подбор для хост-листа YouTube (TCP - основной). Ранее заданная стратегия этого листа сброшена в дефолт."
+            echo "Подбор для хост-листа YouTube (TCP - сам интерфейс. Без видео-домена). Ранее заданная стратегия этого листа сброшена в дефолт."
 			#вывод подсказки
 			show_hint "TCP"
             try_strategies 17 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
             ;;
         "3")
-			echo "Подбор для GVideo (Видеопоток YT). Ранее заданная стратегия этого листа сброшена в дефолт."
-			#на всякий случай убираем GV из листа YT
+			echo "Подбор для googlevideo.com (Видеопоток YouTube). Ранее заданная стратегия этого листа сброшена в дефолт."
+			#на всякий случай убираем GV из листа YT    
 			[ -f "/opt/zapret/extra_strats/TCP/YT/List.txt" ] && \
     			sed -i '/googlevideo.com/d' "/opt/zapret/extra_strats/TCP/YT/List.txt"
 			user_domain="googlevideo.com"
 			#вывод подсказки
-			#show_hint "GV"
+			show_hint "GV"
             try_strategies 17 "/opt/zapret/extra_strats/TCP/GV" "/dev/null" ""
             ;;
 		"4")
@@ -722,7 +728,7 @@ Strats_Tryer() {
             try_strategies 17 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
             ;;
         "5")
-            echo "Режим кастомного домена"
+            echo "Режим ручного указания домена"
 			if [ -z "$mode_domain" ]; then
 				read -re -p "Введите домен (например, mydomain.com): " user_domain
 			fi
@@ -996,7 +1002,7 @@ EOF
  echo -e "${plain}Выполнение установки завершено. ${green}Доступ по ip вашего роутера/VPS в формате ip:17681, например 192.168.1.1:17681 или mydomain.com:17681 ${yellow}логин: ${ttyd_login} пароль - не испольузется.${plain} Был выполнен выход из скрипта для сохранения состояния."
 }
 
-#Функция меню "14. Провайдер"
+#Функция меню "14. Провайдер" by AloofLibra
 provider_submenu() {
   provider_init_once
 
@@ -1083,7 +1089,7 @@ Enter (без цифр) - переустановка/обновление zapret
 12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '${plain}$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")${yellow}'
 13. Активировать доступ в меню через браузер (~3мб места)
 14. Провайдер
-777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Whoze, andric62, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, subzeero452, Grigaraz, Reconnaissance, comandante1928, umad, railwayfx, vtokarev1604, rudnev2028 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
+777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Whoze, andric62, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, subzeero452, Grigaraz, Reconnaissance, comandante1928, umad, railwayfx, vtokarev1604, rudnev2028 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
 if [[ -f "$PREMIUM_FLAG" ]]; then
   echo -e "${red}999. Секретный пункт. Нажимать на свой страх и риск${plain}"
 fi
@@ -1283,7 +1289,7 @@ fi
    provider_submenu
    ;;
   "777")
-   echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028, umad, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 активирован. Наверное. Так же благодарю поддержавших проект hey_enote, VssA, vladdrazz, Alexey_Tob, Bor1sBr1tva, Azamatstd, iMLT, Qu3Bee, SasayKudasay1, alexander_novikoff, MarsKVV, porfenon123, bobrishe_dazzle, kotov38, Levonkas, DA00001, trin4ik, geodomin, I_ZNA_I и анонимов${plain}"
+   echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028, umad, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 активирован. Наверное. Так же благодарю поддержавших проект hey_enote, VssA, vladdrazz, Alexey_Tob, Bor1sBr1tva, Azamatstd, iMLT, Qu3Bee, SasayKudasay1, alexander_novikoff, MarsKVV, porfenon123, bobrishe_dazzle, kotov38, Levonkas, DA00001, trin4ik, geodomin, I_ZNA_I и анонимов${plain}"
    zefeer_premium_777
    exit_to_menu
    ;;
@@ -1294,7 +1300,7 @@ fi
   esac
  }
 
-#___Сам код начинается тут____
+#___Само выполнение скрипта начинается тут____
 
 #Добавление ссылки на быстрый вызов скрипта, проверка на актуальность сначала если есть
 if [ -d /opt/bin ]; then
