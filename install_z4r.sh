@@ -225,13 +225,13 @@ debug_log "Рабочая директория: ${INSTALL_DIR}"
 cd "${INSTALL_DIR}" || exit 1
 
 # Определяем какой shell использовать
-if [ -x /bin/bash ]; then
+#if [ -x /bin/bash ]; then
     SHELL_CMD="/bin/bash"
-elif [ -x /bin/ash ]; then
-    SHELL_CMD="/bin/ash"
-else
-    SHELL_CMD="/bin/sh"
-fi
+#elif [ -x /bin/ash ]; then
+#    SHELL_CMD="/bin/ash"
+#else
+#    SHELL_CMD="/bin/sh"
+#fi
 
 debug_log "Используемый shell: $SHELL_CMD"
 debug_log "Команда: $SHELL_CMD ${INSTALL_DIR}/z4r.sh"
