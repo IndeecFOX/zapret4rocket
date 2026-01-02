@@ -31,7 +31,7 @@ Bcyan='\033[46m'
 #___Сначала идут анонсы функций____
 
 #Определяем путь скрипта, подгружаем функции
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
 
 # UI helpers (пауза/печать пунктов меню/совместимость старого кода)
 # Функции: pause_enter, submenu_item, exit_to_menu
