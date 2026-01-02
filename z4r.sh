@@ -476,7 +476,7 @@ get_menu() {
     echo -e '
 '"${red}"'      *
      ***            '"${Fcyan}"'by Dmitriy Utkin:
-     *
+      *
 '"${green}"'     /|\             '"${plain}"'.   .      .
 '"${green}"'    //|\\\             '"${plain}"'.     '"${Fred}"'* '"${plain}"'.   .
 '"${green}"'   ///|\\\\\                 '"${green}"'/ \  '"${plain}"'.
