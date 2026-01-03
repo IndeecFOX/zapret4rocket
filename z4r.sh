@@ -386,6 +386,10 @@ get_menu() {
   while true; do
   	local strategies_status
     strategies_status=$(get_current_strategies_info)
+	TITLE_MENU_LINE=""
+    if [[ -s "$PREMIUM_TITLE_FILE" ]]; then
+      TITLE_MENU_LINE="\n${pink}Титул:${plain} $(cat "$PREMIUM_TITLE_FILE")${yellow}\n"
+    fi
     clear
     echo -e "${cyan}========================================${plain}"
     echo -e "${Fcyan}     zeefeer4rocket by IndeecFOX     ${plain}"
