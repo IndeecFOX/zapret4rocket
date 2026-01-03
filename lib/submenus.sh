@@ -135,6 +135,7 @@ tcp443_submenu() {
       else
         echo -e "${yellow}Неверный ввод.${plain}"
         sleep 1
+        pause_enter
       fi
       ;;
   esac
@@ -161,10 +162,12 @@ provider_submenu() {
     case "$ans" in
       "1")
         provider_set_manual_menu
+        sleep 1
         pause_enter
         ;;
       "2")
         provider_force_redetect
+        sleep 1
         pause_enter
         ;;
       "3")
