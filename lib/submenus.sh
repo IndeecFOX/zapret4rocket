@@ -99,69 +99,46 @@ flowoffload_submenu() {
 
 tcp443_submenu() {
   while true; do
-    clear
-    echo -e "${cyan}--- TCP-443 (безразборный режим) ---${plain}"
-
-    local num
-    num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1)
-    echo -e "${yellow}Текущая стратегия: ${plain}$((num ? num : 0))"
-    echo ""
-
-    echo -e "${yellow}Выберите:${plain}"
-    echo "1-17  Включить безразборный режим на выбранной стратегии"
-    echo "0     Отключить безразборный режим"
-    echo "Enter Назад"
-    echo ""
-
-    read -re -p "Ваш выбор: " ans
-
-    case "$ans" in
-      "" )
-        return
-        ;;
-      "0")
-        local i
+  clear
+  num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1)
+  echo -e "${yellow}Безразборный режим по стратегии: ${plain}$((num ? num : 0))"
+  echo -e "\033[33mС каким номером применить стратегию? (1-17, 0 - отключение безразборного режима, Enter - выход) \033[31mПри активации кастомно подобранные домены будут очищены:${plain}"
+  read -re -p " " answer_bezr
+  
+  case "$answer_bezr" in
+    "" )
+      return
+      ;;
+    *)
+      if echo "$answer_bezr" | grep -Eq '^[0-9]+$' && [ "$answer_bezr" -ge 0 ] && [ "$answer_bezr" -le 17 ]; then
+        #Отключение
         for i in $(seq 112 128); do
           if sed -n "${i}p" /opt/zapret/config | grep -Fq -- '--filter-tcp=443 --hostlist-domains= --h'; then
             sed -i "${i}s#--filter-tcp=443 --hostlist-domains= --h#--filter-tcp=443 --hostlist-domains=none.dom --h#" /opt/zapret/config
             /opt/zapret/init.d/sysv/zapret restart
-            echo -e "${green}Безразборный режим отключен, zapret перезапущен.${plain}"
-            pause_enter
+            echo -e "${green}Выполнена команда перезапуска zapret${plain}"
+            echo "Безразборный режим отключен"
             break
           fi
         done
-        ;;
-      *)
-        if echo "$ans" | grep -Eq '^[0-9]+$' && [ "$ans" -ge 1 ] && [ "$ans" -le 17 ]; then
-          # 1) На всякий случай сначала отключаем текущий активный режим
-          local i
-          for i in $(seq 112 128); do
-            if sed -n "${i}p" /opt/zapret/config | grep -Fq -- '--filter-tcp=443 --hostlist-domains= --h'; then
-              sed -i "${i}s#--filter-tcp=443 --hostlist-domains= --h#--filter-tcp=443 --hostlist-domains=none.dom --h#" /opt/zapret/config
-              break
-            fi
-          done
-
-          # 2) Чистим кастомные домены (как у тебя сейчас)
-          local f_clear
+        if [ "$answer_bezr" -ge 1 ] && [ "$answer_bezr" -le 17 ]; then
           for f_clear in $(seq 1 17); do
             echo -n > "/opt/zapret/extra_strats/TCP/User/$f_clear.txt"
             echo -n > "/opt/zapret/extra_strats/TCP/temp/$f_clear.txt"
           done
-
-          # 3) Активируем выбранную строку (111 + N)
-          sed -i "$((111 + ans))s/--hostlist-domains=none\\.dom/--hostlist-domains=/" /opt/zapret/config
+          sed -i "$((111 + answer_bezr))s/--hostlist-domains=none\.dom/--hostlist-domains=/" /opt/zapret/config
           /opt/zapret/init.d/sysv/zapret restart
-          echo -e "${green}Активирован TCP-443 безразборный режим на стратегии ${yellow}${ans}${plain}${green}, zapret перезапущен.${plain}"
+          echo -e "${green}Выполнена команда перезапуска zapret. ${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443. Проверка доступа к meduza.io${plain}"
           check_access_list
-          pause_enter
-        else
-          echo -e "${yellow}Неверный ввод.${plain}"
-          sleep 1
         fi
-        ;;
-    esac
-  done
+        read -n 1 -s -r -p "Нажмите любую клавишу для продолжения..."
+      else
+        echo -e "${yellow}Неверный ввод.${plain}"
+        sleep 1
+      fi
+      ;;
+  esac
+done
 }
 
 provider_submenu() {
