@@ -74,10 +74,6 @@ provider_set_manual_menu() {
   read -re -p "Провайдер (например MTS/Beeline): " p
   read -re -p "Город (можно пусто): " c
 
-  # Чистим ввод
-  p=$(echo "$p" | tr -cd '[:alnum:] ._-')
-  c=$(echo "$c" | tr -cd '[:alnum:] ._-')
-
   local res="$p"
   [ -n "$c" ] && res="$res - $c"
 
