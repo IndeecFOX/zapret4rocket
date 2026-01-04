@@ -5,7 +5,7 @@ backup_strats() {
     echo -e "${yellow}5 - Да, Enter - Нет, 0 - отмена${plain}"
     read -r ans
     if [ "$ans" = "0" ]; then
-      return 130   # сигнал “отмена/в меню”
+        get_menu # сигнал “отмена/в меню”
     fi
     if [ "$ans" = "5" ] || [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
       rm -rf /opt/extra_strats 2>/dev/null || true
