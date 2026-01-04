@@ -8,11 +8,11 @@ strategies_submenu() {
 
     echo -e "${cyan}--- Управление стратегиями ---${plain}"
 
-    submenu_item "1" "YouTube с видеопотоком (UDP QUIC) — 8 вариантов"
-    submenu_item "2" "YouTube (TCP - интерфейс) — 17 вариантов"
-    submenu_item "3" "GVideo (TCP - видеопоток/GV домен) — 17 вариантов"
-    submenu_item "4" "RKN (Обход блокировок) — 17 вариантов"
-    submenu_item "5" "Отдельный домен — 17 вариантов"
+    submenu_item "1" "YouTube с видеопотоком (UDP QUIC)." "8 вариантов"
+    submenu_item "2" "YouTube (TCP. Интерфейс)." "17 вариантов"
+    submenu_item "3" "YouTube (TCP. Видеопоток/GV домен)." "17 вариантов"
+    submenu_item "4" "RKN (Популярные блокированные сайты. Дискорд в т.ч.)." "17 вариантов"
+    submenu_item "5" "Отдельный домен." "17 вариантов"
     submenu_item "0" "Назад"
     echo ""
 
