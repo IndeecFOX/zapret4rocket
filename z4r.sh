@@ -439,7 +439,7 @@ Enter (без цифр) - переустановка/обновление zapret
     case "$answer_menu" in
   "")
     echo -e "${yellow}Вы уверены, что хотите переустановить/обновить zapret?${plain}"
-    echo -e "${yellow}Y - Да, Enter/0 - Нет (вернуться в меню)${plain}"
+    echo -e "${yellow}5 - Да, Enter/0 - Нет (вернуться в меню)${plain}"
     read -r ans
     if [ "$ans" = "5" ] || [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
       # подтверждение: выходим из get_menu и уходим в “тело” (переустановка/обновление)
