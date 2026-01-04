@@ -2,8 +2,11 @@ backup_strats() {
   # Бэкап папки стратегий
   if [ -d /opt/zapret/extra_strats ]; then
     echo -e "${yellow}Сделать бэкап /opt/zapret/extra_strats ?${plain}"
-    echo -e "${yellow}5 - Да, Enter - Нет${plain}"
+    echo -e "${yellow}5 - Да, Enter - Нет, 0 - отмена и выход в меню${plain}"
     read -r ans
+    if [ "$ans" = "0" ]; then
+      return 130   # сигнал “отмена/в меню”
+    fi
     if [ "$ans" = "5" ] || [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
       rm -rf /opt/extra_strats 2>/dev/null || true
       cp -rf /opt/zapret/extra_strats /opt/ || true
@@ -14,8 +17,11 @@ backup_strats() {
   # Бэкап листа исключений
   if [ -f /opt/zapret/lists/netrogat.txt ]; then
     echo -e "${yellow}Сделать бэкап /opt/zapret/lists/netrogat.txt ?${plain}"
-    echo -e "${yellow}5 - Да, Enter - Нет${plain}"
+    echo -e "${yellow}5 - Да, Enter - Нет, 0 - отмена и выход в меню${plain}"
     read -r ans2
+    if [ "$ans2" = "0" ]; then
+      return 130
+    fi
     if [ "$ans2" = "5" ] || [ "$ans2" = "y" ] || [ "$ans2" = "Y" ]; then
       cp -f /opt/zapret/lists/netrogat.txt /opt/netrogat.txt || true
       echo -e "${green}Бэкап netrogat.txt сохранён в /opt/netrogat.txt${plain}"
