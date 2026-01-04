@@ -28,10 +28,34 @@ Bblue='\033[44m'
 Bpink='\033[45m'
 Bcyan='\033[46m'
 
-#___Сначала идут анонсы функций____
+#___Проверка на наличие необходимых библиотек___#
 
 #Определяем путь скрипта, подгружаем функции
 SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
+
+# Проверяем наличие всех нужных lib-файлов, иначе запускаем внешний скрипт
+missing_libs=0
+LIB_DIR="$SCRIPT_DIR/zapret/z4r_lib"
+for lib in ui.sh provider.sh telemetry.sh recommendations.sh netcheck.sh premium.sh strategies.sh submenus.sh actions.sh; do
+  if [ ! -f "$LIB_DIR/$lib" ]; then
+    missing_libs=1
+    break
+  fi
+done
+
+if [ "$missing_libs" -ne 0 ]; then
+  echo "Не найдены нужные файлы в $LIB_DIR. Запускаю внешний z4r..."
+  if command -v curl >/dev/null 2>&1; then
+    exec sh -c 'curl -fsSL "https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r" | sh'
+  elif command -v wget >/dev/null 2>&1; then
+    exec sh -c 'wget -qO- "https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r" | sh'
+  else
+    echo "Ошибка: нет curl или wget для загрузки внешнего z4r."
+    exit 1
+  fi
+fi
+
+#___Сначала идут анонсы функций____
 
 # UI helpers (пауза/печать пунктов меню/совместимость старого кода)
 # Функции: pause_enter, submenu_item, exit_to_menu
