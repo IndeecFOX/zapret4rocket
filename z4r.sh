@@ -1,8 +1,9 @@
 #!/bin/bash
 
 set -e
+
 #Переменная содержащая версию на случай невозможности получить информацию о lastest с github
-DEFAULT_VER="72.5"
+DEFAULT_VER="72.6"
 
 #Чтобы удобнее красить текст
 plain='\033[0m'
@@ -27,517 +28,49 @@ Bblue='\033[44m'
 Bpink='\033[45m'
 Bcyan='\033[46m'
 
-
-
-# ---- Provider detector integration by AloofLibra ----
-# Используем provider.txt как основной источник правды (просто строка "Provider - City")
-PROVIDER_CACHE="/opt/zapret/extra_strats/cache/provider.txt"
-PROVIDER_MENU="Не определён"
-PROVIDER_INIT_DONE=0
-
-# Вспомогательная функция: делает запрос к API и пишет в файл
-_detect_api_simple() {
-    # 1. Скачиваем ответ во временный файл (чтобы точно видеть, что пришло)
-    local tmp_file="/tmp/z4r_provider_debug.txt"
-    curl -s --max-time 10 "http://ip-api.com/line?fields=isp,city" > "$tmp_file"
-
-    # 2. Читаем построчно (без пайпов, чтобы не терять код возврата)
-    local p_name=$(head -n 1 "$tmp_file")
-    local p_city=$(head -n 2 "$tmp_file" | tail -n 1)
-
-    # 3. Чистим жестко (оставляем только латиницу, цифры и пробелы)
-    # Удаляем вообще все странные символы
-    p_name=$(echo "$p_name" | tr -cd 'a-zA-Z0-9 ._-')
-    p_city=$(echo "$p_city" | tr -cd 'a-zA-Z0-9 ._-')
-
-    # Убираем дублирование, если API вернул 1 строку
-    if [ "$p_city" = "$p_name" ]; then p_city=""; fi
-
-    # 4. Формируем результат
-    local res="$p_name"
-    if [ -n "$p_city" ]; then
-        res="$res - $p_city"
-    fi
-    
-       # 5. Проверка результата перед записью
-    if [ -n "$res" ]; then
-        mkdir -p "$(dirname "$PROVIDER_CACHE")"
-        
-        echo "$res" > "$PROVIDER_CACHE"
-    else
-
-        echo "DEBUG: Результат парсинга пустой! (Raw: $(cat $tmp_file))" >&2
-    fi
-    
-    # Чистим за собой
-    rm -f "$tmp_file"
-}
-
-provider_init_once() {
-  [ "$PROVIDER_INIT_DONE" = "1" ] && return 0
-  PROVIDER_INIT_DONE=1
-
-  # Если кэша нет или он пустой — пробуем определить
-  if [ ! -s "$PROVIDER_CACHE" ]; then
-    echo "Определяем провайдера..."
-    _detect_api_simple
-  fi
-
-  # Читаем результат в переменную меню
-  if [ -s "$PROVIDER_CACHE" ]; then
-      PROVIDER_MENU="$(cat "$PROVIDER_CACHE")"
-  else
-      PROVIDER_MENU="Не определён"
-  fi
-}
-
-provider_force_redetect() {
-  echo "Обновляем данные о провайдере..."
-  rm -f "$PROVIDER_CACHE"
-  _detect_api_simple
-  
-  if [ -s "$PROVIDER_CACHE" ]; then
-      PROVIDER_MENU="$(cat "$PROVIDER_CACHE")"
-  else
-      PROVIDER_MENU="Не удалось определить"
-  fi
-}
-
-provider_set_manual_menu() {
-  read -re -p "Провайдер (например MTS/Beeline): " p
-  read -re -p "Город (можно пусто): " c
-  
-  # Чистим ввод
-  p=$(echo "$p" | tr -cd '[:alnum:] ._-')
-  c=$(echo "$c" | tr -cd '[:alnum:] ._-')
-  
-  local res="$p"
-  [ -n "$c" ] && res="$res - $c"
-  
-  mkdir -p "$(dirname "$PROVIDER_CACHE")"
-  echo "$res" > "$PROVIDER_CACHE"
-  PROVIDER_MENU="$res"
-}
-# ---- /Provider detector integration by AloofLibra ----
-
-# ---- Telemetry module integration by AloofLibra ----
-# Настройки Google Forms
-STATS_FORM_ID="1FAIpQLScrUf7Pybm0n61aK8aZuxuAR8KhyNYZ-X0xjSUS8K72SmEhPw"
-ENTRY_UUID="entry.1346249141"
-ENTRY_ISP="entry.2008245653"
-ENTRY_UDP="entry.592144534"
-ENTRY_TCP="entry.1826276405"
-ENTRY_GV="entry.1549076812"
-ENTRY_RKN="entry.1527830884"
-
-# 2. Пути к файлам (используем простые форматы)
-CACHE_DIR="/opt/zapret/extra_strats/cache"
-TELEMETRY_CFG="$CACHE_DIR/telemetry.config"
-PROVIDER_TXT="$CACHE_DIR/provider.txt"
-
-# Помощник: находит номер активной стратегии (ищет непустой файл 1.txt ... N.txt)
-get_active_strat_num() {
-    local dir="$1"
-    local max="$2"
-    for i in $(seq 1 "$max"); do 
-        if [ -s "$dir/$i.txt" ]; then 
-            echo "$i"
-            return
-        fi
-    done
-    echo "0"
-}
-
-# Функция инициализации (Спрашивает пользователя один раз)
-init_telemetry() {
-    mkdir -p "$CACHE_DIR"
-    local tel_enabled=""
-    local tel_uuid=""
-    
-    # 1. Загружаем конфиг, если он есть
-    [ -f "$TELEMETRY_CFG" ] && source "$TELEMETRY_CFG"
-
-    # 2. Если статус еще не задан — спрашиваем
-    if [ -z "$tel_enabled" ]; then
-        echo ""
-        echo -e "${green}Хотите отправлять анонимную статистику (Провайдер + Стратегии)?${plain}"
-        echo -e "Это поможет понять, какие стратегии работают лучше всего."
-        read -p "Разрешить? (y/n): " stats_yn
-        case "$stats_yn" in
-            [Yy]*) tel_enabled="1" ;;
-            *) tel_enabled="0" ;;
-        esac
-        
-        # Сразу сохраняем выбор
-        echo "tel_enabled=$tel_enabled" > "$TELEMETRY_CFG"
-        echo "tel_uuid=$tel_uuid" >> "$TELEMETRY_CFG"
-        
-        if [ "$tel_enabled" == "1" ]; then
-             echo -e "${green}Спасибо! Статистика включена.${plain}"
-        else
-             echo -e "${red}Статистика отключена.${plain}"
-        fi
-        sleep 1
-    fi
-
-    # 3. Генерация UUID (если включено и его нет)
-    if [ "$tel_enabled" == "1" ] && [ -z "$tel_uuid" ]; then
-        # Пытаемся взять системный UUID или генерируем md5 от времени
-        if [ -f /proc/sys/kernel/random/uuid ]; then
-            tel_uuid=$(cat /proc/sys/kernel/random/uuid | cut -c1-8)
-        else
-            tel_uuid=$(date +%s%N | md5sum | head -c 8)
-        fi
-        # Перезаписываем конфиг с новым UUID
-        echo "tel_enabled=$tel_enabled" > "$TELEMETRY_CFG"
-        echo "tel_uuid=$tel_uuid" >> "$TELEMETRY_CFG"
-    fi
-}
-
-# Функция отправки статистики
-send_stats() {
-    # Если конфига нет, значит init_telemetry не запускался — выходим
-    [ ! -f "$TELEMETRY_CFG" ] && return 0
-    
-    # Читаем переменные (tel_enabled, tel_uuid)
-    source "$TELEMETRY_CFG"
-    
-    # Если пользователь запретил — выходим
-    if [ "$tel_enabled" != "1" ]; then
-        return 0
-    fi
-
-    # 1. Провайдер (Читаем из provider.txt, который создает Provider detector)
-    local my_isp="Unknown"
-    if [ -s "$PROVIDER_TXT" ]; then
-        my_isp=$(cat "$PROVIDER_TXT")
-    else
-        # Фолбек: если provider.txt еще нет, пробуем быстро узнать
-        my_isp=$(curl -s --max-time 3 "http://ip-api.com/line?fields=org" | tr -cd '[:alnum:] ._-')
-    fi
-    # Обрезаем до 60 символов и ставим заглушку если пусто
-    my_isp=$(echo "$my_isp" | head -c 60)
-    [ -z "$my_isp" ] && my_isp="Unknown"
-
-    # 2. Определяем номера стратегий
-    local s_udp=$(get_active_strat_num "/opt/zapret/extra_strats/UDP/YT" 8)
-    local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
-    local s_gv=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/GV" 17)
-    local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
-
-    # 3. Отправка в Google Forms (Тихий режим, в фоне &)
-    curl -sL --max-time 10 \
-        -d "$ENTRY_UUID=$tel_uuid" \
-        -d "$ENTRY_ISP=$my_isp" \
-        -d "$ENTRY_UDP=$s_udp" \
-        -d "$ENTRY_TCP=$s_tcp" \
-        -d "$ENTRY_GV=$s_gv" \
-        -d "$ENTRY_RKN=$s_rkn" \
-        "https://docs.google.com/forms/d/e/$STATS_FORM_ID/formResponse" > /dev/null 2>&1 &
-}
-# ---- /Telemetry module integration by AloofLibra ----
-
-# ---- ZEFEER PREMIUM (777/999) ----
-# Сделано исключительно ради мемов. Практического смысла не несёт. (code by AloofLibra)
-PREMIUM_FLAG="$CACHE_DIR/premium.enabled"
-PREMIUM_TITLE_FILE="$CACHE_DIR/premium.title"
-
-rand_from_list() {
-  # usage: rand_from_list "a" "b" "c"
-  local n=$#
-  (( n == 0 )) && return 1
-  local idx=$(( (RANDOM % n) + 1 ))
-  eval "echo \"\${$idx}\""
-}
-
-spinner_for_seconds() {
-  local seconds="${1:-2}"
-  local msg="${2:-Работаем}"
-  local frames="|/-\\"
-  local i=0
-  local end=$((SECONDS + seconds))
-
-local _had_tput=0
-  if command -v tput >/dev/null 2>&1; then
-    _had_tput=1
-    tput civis
-    trap 'tput cnorm; trap - EXIT INT TERM' EXIT INT TERM
-  fi
-
-  while (( SECONDS < end )); do
-    i=$(( (i + 1) % 4 ))
-    # \r + \033[2K: в начало строки и стереть строку
-    printf "\r\033[2K%s... [%c]" "$msg" "${frames:$i:1}"
-    sleep 1
-  done
-  printf "\r\033[2K%s... [OK]\n" "$msg"
-
-  if (( _had_tput )); then
-    tput cnorm
-    trap - EXIT INT TERM
-  fi
-}
-
-premium_get_or_set_title() {
-  mkdir -p "$CACHE_DIR"
-  if [[ -s "$PREMIUM_TITLE_FILE" ]]; then
-    cat "$PREMIUM_TITLE_FILE"
-    return 0
-  fi
-
-  local title
-  title="$(rand_from_list \
-    "Граф Дезинхрона" \
-    "Барон QUIC'а" \
-    "Хранитель Hostlist'ов" \
-    "Лорд --new" \
-    "Грандмастер FakeTLS" \
-    "Архитектор Сплитов" \
-    "Повелитель RST (легальный)" \
-    "Смотрящий за ipset'ом" \
-    "Владыка TTL (ненадолго)" \
-    "Амбассадор «Тест не точен»" \
-  )"
-
-  echo "$title" > "$PREMIUM_TITLE_FILE"
-  echo "$title"
-}
-
-zefeer_premium_777() {
-  mkdir -p "$CACHE_DIR"
-
-  if [[ -f "$PREMIUM_FLAG" ]]; then
-    local title
-    title="$(premium_get_or_set_title)"
-    echo -e "${yellow}ZEFEER PREMIUM уже активирован.${plain}"
-    echo -e "Ваш титул: ${green}${title}${plain}"
-    return 0
-  fi
-
-  echo -e "${yellow}Подключаемся к платёжному шлюзу...${plain}"
-  spinner_for_seconds 2 "Проверяем поддержку проекта"
-
-  # Фальш-результат
-  local verdict
-  verdict="$(rand_from_list \
-    "Транзакция не найдена, но найден хороший человек." \
-    "Оплата не прошла, зато прошли вы. В сердечко." \
-    "Биллинг лежит. Premium — стоит." \
-    "Счёт не выставлялся. Списали уважение." \
-    "Донат не обнаружен. Обнаружена смелость нажать 777." \
-  )"
-  echo -e "${green}${verdict}${plain}"
-
-  local title
-  title="$(premium_get_or_set_title)"
-  echo -e "Premium активирован ${green}ヽ(o^ ^o)ﾉ ${plain}"
-  echo -e "Присвоен титул: ${pink}${title}${plain}"
-
-  : > "$PREMIUM_FLAG"
-}
-
-zefeer_space_999() {
-  echo -e "${cyan}Секретный протокол 999: попытка связи с космосом...${plain}"
-  spinner_for_seconds 6 "Наводим тарелку на созвездие Пакетных Потерь"
-
-  local excuse
-  excuse="$(rand_from_list \
-    "Меркурий не в том доме." \
-    "Вспышка на Солнце сбила сигнал." \
-    "Ретроградный NAT. Портал закрыт." \
-    "Слишком много DPI на орбите — сигнал дропнули." \
-    "Космос ответил RST." \
-    "Сигнал ушёл по QUIC, а обратно пришёл по SMTP." \
-    "Спутник занят: обновляет hostlist." \
-    "Астральный ipset переполнен." \
-    "Связь есть, но только с IPv6, а вы в IPv4 настроении." \
-    "Сбой калибровки антенны: /dev/space не найден." \
-  )"
-
-  echo -e "${red}Ошибка связи:${plain} ${yellow}${excuse}${plain}"
-}
-# ---- /ZEFEER PREMIUM by AloofLibra ----
-
-# ---- Recomendations module by AloofLibra ----
-RECS_URL="https://raw.githubusercontent.com/AloofLibra/zapret4rocket/master/recommendations.txt"
-RECS_FILE="/opt/zapret/extra_strats/cache/recommendations.txt"
-
-# 1. Функция обновления базы (в фоне)
-update_recommendations() {
-    mkdir -p "$(dirname "$RECS_FILE")"
-
-    # Проверка: если файл существует И он моложе 1 дня (24 часа) - выходим.
-    # -mtime -1 означает "изменен менее 1 дня назад"
-    if [ -f "$RECS_FILE" ] && [ -n "$(find "$RECS_FILE" -mtime -1 2>/dev/null)" ]; then
-        # Файл свежий, обновлять не нужно
-        return 0
-    fi
-
-    # Если файла нет или он старый - качаем
-    curl -s --max-time 5 "$RECS_URL" -o "$RECS_FILE" || rm -f "$RECS_FILE"
-}
-
-# 2. Функция показа подсказки (Logic + UI)
-show_hint() {
-    local strat_type="$1" # UDP, TCP или RKN
-    local my_isp=""
-    
-    # А. Узнаем провайдера
-    if [ -s "/opt/zapret/extra_strats/cache/provider.txt" ]; then
-        my_isp=$(cat "/opt/zapret/extra_strats/cache/provider.txt")
-    fi
-    
-    # Б. Проверяем наличие базы
-    if [ -z "$my_isp" ] || [ ! -f "$RECS_FILE" ]; then
-        return
-    fi
-    
-    # В. Ищем строку (grep -F для безопасности спецсимволов)
-    local line=$(grep -F "$my_isp|" "$RECS_FILE" | head -n 1)
-    [ -z "$line" ] && return
-    
-    # Г. Парсим
-    # Формат: ISP|UDP:x|TCP:y|RKN:z
-    local part=""
-    case "$strat_type" in
-        "UDP") part=$(echo "$line" | cut -d'|' -f2 | cut -d':' -f2) ;;
-        "TCP") part=$(echo "$line" | cut -d'|' -f3 | cut -d':' -f2) ;;
-        "GV")  part=$(echo "$line" | cut -d'|' -f4 | cut -d':' -f2) ;;
-        "RKN") part=$(echo "$line" | cut -d'|' -f5 | cut -d':' -f2) ;;
-    esac
-    
-    # Д. Выводим
-    if [ -n "$part" ] && [ "$part" != "-" ]; then
-        echo ""
-        echo -e "${cyan}💡 Подсказка:${plain} Пользователи ${green}$my_isp${plain} часто выбирают: ${yellow}$part${plain}"
-        echo -e "Попробуйте начать с них."
-        echo ""
-    fi
-}
-# ---- /Recomendations module by AloofLibra ----
-
 #___Сначала идут анонсы функций____
-# Функция определяет номер активной стратегии в указанной папке
-# Использование: get_active_strat_num "/path/to/folder" MAX_COUNT
-get_active_strat_num() {
-    local folder="$1"
-    local max="$2"
-    local i
-    
-    # Перебираем файлы от 1 до MAX
-    for ((i=1; i<=max; i++)); do
-        if [ -s "${folder}/${i}.txt" ]; then
-            echo "$i"
-            return
-        fi
-    done
-    
-    # Если ничего не найдено - 0
-    echo "0"
-}
 
-# Функция для генерации строки статуса стратегий
-get_current_strategies_info() {
-    local s_udp=$(get_active_strat_num "/opt/zapret/extra_strats/UDP/YT" 8)
-    local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
-    local s_gv=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/GV" 17)
-    local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
-    
-    # Формируем красивую строку. Цвета можно менять.
-    # Функция для окраски: 0 - серый, >0 - зеленый
-    colorize_num() {
-        if [ "$1" == "0" ]; then
-            echo "${gray}Def${plain}"
-        else
-            echo "${green}$1${plain}"
-        fi
-    }
+#Определяем путь скрипта, подгружаем функции
+SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
 
-    echo -e "UDP:$(colorize_num "$s_udp") TCP:$(colorize_num "$s_tcp") GV:$(colorize_num "$s_gv") RKN:$(colorize_num "$s_rkn")"
-}
+# UI helpers (пауза/печать пунктов меню/совместимость старого кода)
+# Функции: pause_enter, submenu_item, exit_to_menu
+source "$SCRIPT_DIR/lib/ui.sh" 
 
-get_yt_cluster_domain() {
-    local letters_list_a=('u' 'z' 'p' 'k' 'f' 'a' '5' '0' 'v' 'q' 'l' 'g' 'b' '6' '1' 'w' 'r' 'm' 'h' 'c' '7' '2' 'x' 's' 'n' 'i' 'd' '8' '3' 'y' 't' 'o' 'j' 'e' '9' '4' '-')
-    local letters_list_b=('0' '1' '2' '3' '4' '5' '6' '7' '8' '9' 'a' 'b' 'c' 'd' 'e' 'f' 'g' 'h' 'i' 'j' 'k' 'l' 'm' 'n' 'o' 'p' 'q' 'r' 's' 't' 'u' 'v' 'w' 'x' 'y' 'z' '-')
-    letters_map_a="${letters_list_a[*]}"
-    letters_map_b="${letters_list_b[*]}"
-    cluster_codename=$(curl -s --max-time 2 "https://redirector.xn--ngstr-lra8j.com/report_mapping?di=no"| sed -n 's/.*=>[[:space:]]*\([^ (:)]*\).*/\1/p')
-	#Второй раз для пробития нерелевантного ответа
-	cluster_codename=$(curl -s --max-time 2 "https://redirector.xn--ngstr-lra8j.com/report_mapping?di=no"| sed -n 's/.*=>[[:space:]]*\([^ (:)]*\).*/\1/p')
+# Определение провайдера/города + ручная установка/сброс кэша
+# Функции: provider_init_once, provider_force_redetect, provider_set_manual_menu
+# (внутр.: _detect_api_simple)
+source "$SCRIPT_DIR/lib/provider.sh" 
 
-    [ -z "$cluster_codename" ] && {
-        echo "Не удалось получить cluster_codename. Используем тогда rr1---sn-5goeenes.googlevideo.com" >&2
-		echo "rr1---sn-5goeenes.googlevideo.com"
-        return
-    }
+# Телеметрия (вкл/выкл один раз + отправка статистики в Google Forms)
+# Функции: init_telemetry, send_stats
+source "$SCRIPT_DIR/lib/telemetry.sh" 
 
-	local converted_name=""
-    local i char idx a b
-    for ((i=0; i<${#cluster_codename}; i++)); do
-        char="${cluster_codename:$i:1}"
-        idx=0
-        for a in $letters_map_a; do
-            [ "$a" = "$char" ] && break
-            idx=$((idx+1))
-        done
-        b=$(echo "$letters_map_b" | cut -d' ' -f $((idx+1)))
-        converted_name="${converted_name}${b}"
-    done
-    echo "rr1---sn-${converted_name}.googlevideo.com"
-}
+# База подсказок по стратегиям (скачивание + вывод подсказки по провайдеру)
+# Функции: update_recommendations, show_hint
+source "$SCRIPT_DIR/lib/recommendations.sh" 
 
-check_access() {
-	local TestURL="$1"
-	# Проверка TLS 1.2
-	if curl --tls-max 1.2 --max-time 1 -s -o /dev/null "$TestURL"; then
-		echo -e "${green}Есть ответ по TLS 1.2 (важно для ТВ и т.п.). ${yellow}Тест может быть ошибочен.${plain}"
-	else
-		echo -e "${yellow}Нет ответа по TLS 1.2 (важно для ТВ и т.п.) Таймаут 2сек. ${red}Проверьте доступность вручную. Возможно ошибка теста.${plain}"
-	fi
-	# Проверка TLS 1.3
-	if curl --tlsv1.3 --max-time 1 -s -o /dev/null "$TestURL"; then
-		echo -e "${green}Есть ответ по TLS 1.3 (важно в основном для всего современного) ${yellow}Тест может быть ошибочен.${plain}"
-	else
-		echo -e "${yellow}Нет ответа по TLS 1.3 (важно в основном для всего современного) Таймаут 2сек. ${red}Проверьте доступность вручную. Возможно ошибка теста.${plain}"
-	fi
-}
+# Проверка доступности ресурсов/сети (TLS 1.2/1.3) + получение домена кластера youtube (googlevideo)
+# Функции: get_yt_cluster_domain, check_access, check_access_list
+source "$SCRIPT_DIR/lib/netcheck.sh"
 
-check_access_list() {
-   echo "Проверка доступности youtube.com (YT TCP)"
-   check_access "https://www.youtube.com/"
-   echo "Проверка доступности $(get_yt_cluster_domain) (YT TCP)"
-   check_access "https://$(get_yt_cluster_domain)"
-   echo "Проверка доступности meduza.io (RKN list)"
-   check_access "https://meduza.io"
-   echo "Проверка доступности www.instagram.com (RKN list + нужен рабочий DNS)"
-   check_access "https://www.instagram.com/"
-}
+# “Premium” пункты 777/999 и их вспомогательные эффекты (рандом, спиннер, титулы)
+# Функции: rand_from_list, spinner_for_seconds, premium_get_or_set_title, zefeer_premium_777, zefeer_space_999
+source "$SCRIPT_DIR/lib/premium.sh" 
 
-exit_to_menu() {
-   read -p "Enter для выхода в меню"
-   get_menu
-}
+# Логика стратегий: определение активной стратегии, статус строкой, перебор стратегий, быстрый подбор
+# Функции: get_active_strat_num, get_current_strategies_info, try_strategies, Strats_Tryer
+source "$SCRIPT_DIR/lib/strategies.sh" 
 
-#Запрос на резервирование настроек в подборе стратегий
-backup_strats() {
-  if [ -d /opt/zapret/extra_strats ]; then
-    read -re -p $'\033[0;33mХотите сохранить текущие настройки ручного подбора стратегий? Не рекомендуется. (5 - сохранить, Enter - нет\n0 - прервать операцию): \033[0m' answer_backup
-    if [[ "$answer_backup" == "5" ]]; then
-		cp -rf /opt/zapret/extra_strats /opt/
-  		echo "Настройки подбора резервированы."
-	elif [[ "$answer_backup" == "0" ]]; then
-		exit_to_menu
-	fi
-	answer_backup=""
-	read -re -p $'\033[0;33mХотите сохранить добавленные в лист исключений домены? Не рекомендуется. (\"5\" - сохранить, Enter - нет): \033[0m' answer_backup
-	if [[ "$answer_backup" == "5" ]]; then
-		cp -f /opt/zapret/lists/netrogat.txt /opt/
-       	echo "Лист исключений резервирован."
-  	fi	
-  fi
-}
+# Подменю (UI-обвязка над Strats_Tryer + доп. меню управления: FLOWOFFLOAD, TCP443, провайдер)
+# Функции: strategies_submenu, flowoffload_submenu, tcp443_submenu, provider_submenu
+source "$SCRIPT_DIR/lib/submenus.sh" 
 
-#Раскомменчивание юзера под keenetic или merlin
+# Действия меню (бэкапы/сбросы/переключатели)
+# Функции: backup_strats, menu_action_update_config_reset, menu_action_toggle_bolvan_ports,
+#          menu_action_toggle_fwtype, menu_action_toggle_udp_range
+source "$SCRIPT_DIR/lib/actions.sh" 
+
 change_user() {
    if /opt/zapret/nfq/nfqws --dry-run --user="nobody" 2>&1 | grep -q "queue"; then
     echo "WS_USER=nobody"
@@ -581,167 +114,6 @@ get_repo() {
 # cache
 mkdir -p /opt/zapret/extra_strats/cache
 
-}
-
-#Функция для функции подбора стратегий
-try_strategies() {
-    local count="$1"
-    local base_path="$2"
-    local list_file="$3"
-    local final_action="$4"
-    
-    read -re -p "Введите номер стратегии к которой перейти или Enter: " strat_num
-    if (( strat_num < 1 || strat_num > count )); then
-        echo "Введено значение не из диапазона. Начинаем с 1 стратегии"
-        strat_num=1
-    fi
-
-    # Предварительная очистка всех файлов стратегий в папке
-    for ((clr_txt=1; clr_txt<=count; clr_txt++)); do
-        echo -n > "$base_path/${clr_txt}.txt"
-    done
-
-    # Основной цикл перебора
-    for ((strat_num=strat_num; strat_num<=count; strat_num++)); do
-        
-        # Очищаем файл предыдущей стратегии (чтобы не было дублей)
-        if [[ $strat_num -ge 2 ]]; then
-            prev=$((strat_num - 1))
-            echo -n > "$base_path/${prev}.txt"
-        fi
-
-        # Запись в файл текущей стратегии
-        if [[ "$list_file" != "/dev/null" ]]; then
-            # Режим списка (копируем весь файл)
-            cp "$list_file" "$base_path/${strat_num}.txt"
-        else
-            # Режим одного домена
-            echo "$user_domain" > "$base_path/${strat_num}.txt"
-        fi
-        
-        echo "Стратегия номер $strat_num активирована"
-        
-        # Блок проверки доступности (curl)
-        # Работает только для TCP стратегий
-        if [[ "$count" == "17" ]]; then
-             local TestURL=""
-             
-             # ЛОГИКА ВЫБОРА ДОМЕНА ДЛЯ ПРОВЕРКИ
-             if [[ "$user_domain" == "googlevideo.com" ]]; then
-                # 1. Если это GVideo - ищем живой кластер для проверки видеопотока
-                local cluster
-                cluster=$(get_yt_cluster_domain)
-                TestURL="https://$cluster"
-                echo "Проверка доступности (кластер): $cluster"
-                
-             elif [[ -z "$user_domain" ]]; then
-                # 2. Если домен пустой (обычный режим YT) - проверяем доступ к самому сайту
-                TestURL="https://www.youtube.com"
-                
-             else
-                # 3. Для кастомных доменов и RKN проверяем сам введенный домен
-                TestURL="https://$user_domain"
-             fi
-             
-             check_access "$TestURL"
-        fi
-            
-        read -re -p "Проверьте работу (1 - сохранить, 0 - отмена, Enter - далее): " answer_strat
-        
-        if [[ "$answer_strat" == "1" ]]; then
-            echo "Стратегия $strat_num сохранена."
-            send_stats  # Отправка телеметрии (если включена)
-            
-            # Если передано дополнительное действие (final_action), выполняем его
-            if [[ -n "$final_action" ]]; then
-                eval "$final_action"
-            fi
-            return
-            
-        elif [[ "$answer_strat" == "0" ]]; then
-            # Сброс текущей стратегии при отмене
-            echo -n > "$base_path/${strat_num}.txt"
-            echo "Изменения отменены."
-            return
-        fi
-    done
-
-    # Если цикл закончился, а пользователь ничего не выбрал
-    echo -n > "$base_path/${count}.txt"
-    echo "Все стратегии испробованы. Ничего не подошло."
-    exit_to_menu
-}
-
-#Сама функция подбора стратегий
-Strats_Tryer() {
-	local mode_domain="$1"
-	
-	if [ -z "$mode_domain" ]; then
-		# если аргумент не передан — спрашиваем вручную
-		echo -e '\033[33mПодобрать стратегию? (1-5 или Enter для отмены):\033[32m
-	1. YouTube с видеопотоком (UDP QUIC). \033[0m8 вариантов\033[32m
-	2. YouTube (TCP. Интерфейс). \033[0m17 вариантов\033[32m
-	3. YouTube (TCP. Видеопоток/GV домен). \033[0m17 вариантов\033[32m
-	4. RKN (Популярные блокированные сайты. Дискорд в т.ч.). \033[0m17 вариантов\033[32m
-	5. Отдельный домен. \033[0m17 вариантов'	
-		read -re -p "" answer_strat_mode
-	else
-		if [ "${#mode_domain}" -gt 1 ]; then
-			answer_strat_mode="5"
-			user_domain="$mode_domain"
-		else
-			answer_strat_mode="$mode_domain"
-		fi
-	fi
-	
-    case "$answer_strat_mode" in
-        "1")
-            echo "Подбор для хост-листа YouTube с видеопотоком (UDP QUIC - браузеры, моб. приложения). Ранее заданная стратегия этого листа сброшена в дефолт."
-			#вывод подсказки
-			show_hint "UDP"
-            try_strategies 8 "/opt/zapret/extra_strats/UDP/YT" "/opt/zapret/extra_strats/UDP/YT/List.txt" ""
-            ;;
-        "2")
-            echo "Подбор для хост-листа YouTube (TCP - сам интерфейс. Без видео-домена). Ранее заданная стратегия этого листа сброшена в дефолт."
-			#вывод подсказки
-			show_hint "TCP"
-            try_strategies 17 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
-            ;;
-        "3")
-			echo "Подбор для googlevideo.com (Видеопоток YouTube). Ранее заданная стратегия этого листа сброшена в дефолт."
-			#на всякий случай убираем GV из листа YT    
-			[ -f "/opt/zapret/extra_strats/TCP/YT/List.txt" ] && \
-    			sed -i '/googlevideo.com/d' "/opt/zapret/extra_strats/TCP/YT/List.txt"
-			user_domain="googlevideo.com"
-			#вывод подсказки
-			show_hint "GV"
-            try_strategies 17 "/opt/zapret/extra_strats/TCP/GV" "/dev/null" ""
-            ;;
-		"4")
-            echo "Подбор для хост-листа основных доменов блока RKN. Проверка доступности задана на домен meduza.io. Ранее заданная стратегия этого листа сброшена в дефолт."
-			for numRKN in {1..17}; do
-				echo -n > "/opt/zapret/extra_strats/TCP/RKN/${numRKN}.txt"
-			done
-			user_domain="meduza.io"
-			#вывод подсказки
-			show_hint "RKN"
-            try_strategies 17 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
-            ;;
-        "5")
-            echo "Режим ручного указания домена"
-			if [ -z "$mode_domain" ]; then
-				read -re -p "Введите домен (например, mydomain.com): " user_domain
-			fi
-			echo "Введён домен: $user_domain"
-
-            try_strategies 17 "/opt/zapret/extra_strats/TCP/temp" "/dev/null" \
-            "echo -n > \"/opt/zapret/extra_strats/TCP/temp/\${strat_num}.txt\"; \
-             echo \"$user_domain\" >> \"/opt/zapret/extra_strats/TCP/User/\${strat_num}.txt\""
-            ;;
-        *)
-            echo "Пропуск подбора альтернативной стратегии"
-            ;;
-    esac
 }
 
 #Удаление старого запрета, если есть
@@ -1002,318 +374,197 @@ EOF
  echo -e "${plain}Выполнение установки завершено. ${green}Доступ по ip вашего роутера/VPS в формате ip:17681, например 192.168.1.1:17681 или mydomain.com:17681 ${yellow}логин: ${ttyd_login} пароль - не испольузется.${plain} Был выполнен выход из скрипта для сохранения состояния."
 }
 
-#Функция меню "14. Провайдер" by AloofLibra
-provider_submenu() {
-  provider_init_once
-
-  echo -e "${yellow}Провайдер: ${plain}${PROVIDER_MENU}${yellow}
-${green}1.${yellow} Указать вручную
-${green}2.${yellow} Определить заново (сбросить кэш)
-${green}3.${yellow} Обновить базу рекомендаций (Подсказки)
-${green}0.${yellow} Назад${plain}"
-  read -re -p "" answer_provider
-
-  case "$answer_provider" in
-    "1") 
-        provider_set_manual_menu 
-        exit_to_menu 
-        ;;
-    "2") 
-        provider_force_redetect 
-        exit_to_menu 
-        ;;
-    "3") 
-        echo "Обновляем базу рекомендаций..."
-        # Принудительно удаляем старый файл, чтобы update_recommendations скачал новый
-        rm -f "$RECS_FILE"
-        update_recommendations
-        if [ -s "$RECS_FILE" ]; then
-            echo -e "${green}База успешно обновлена!${plain}"
-        else
-            echo -e "${red}Ошибка обновления базы.${plain}"
-        fi
-        sleep 1
-        exit_to_menu 
-        ;;
-    "0"|"") 
-        exit_to_menu 
-        ;;
-    *) 
-        exit_to_menu 
-        ;;
-  esac
-}
-
-
 #Меню, проверка состояний и вывод с чтением ответа
 get_menu() {
-local strategies_status=$(get_current_strategies_info)
-TITLE_MENU_LINE=""
-if [[ -s "$PREMIUM_TITLE_FILE" ]]; then
-  TITLE_MENU_LINE="\n${pink}Титул:${plain} $(cat "$PREMIUM_TITLE_FILE")${yellow}\n"
-fi
-provider_init_once
-init_telemetry
-update_recommendations
- echo -e '
-'${red}'      *
-     ***            '${Fcyan}'by Dmitriy Utkin:
+    TITLE_MENU_LINE=""
+    if [[ -s "$PREMIUM_TITLE_FILE" ]]; then
+      TITLE_MENU_LINE="\n${pink}Титул:${plain} $(cat "$PREMIUM_TITLE_FILE")${yellow}\n"
+    fi
+    provider_init_once
+    init_telemetry
+    update_recommendations  
+  while true; do
+  	local strategies_status
+    strategies_status=$(get_current_strategies_info)
+	TITLE_MENU_LINE=""
+    if [[ -s "$PREMIUM_TITLE_FILE" ]]; then
+      TITLE_MENU_LINE="\n${pink}Титул:${plain} $(cat "$PREMIUM_TITLE_FILE")${yellow}\n"
+    fi
+    clear
+    echo -e "${cyan}========================================${plain}"
+    echo -e "${Fcyan}     zeefeer4rocket by IndeecFOX     ${plain}"
+    echo -e "${Fgreen}         Z4R - Zapret Manager          ${plain}"
+    echo -e "${cyan}========================================${plain}"
+    echo ""
+    
+    echo -e '
+'"${red}"'      *
+     ***            '"${Fcyan}"'by Dmitriy Utkin:
       *
-'${green}'     /|\             '${plain}'.   .      .
-'${green}'    //|\\\             '${plain}'.     '${Fred}'* '${plain}'.   .
-'${green}'   ///|\\\\\                 '${green}'/ \  '${plain}'.
-'${green}'  ////|\\\\\\\           '${plain}'.   '${green}'/ '${Fcyan}'* '${green}'\      '${plain}'.
-'${green}'   ///|\\\\\\               '${green}'/  .  \   '${plain}'.
-'${green}'  ////|\\\\\\\\         '${plain}'.   '${green}'/ '${Fpink}'* . '${Fyellow}'* '${green}'\
-'${green}' /////|\\\\\\\\\\           '${green}'/  .   .  \  '${plain}'.
-'${green}'  ////|\\\\\\\\\      '${plain}'.   '${green}'/ '${Fcyan}'* . '${plain}'* . '${Fred}'* '${green}'\   '${plain}'.
-'${green}' /////|\\\\\\\\\\\        '${green}'/_____________\
-'${green}'//////|\\\\\\\\\\\\\      '${plain}'.     '${green}'[___]   '${plain}'.  .
+'"${green}"'     /|\             '"${plain}"'.   .      .
+'"${green}"'    //|\\\             '"${plain}"'.     '"${Fred}"'* '"${plain}"'.   .
+'"${green}"'   ///|\\\\\                 '"${green}"'/ \  '"${plain}"'.
+'"${green}"'  ////|\\\\\\\           '"${plain}"'.   '"${green}"'/ '"${Fcyan}"'* '"${green}"'\      '"${plain}"'.
+'"${green}"'   ///|\\\\\\               '"${green}"'/  .  \   '"${plain}"'.
+'"${green}"'  ////|\\\\\\\\         '"${plain}"'.   '"${green}"'/ '"${Fpink}"'* . '"${Fyellow}"'* '"${green}"'\
+'"${green}"' /////|\\\\\\\\\\           '"${green}"'/  .   .  \  '"${plain}"'.
+'"${green}"'  ////|\\\\\\\\\      '"${plain}"'.   '"${green}"'/ '"${Fcyan}"'* . '"${plain}"'* . '"${Fred}"'* '"${green}"'\   '"${plain}"'.
+'"${green}"' /////|\\\\\\\\\\\        '"${green}"'/_____________\
+'"${green}"'//////|\\\\\\\\\\\\\      '"${plain}"'.     '"${green}"'[___]   '"${plain}"'.  .
 '"Город/провайдер: ${plain}${PROVIDER_MENU}${yellow}"'
 '"${TITLE_MENU_LINE}"'
 \033[32mВыберите необходимое действие:\033[33m
 Enter (без цифр) - переустановка/обновление zapret
 0. Выход
 01. Проверить доступность сервисов (Тест не точен)
-1. Сменить стратегии или добавить домен в хост-лист. Текущие: '${plain}[ ${strategies_status} ]${yellow}'
-2. Стоп/пере(запуск) zapret (сейчас: '$(pidof nfqws >/dev/null && echo "${green}Запущен${yellow}" || echo "${red}Остановлен${yellow}")')
+1. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' ]'"${yellow}"'
+2. Стоп/пере(запуск) zapret (сейчас: '"$(pidof nfqws >/dev/null && echo "${green}Запущен${yellow}" || echo "${red}Остановлен${yellow}")"')
 3. Тут могла быть ваша реклама :D (Функция перенесена во 2 пункт. Резерв)
 4. Удалить zapret
 5. Обновить стратегии, сбросить листы подбора стратегий и исключений (есть бэкап)
 6. Исключить домен из zapret обработки
 7. Открыть в редакторе config (Установит nano редактор ~250kb)
-8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '${plain}$(grep -Eq '^NFQWS_PORTS_UDP=.*443$' /opt/zapret/config && echo "Скрипты" || (grep -Eq '443,1400,3478-3481,5349,50000-50099,19294-19344$' /opt/zapret/config && echo "Классические стратегии" || echo "Незвестно"))${yellow}'
-9. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '${plain}$(grep -q '^FWTYPE=iptables$' /opt/zapret/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret/config && echo "nftables" || echo "Неизвестно"))${yellow}'
-10. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '${plain}$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=1026-65531,443' /opt/zapret/config && echo "Включен" || echo "Неизвестно"))${yellow}'
-11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '${plain}$(grep '^FLOWOFFLOAD=' /opt/zapret/config)${yellow}'
-12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '${plain}$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")${yellow}'
+8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '"${plain}"'['"$(grep -Eq '^NFQWS_PORTS_UDP=.*443$' /opt/zapret/config && echo "Скрипты" || (grep -Eq '443,1400,3478-3481,5349,50000-50099,19294-19344$' /opt/zapret/config && echo "Классические стратегии" || echo "Незвестно"))"']'"${yellow}"'
+9. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '"${plain}"'['"$(grep -q '^FWTYPE=iptables$' /opt/zapret/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret/config && echo "nftables" || echo "Неизвестно"))"']'"${yellow}"'
+10. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '"${plain}"'['"$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=1026-65531,443' /opt/zapret/config && echo "Включен" || echo "Неизвестно"))"']'"${yellow}"'
+11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret/config)"']'"${yellow}"'
+12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '"${plain}"'['"$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")"']'"${yellow}"'
 13. Активировать доступ в меню через браузер (~3мб места)
 14. Провайдер
-777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Whoze, andric62, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, subzeero452, Grigaraz, Reconnaissance, comandante1928, umad, railwayfx, vtokarev1604, rudnev2028 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
-if [[ -f "$PREMIUM_FLAG" ]]; then
-  echo -e "${red}999. Секретный пункт. Нажимать на свой страх и риск${plain}"
-fi
- read -re -p '' answer_menu
- case "$answer_menu" in
+777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
+    if [[ -f "$PREMIUM_FLAG" ]]; then
+      echo -e "${red}999. Секретный пункт. Нажимать на свой страх и риск${plain}"
+    fi
+  read -re -p "" answer_menu
+    case "$answer_menu" in
+  "")
+    echo -e "${yellow}Вы уверены, что хотите переустановить/обновить zapret?${plain}"
+    echo -e "${yellow}5 - Да, Enter/0 - Нет (вернуться в меню)${plain}"
+    read -r ans
+    if [ "$ans" = "5" ] || [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
+      # подтверждение: выходим из get_menu и уходим в “тело” (переустановка/обновление)
+      return 0
+    else
+      # отмена: остаёмся в меню, цикл while true продолжится
+      :
+    fi
+    ;;
+
   "0")
-   echo "Выход выполнен"
-   exit 0
-   ;;
+    echo "Выход выполнен"
+    exit 0
+    ;;
+
   "01")
-   check_access_list
-   exit_to_menu
-   ;;
+    check_access_list
+    pause_enter
+    ;;
+
   "1")
-   echo "Режим подбора других стратегий"
-   Strats_Tryer
-   exit_to_menu
-   ;;
+    echo "Режим подбора других стратегий"
+    strategies_submenu     # strategies_submenu сам в цикле и выходит через return
+    ;;
+
   "2")
-   if pidof nfqws >/dev/null; then
-	/opt/zapret/init.d/sysv/zapret stop
-  	echo -e "${green}Выполнена команда остановки zapret${plain}"
-   else
-	/opt/zapret/init.d/sysv/zapret restart
-   	echo -e "${green}Выполнена команда перезапуска zapret${plain}"
-   fi 
-   exit_to_menu
-   ;;
+    if pidof nfqws >/dev/null; then
+      /opt/zapret/init.d/sysv/zapret stop
+      echo -e "${green}Выполнена команда остановки zapret${plain}"
+    else
+      /opt/zapret/init.d/sysv/zapret restart
+      echo -e "${green}Выполнена команда перезапуска zapret${plain}"
+    fi
+    pause_enter
+    ;;
+
   "3")
-   exit_to_menu
-   ;;
+    # Резерв: просто вернемся в меню
+    ;;
+
   "4")
-   remove_zapret
-   echo -e "${yellow}zapret удалён${plain}"
-   exit_to_menu
-   ;;
+    remove_zapret
+    echo -e "${yellow}zapret удалён${plain}"
+    pause_enter
+    ;;
+
   "5")
-   echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
-   backup_strats
-   /opt/zapret/init.d/sysv/zapret stop
-   rm -rf /opt/zapret/lists /opt/zapret/extra_strats
-   rm -f /opt/zapret/files/fake/http_fake_MS.bin /opt/zapret/files/fake/quic_{1..7}.bin /opt/zapret/files/fake/syn_packet.bin /opt/zapret/files/fake/tls_clienthello_{1..18}.bin /opt/zapret/files/fake/tls_clienthello_2n.bin /opt/zapret/files/fake/tls_clienthello_6a.bin /opt/zapret/files/fake/tls_clienthello_4pda_to.bin
-   get_repo
-   #Раскомменчивание юзера под keenetic или merlin
-   change_user
-   cp -f /opt/zapret/config.default /opt/zapret/config
-   /opt/zapret/init.d/sysv/zapret start
-   check_access_list
-   echo -e "${green}Config файл обновлён. Листы подбора стратегий и исключений сброшены в дефолт, если не просили сохранить. Фейк файлы обновлены.${plain}"
-   exit_to_menu
-   ;;
+    menu_action_update_config_reset
+    pause_enter
+    ;;
+
   "6")
-   read -re -p "Введите домен, который добавить в исключения (например, mydomain.com): " user_domain
-   if [ -n "$user_domain" ]; then
-    echo "$user_domain" >> /opt/zapret/lists/netrogat.txt
-    echo -e "Домен ${yellow}$user_domain${plain} добавлен в исключения (netrogat.txt). zapret перезапущен."
-   else
-    echo "Ввод пустой, ничего не добавлено"
-   fi
-   exit_to_menu
-   ;;
+    read -re -p "Введите домен, который добавить в исключения (например, mydomain.com): " user_domain
+    if [ -n "$user_domain" ]; then
+      echo "$user_domain" >> /opt/zapret/lists/netrogat.txt
+      echo -e "Домен ${yellow}$user_domain${plain} добавлен в исключения (netrogat.txt)."
+    else
+      echo "Ввод пустой, ничего не добавлено"
+    fi
+    pause_enter
+    ;;
+
   "7")
-   if [[ "$OSystem" == "VPS" ]]; then
-	apt install nano
-   else
-	opkg remove nano 2>/dev/null || apk del nano 2>/dev/null && opkg install nano-full 2>/dev/null || apk add nano-full 2>/dev/null
-   fi
-   nano /opt/zapret/config
-   exit_to_menu
-   ;;
+    if [[ "$OSystem" == "VPS" ]]; then
+      apt install nano
+    else
+      opkg remove nano 2>/dev/null || apk del nano 2>/dev/null
+      opkg install nano-full 2>/dev/null || apk add nano-full 2>/dev/null
+    fi
+    nano /opt/zapret/config
+    # после выхода из nano
+    ;;
+
   "8")
-	if grep -Eq '^NFQWS_PORTS_UDP=.*443$' "/opt/zapret/config"; then
-     # Был только 443 → добавляем порты и убираем --skip, удаляем скрипты
-     sed -i '76s/443$/443,1400,3478-3481,5349,50000-50099,19294-19344/' /opt/zapret/config
-	 sed -i 's/^--skip --filter-udp=50000/--filter-udp=50000/' "/opt/zapret/config"
-	 rm -f \opt\zapret\init.d\sysv\custom.d\50-discord-media \opt\zapret\init.d\sysv\custom.d\50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-discord-media
-     echo -e "${green}Уход от скриптов bol-van. Выделены порты 50000-50099,1400,3478-3481,5349 и раскомментированы стратегии DS, WA, TG${plain}"
-	elif grep -q '443,1400,3478-3481,5349,50000-50099,19294-19344$' "/opt/zapret/config"; then
-     # Уже расширенный список → возвращаем к 443 и добавляем --skip, возвращаем скрипты
-     sed -i 's/443,1400,3478-3481,5349,50000-50099,19294-19344$/443/' "/opt/zapret/config"
-	 sed -i 's/^--filter-udp=50000/--skip --filter-udp=50000/' "/opt/zapret/config"
-	 curl -L -o /opt/zapret/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-stun4all
-	 curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
-	 cp -f /opt/zapret/init.d/sysv/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all
- 	 cp -f /opt/zapret/init.d/sysv/custom.d/50-discord-media /opt/zapret/init.d/openwrt/custom.d/50-discord-media
-     echo -e "${green}Работа от скриптов bol-van. Вернули строку к виду NFQWS_PORTS_UDP=443 и добавили "--skip " в начале строк стратегии войса${plain}"
-	else
-     echo -e "${yellow}Неизвестное состояние строки NFQWS_PORTS_UDP. Проверь конфиг вручную.${plain}"
-	fi
-	/opt/zapret/init.d/sysv/zapret restart
- 	echo -e "${green}Выполнение переключений завершено.${plain}"
-   exit_to_menu
-   ;;
+    menu_action_toggle_bolvan_ports
+    pause_enter
+    ;;
+
   "9")
-	if grep -q '^FWTYPE=iptables$' "/opt/zapret/config"; then
-     # Был только 443 → добавляем порты и убираем --skip
-     sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret/config"
-	 /opt/zapret/install_prereq.sh
-  	 /opt/zapret/init.d/sysv/zapret restart
-     echo -e "${green}Zapret moode: nftables.${plain}"
-	elif grep -q '^FWTYPE=nftables$' "/opt/zapret/config"; then
-     sed -i 's/^FWTYPE=nftables$/FWTYPE=iptables/' "/opt/zapret/config"
-	 /opt/zapret/install_prereq.sh
-  	 /opt/zapret/init.d/sysv/zapret restart
-     echo -e "${green}Zapret moode: iptables.${plain}"
-	else
-     echo -e "${yellow}Неизвестное состояние строки FWTYPE. Проверь конфиг вручную.${plain}"
-	fi
-   exit_to_menu
-   ;;
+    menu_action_toggle_fwtype
+    pause_enter
+    ;;
+
   "10")
-	if grep -q '^NFQWS_PORTS_UDP=443' "/opt/zapret/config"; then
-     # Был только 443 → добавляем порты и убираем --skip
-     sed -i 's/^NFQWS_PORTS_UDP=443/NFQWS_PORTS_UDP=1026-65531,443/' "/opt/zapret/config"
-	 sed -i 's/^--skip --filter-udp=1026/--filter-udp=1026/' "/opt/zapret/config"
-     echo -e "${green}Стратегия UDP обхода активирована. Выделены порты 1026-65531${plain}"
-	elif grep -q '^NFQWS_PORTS_UDP=1026-65531,443' "/opt/zapret/config"; then
-     # Уже расширенный список → возвращаем к 443 и добавляем --skip
-     sed -i 's/^NFQWS_PORTS_UDP=1026-65531,443/NFQWS_PORTS_UDP=443/' "/opt/zapret/config"
-	 sed -i 's/^--filter-udp=1026/--skip --filter-udp=1026/' "/opt/zapret/config"
-     echo -e "${green}Стратегия UDP обхода ДЕактивирована. Выделенные порты 1026-65531 убраны${plain}"
-	else
-     echo -e "${yellow}Неизвестное состояние строки NFQWS_PORTS_UDP. Проверь конфиг вручную.${plain}"
-	fi
-	/opt/zapret/init.d/sysv/zapret restart
- 	echo -e "${green}Выполнение переключений завершено.${plain}"
-    exit_to_menu 
-   ;;
+    menu_action_toggle_udp_range
+    pause_enter
+    ;;
+
   "11")
-	echo "Текущее состояние: $(grep '^FLOWOFFLOAD=' /opt/zapret/config)"
- 	read -re -p $'\033[33mСменить аппаратное ускорение? (1-4 или Enter для выхода):\033[0m\n\033[32m1. software. Программное ускорение. \n2. hardware. Аппаратное NAT\n3. none. Отключено.\n4. donttouch. Не трогать (дефолт).\033[0m\n' answer_offload
+    flowoffload_submenu   # сабменю само в цикле и выходит через return
+    ;;
 
-    case "$answer_offload" in
-        "1")
- 	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=software/' "/opt/zapret/config"
-			/opt/zapret/install_prereq.sh
-  			/opt/zapret/init.d/sysv/zapret restart
-            ;;
-        "2")
- 	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=hardware/' "/opt/zapret/config"
-			/opt/zapret/install_prereq.sh
-  			/opt/zapret/init.d/sysv/zapret restart
-            ;;
-        "3")
- 	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=none/' "/opt/zapret/config"
-			/opt/zapret/install_prereq.sh
-  			/opt/zapret/init.d/sysv/zapret restart         
-            ;;
-        "4")
- 	  	    sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=donttouch/' "/opt/zapret/config"
-			/opt/zapret/install_prereq.sh
-  			/opt/zapret/init.d/sysv/zapret restart
-            ;;
-        *)
-            echo "Выход"
-            ;;
-    esac
-
-   echo -e "${green}Выполнено.${plain}"
-   exit_to_menu
-   ;;
   "12")
-   num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); echo -e "${yellow}Безразборный режим по стратегии: ${plain}$((num ? num : 0))"
-   echo -e "\033[33mС каким номером применить стратегию? (1-17, 0 - отключение безразборного режима, Enter - выход) \033[31mПри активации кастомно подобранные домены будут очищены:${plain}"
-   read -re -p " " answer_bezr
-   if echo "$answer_bezr" | grep -Eq '^[0-9]+$' && [ "$answer_bezr" -ge 0 ] && [ "$answer_bezr" -le 17 ]; then
-	#Отключение
-    for i in $(seq 112 128); do
-	 if sed -n "${i}p" /opt/zapret/config | grep -Fq -- '--filter-tcp=443 --hostlist-domains= --h'; then
-		sed -i "${i}s#--filter-tcp=443 --hostlist-domains= --h#--filter-tcp=443 --hostlist-domains=none.dom --h#" /opt/zapret/config
-		/opt/zapret/init.d/sysv/zapret restart
-   		echo -e "${green}Выполнена команда перезапуска zapret${plain}"
-		echo "Безразборный режим отключен"
-		break
-	fi
-	done
-	if [ "$answer_bezr" -ge 1 ] && [ "$answer_bezr" -le 17 ]; then
-		for f_clear in $(seq 1 17); do
-			echo -n > "/opt/zapret/extra_strats/TCP/User/$f_clear.txt"
-			echo -n > "/opt/zapret/extra_strats/TCP/temp/$f_clear.txt"
-		done
-		sed -i "$((111 + answer_bezr))s/--hostlist-domains=none\.dom/--hostlist-domains=/" /opt/zapret/config
-		/opt/zapret/init.d/sysv/zapret restart
-		echo -e "${green}Выполнена команда перезапуска zapret. ${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443. Проверка доступа к meduza.io${plain}"
-		check_access_list
-	fi
-   else
-    get_menu
-   fi
-   exit_to_menu
-   ;;
+    tcp443_submenu        # сабменю само в цикле и выходит через return
+    ;;
+
   "13")
-   ttyd_webssh
-   exit 7
-   ;;
+    ttyd_webssh
+    pause_enter
+    ;;
+
   "14")
-   provider_submenu
-   ;;
+    provider_submenu      # сабменю само в цикле и выходит через return
+    ;;
+
   "777")
    echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028, umad, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 активирован. Наверное. Так же благодарю поддержавших проект hey_enote, VssA, vladdrazz, Alexey_Tob, Bor1sBr1tva, Azamatstd, iMLT, Qu3Bee, SasayKudasay1, alexander_novikoff, MarsKVV, porfenon123, bobrishe_dazzle, kotov38, Levonkas, DA00001, trin4ik, geodomin, I_ZNA_I, CMyTHblN PacKoJlbHNK и анонимов${plain}"
    zefeer_premium_777
    exit_to_menu
    ;;
   "999")
-  zefeer_space_999
-  exit_to_menu
-  ;; 
-  esac
- }
+    zefeer_space_999
+    pause_enter
+    ;;
+
+  *)
+    echo -e "${yellow}Неверный ввод.${plain}"
+    sleep 1
+    ;;
+esac
+
+  done
+}
 
 #___Само выполнение скрипта начинается тут____
-
-#Добавление ссылки на быстрый вызов скрипта, проверка на актуальность сначала если есть
-if [ -d /opt/bin ]; then
-    if [ ! -f /opt/bin/z4r ] || ! grep -q 'opt/z4r.sh "$@"' /opt/bin/z4r; then	
-		echo "Скачиваем /opt/bin/z4r"
-        curl -L -o /opt/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
-        chmod +x /opt/bin/z4r
-    fi
-elif [ ! -f /usr/bin/z4r ] || ! grep -q 'opt/z4r.sh "$@"' /usr/bin/z4r; then
-	echo "Скачиваем /usr/bin/z4r"
-    curl -L -o /usr/bin/z4r https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r
-    chmod +x /usr/bin/z4r
-fi
 
 #Проверка ОС
 if [[ -f /etc/os-release ]]; then
