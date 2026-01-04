@@ -2,7 +2,7 @@ backup_strats() {
   # Бэкап папки стратегий
   if [ -d /opt/zapret/extra_strats ]; then
     echo -e "${yellow}Сделать бэкап /opt/zapret/extra_strats ?${plain}"
-    echo -e "${yellow}5 - Да, Enter - Нет, 0 - отмена и выход в меню${plain}"
+    echo -e "${yellow}5 - Да, Enter - Нет, 0 - отмена${plain}"
     read -r ans
     if [ "$ans" = "0" ]; then
       return 130   # сигнал “отмена/в меню”
