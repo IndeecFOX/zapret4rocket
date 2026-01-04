@@ -9,6 +9,7 @@ strategies_submenu() {
     clear
 
     echo -e "${cyan}--- Управление стратегиями ---${plain}"
+    echo -e "${yellow}Подобрать стратегию? (1-5 для подбора, 0 или Enter для отмены)${plain}"
     echo -e "  [${strategies_status}]"
     echo -e 
 
