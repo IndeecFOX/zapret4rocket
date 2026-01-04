@@ -20,7 +20,7 @@ backup_strats() {
     echo -e "${yellow}5 - Да, Enter - Нет, 0 - отмена и выход в меню${plain}"
     read -r ans2
     if [ "$ans2" = "0" ]; then
-      return 130
+      get_menu
     fi
     if [ "$ans2" = "5" ] || [ "$ans2" = "y" ] || [ "$ans2" = "Y" ]; then
       cp -f /opt/zapret/lists/netrogat.txt /opt/netrogat.txt || true
