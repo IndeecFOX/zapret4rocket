@@ -34,7 +34,7 @@ get_current_strategies_info() {
         fi
     }
 
-    echo -e "UDP:$(colorize_num "$s_udp") TCP:$(colorize_num "$s_tcp") GV:$(colorize_num "$s_gv") RKN:$(colorize_num "$s_rkn")"
+    echo -e "YT_UDP:$(colorize_num "$s_udp") YT_TCP:$(colorize_num "$s_tcp") YT_GV:$(colorize_num "$s_gv") RKN:$(colorize_num "$s_rkn")"
 }
 
 #Функция для функции подбора стратегий
