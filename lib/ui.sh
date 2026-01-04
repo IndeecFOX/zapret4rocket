@@ -5,7 +5,7 @@ pause_enter() {
 }
 
 submenu_item() {
-  echo -e "${green}$1.${yellow} $2${plain}"
+  echo -e "${green}$1. $2${plain} $3"
 }
 
 # Совместимость со старым кодом меню
