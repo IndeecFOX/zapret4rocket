@@ -8,11 +8,43 @@ PROVIDER_INIT_DONE=0
 _detect_api_simple() {
     # 1. Скачиваем ответ во временный файл (чтобы точно видеть, что пришло)
     local tmp_file="/tmp/z4r_provider_debug.txt"
-    curl -s --max-time 10 "http://ip-api.com/line?fields=isp,city" > "$tmp_file"
+    : > "$tmp_file"
+
+    local p_name=""
+    local p_city=""
+    local api_ok=0
+
+    # Сначала пробуем ip-api.com
+    if curl -s --max-time 10 --fail "http://ip-api.com/line?fields=isp,city" > "$tmp_file"; then
+        p_name=$(head -n 1 "$tmp_file")
+        p_city=$(head -n 2 "$tmp_file" | tail -n 1)
+        if [ -n "$p_name" ] || [ -n "$p_city" ]; then
+            api_ok=1
+        fi
+    fi
+
+    # Если ip-api.com недоступен/пустой — пробуем ipapi.co
+    if [ "$api_ok" -ne 1 ]; then
+        local isp_resp=""
+        local city_resp=""
+        if isp_resp=$(curl -s --max-time 10 --fail "https://ipapi.co/isp/"); then
+            :
+        fi
+        if city_resp=$(curl -s --max-time 10 --fail "https://ipapi.co/city/"); then
+            :
+        fi
+        if [ -n "$isp_resp" ] || [ -n "$city_resp" ]; then
+            p_name="$isp_resp"
+            p_city="$city_resp"
+            echo "$p_name" > "$tmp_file"
+            echo "$p_city" >> "$tmp_file"
+            api_ok=1
+        fi
+    fi
 
     # 2. Читаем построчно (без пайпов, чтобы не терять код возврата)
-    local p_name=$(head -n 1 "$tmp_file")
-    local p_city=$(head -n 2 "$tmp_file" | tail -n 1)
+    if [ -z "$p_name" ]; then p_name=$(head -n 1 "$tmp_file"); fi
+    if [ -z "$p_city" ]; then p_city=$(head -n 2 "$tmp_file" | tail -n 1); fi
 
     # 3. Чистим жестко (оставляем только латиницу, цифры и пробелы)
     # Удаляем вообще все странные символы
