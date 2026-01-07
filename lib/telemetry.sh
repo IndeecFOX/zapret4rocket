@@ -9,7 +9,7 @@ ENTRY_GV="entry.1549076812"
 ENTRY_RKN="entry.1527830884"
 
 # 2. Пути к файлам (используем простые форматы)
-CACHE_DIR="/opt/zapret/extra_strats/cache"
+CACHE_DIR="/opt/zapret2/extra_strats/cache"
 TELEMETRY_CFG="$CACHE_DIR/telemetry.config"
 PROVIDER_TXT="$CACHE_DIR/provider.txt"
 
@@ -88,10 +88,10 @@ send_stats() {
     [ -z "$my_isp" ] && my_isp="Unknown"
 
     # 2. Определяем номера стратегий
-    local s_udp=$(get_active_strat_num "/opt/zapret/extra_strats/UDP/YT" 8)
-    local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
-    local s_gv=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/GV" 17)
-    local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
+    local s_udp=$(get_active_strat_num "/opt/zapret2/extra_strats/UDP/YT" 8)
+    local s_tcp=$(get_active_strat_num "/opt/zapret2/extra_strats/TCP/YT" 17)
+    local s_gv=$(get_active_strat_num "/opt/zapret2/extra_strats/TCP/GV" 17)
+    local s_rkn=$(get_active_strat_num "/opt/zapret2/extra_strats/TCP/RKN" 17)
 
     # 3. Отправка в Google Forms (Тихий режим, в фоне &)
     curl -sL --max-time 10 \
