@@ -82,7 +82,6 @@ NFQWS2_UDP_PKT_IN=3
 # <HOSTLIST_NOAUTO> appends ipset/zapret-hosts-auto.txt as normal list
 NFQWS2_OPT="
 
---debug=@/opt/zapret2/debug.log
 --qnum 300 --filter-tcp=80,443,2053,2083,2087,2096,8443 --hostlist=/opt/zapret2/extra_strats/TCP_RKN_list.txt --hostlist=/opt/zapret2/extra_strats/TCP_YT_list.txt --in-range=-s5556 --lua-desync=circular --in-range=x
 
 # общий фильтр для всех стратегий
