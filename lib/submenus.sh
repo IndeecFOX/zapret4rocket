@@ -50,7 +50,7 @@ flowoffload_submenu() {
   while true; do
     clear
     echo -e "${cyan}--- FLOWOFFLOAD ---${plain}"
-    echo "Текущее состояние: $(grep '^FLOWOFFLOAD=' /opt/zapret/config 2>/dev/null)"
+    echo "Текущее состояние: $(grep '^FLOWOFFLOAD=' /opt/zapret2/config 2>/dev/null)"
     echo ""
 
     submenu_item "1" "software (программное ускорение)"
@@ -64,30 +64,30 @@ flowoffload_submenu() {
 
     case "$ans" in
       "1")
-        sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=software/' "/opt/zapret/config"
-        /opt/zapret/install_prereq.sh
-        /opt/zapret/init.d/sysv/zapret restart
+        sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=software/' "/opt/zapret2/config"
+        /opt/zapret2/install_prereq.sh
+        /opt/zapret2/init.d/sysv/zapret2 restart
         echo -e "${green}FLOWOFFLOAD=software применён.${plain}"
         pause_enter
         ;;
       "2")
-        sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=hardware/' "/opt/zapret/config"
-        /opt/zapret/install_prereq.sh
-        /opt/zapret/init.d/sysv/zapret restart
+        sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=hardware/' "/opt/zapret2/config"
+        /opt/zapret2/install_prereq.sh
+        /opt/zapret2/init.d/sysv/zapret2 restart
         echo -e "${green}FLOWOFFLOAD=hardware применён.${plain}"
         pause_enter
         ;;
       "3")
-        sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=none/' "/opt/zapret/config"
-        /opt/zapret/install_prereq.sh
-        /opt/zapret/init.d/sysv/zapret restart
+        sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=none/' "/opt/zapret2/config"
+        /opt/zapret2/install_prereq.sh
+        /opt/zapret2/init.d/sysv/zapret2 restart
         echo -e "${green}FLOWOFFLOAD=none применён.${plain}"
         pause_enter
         ;;
       "4")
-        sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=donttouch/' "/opt/zapret/config"
-        /opt/zapret/install_prereq.sh
-        /opt/zapret/init.d/sysv/zapret restart
+        sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=donttouch/' "/opt/zapret2/config"
+        /opt/zapret2/install_prereq.sh
+        /opt/zapret2/init.d/sysv/zapret2 restart
         echo -e "${green}FLOWOFFLOAD=donttouch применён.${plain}"
         pause_enter
         ;;
@@ -105,7 +105,7 @@ flowoffload_submenu() {
 tcp443_submenu() {
   while true; do
   clear
-  num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1)
+  num=$(sed -n '112,128p' /opt/zapret2/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1)
   echo -e "${yellow}Безразборный режим по стратегии: ${plain}$((num ? num : 0))"
   echo -e "\033[33mС каким номером применить стратегию? (1-17, 0 - отключение безразборного режима, Enter - выход) \033[31mПри активации кастомно подобранные домены будут очищены:${plain}"
   read -re -p " " answer_bezr
@@ -118,9 +118,9 @@ tcp443_submenu() {
       if echo "$answer_bezr" | grep -Eq '^[0-9]+$' && [ "$answer_bezr" -ge 0 ] && [ "$answer_bezr" -le 17 ]; then
         #Отключение
         for i in $(seq 112 128); do
-          if sed -n "${i}p" /opt/zapret/config | grep -Fq -- '--filter-tcp=443 --hostlist-domains= --h'; then
-            sed -i "${i}s#--filter-tcp=443 --hostlist-domains= --h#--filter-tcp=443 --hostlist-domains=none.dom --h#" /opt/zapret/config
-            /opt/zapret/init.d/sysv/zapret restart
+          if sed -n "${i}p" /opt/zapret2/config | grep -Fq -- '--filter-tcp=443 --hostlist-domains= --h'; then
+            sed -i "${i}s#--filter-tcp=443 --hostlist-domains= --h#--filter-tcp=443 --hostlist-domains=none.dom --h#" /opt/zapret2/config
+            /opt/zapret2/init.d/sysv/zapret2 restart
             echo -e "${green}Выполнена команда перезапуска zapret${plain}"
             echo "Безразборный режим отключен"
             break
@@ -128,11 +128,11 @@ tcp443_submenu() {
         done
         if [ "$answer_bezr" -ge 1 ] && [ "$answer_bezr" -le 17 ]; then
           for f_clear in $(seq 1 17); do
-            echo -n > "/opt/zapret/extra_strats/TCP/User/$f_clear.txt"
-            echo -n > "/opt/zapret/extra_strats/TCP/temp/$f_clear.txt"
+            echo -n > "/opt/zapret2/extra_strats/TCP/User/$f_clear.txt"
+            echo -n > "/opt/zapret2/extra_strats/TCP/temp/$f_clear.txt"
           done
-          sed -i "$((111 + answer_bezr))s/--hostlist-domains=none\.dom/--hostlist-domains=/" /opt/zapret/config
-          /opt/zapret/init.d/sysv/zapret restart
+          sed -i "$((111 + answer_bezr))s/--hostlist-domains=none\.dom/--hostlist-domains=/" /opt/zapret2/config
+          /opt/zapret2/init.d/sysv/zapret2 restart
           echo -e "${green}Выполнена команда перезапуска zapret. ${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443. Проверка доступа к meduza.io${plain}"
           check_access_list
         fi

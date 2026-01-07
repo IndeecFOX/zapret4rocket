@@ -19,10 +19,10 @@ get_active_strat_num() {
 
 # Функция для генерации строки статуса стратегий
 get_current_strategies_info() {
-    local s_udp=$(get_active_strat_num "/opt/zapret/extra_strats/UDP/YT" 8)
-    local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
-    local s_gv=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/GV" 17)
-    local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
+    local s_udp=$(get_active_strat_num "/opt/zapret2/extra_strats/UDP/YT" 8)
+    local s_tcp=$(get_active_strat_num "/opt/zapret2/extra_strats/TCP/YT" 17)
+    local s_gv=$(get_active_strat_num "/opt/zapret2/extra_strats/TCP/GV" 17)
+    local s_rkn=$(get_active_strat_num "/opt/zapret2/extra_strats/TCP/RKN" 17)
     
     # Формируем красивую строку. Цвета можно менять.
     # Функция для окраски: 0 - серый, >0 - зеленый
@@ -154,33 +154,33 @@ Strats_Tryer() {
       echo "Подбор для хост-листа YouTube с видеопотоком (UDP QUIC - браузеры, моб. приложения). Ранее заданная стратегия этого листа сброшена в дефолт."
       #вывод подсказки
       show_hint "UDP"
-      try_strategies 8 "/opt/zapret/extra_strats/UDP/YT" "/opt/zapret/extra_strats/UDP/YT/List.txt" ""
+      try_strategies 8 "/opt/zapret2/extra_strats/UDP/YT" "/opt/zapret2/extra_strats/UDP/YT/List.txt" ""
       ;;
     "2")
       echo "Подбор для хост-листа YouTube (TCP - сам интерфейс. Без видео-домена). Ранее заданная стратегия этого листа сброшена в дефолт."
       #вывод подсказки
       show_hint "TCP"
-      try_strategies 17 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
+      try_strategies 17 "/opt/zapret2/extra_strats/TCP/YT" "/opt/zapret2/extra_strats/TCP/YT/List.txt" ""
       ;;
     "3")
       echo "Подбор для googlevideo.com (Видеопоток YouTube). Ранее заданная стратегия этого листа сброшена в дефолт."
       #на всякий случай убираем GV из листа YT
-      [ -f "/opt/zapret/extra_strats/TCP/YT/List.txt" ] && \
-        sed -i '/googlevideo.com/d' "/opt/zapret/extra_strats/TCP/YT/List.txt"
+      [ -f "/opt/zapret2/extra_strats/TCP/YT/List.txt" ] && \
+        sed -i '/googlevideo.com/d' "/opt/zapret2/extra_strats/TCP/YT/List.txt"
       user_domain="googlevideo.com"
       #вывод подсказки
       show_hint "GV"
-      try_strategies 17 "/opt/zapret/extra_strats/TCP/GV" "/dev/null" ""
+      try_strategies 17 "/opt/zapret2/extra_strats/TCP/GV" "/dev/null" ""
       ;;
     "4")
       echo "Подбор для хост-листа основных доменов блока RKN. Проверка доступности задана на домен meduza.io. Ранее заданная стратегия этого листа сброшена в дефолт."
       for numRKN in {1..17}; do
-        echo -n > "/opt/zapret/extra_strats/TCP/RKN/${numRKN}.txt"
+        echo -n > "/opt/zapret2/extra_strats/TCP/RKN/${numRKN}.txt"
       done
       user_domain="meduza.io"
       #вывод подсказки
       show_hint "RKN"
-      try_strategies 17 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
+      try_strategies 17 "/opt/zapret2/extra_strats/TCP/RKN" "/opt/zapret2/extra_strats/TCP/RKN/List.txt" ""
       ;;
     "5")
       echo "Режим ручного указания домена"
@@ -191,9 +191,9 @@ Strats_Tryer() {
       fi
       echo "Введён домен: $user_domain"
 
-      try_strategies 17 "/opt/zapret/extra_strats/TCP/temp" "/dev/null" \
-        "echo -n > \"/opt/zapret/extra_strats/TCP/temp/\${strat_num}.txt\"; \
-         echo \"$user_domain\" >> \"/opt/zapret/extra_strats/TCP/User/\${strat_num}.txt\""
+      try_strategies 17 "/opt/zapret2/extra_strats/TCP/temp" "/dev/null" \
+        "echo -n > \"/opt/zapret2/extra_strats/TCP/temp/\${strat_num}.txt\"; \
+         echo \"$user_domain\" >> \"/opt/zapret2/extra_strats/TCP/User/\${strat_num}.txt\""
       ;;
     *)
       echo "Пропуск подбора альтернативной стратегии"

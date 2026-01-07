@@ -35,7 +35,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
 
 # Проверяем наличие всех нужных lib-файлов, иначе запускаем внешний скрипт
 missing_libs=0
-LIB_DIR="$SCRIPT_DIR/zapret2/z4r_lib"
+LIB_DIR="$SCRIPT_DIR/zapret2/z2r_lib"
 for lib in ui.sh provider.sh telemetry.sh recommendations.sh netcheck.sh premium.sh strategies.sh submenus.sh actions.sh; do
   if [ ! -f "$LIB_DIR/$lib" ]; then
     missing_libs=1
@@ -44,13 +44,13 @@ for lib in ui.sh provider.sh telemetry.sh recommendations.sh netcheck.sh premium
 done
 
 if [ "$missing_libs" -ne 0 ]; then
-  echo "Не найдены нужные файлы в $LIB_DIR. Запускаю внешний z4r..."
+  echo "Не найдены нужные файлы в $LIB_DIR. Запускаю внешний z2r..."
   if command -v curl >/dev/null 2>&1; then
-    exec sh -c 'curl -fsSL "https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r" | sh'
+    exec sh -c 'curl -fsSL "https://raw.githubusercontent.com/AloofLibra/z4r/z2r/z2r" | sh'
   elif command -v wget >/dev/null 2>&1; then
-    exec sh -c 'wget -qO- "https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r" | sh'
+    exec sh -c 'wget -qO- "https://raw.githubusercontent.com/AloofLibra/z4r/z2r/z2r" | sh'
   else
-    echo "Ошибка: нет curl или wget для загрузки внешнего z4r."
+    echo "Ошибка: нет curl или wget для загрузки внешнего z2r."
     exit 1
   fi
 fi
@@ -59,41 +59,41 @@ fi
 
 # UI helpers (пауза/печать пунктов меню/совместимость старого кода)
 # Функции: pause_enter, submenu_item, exit_to_menu
-source "$SCRIPT_DIR/zapret2/z4r_lib/ui.sh" 
+source "$SCRIPT_DIR/zapret2/z2r_lib/ui.sh" 
 
 # Определение провайдера/города + ручная установка/сброс кэша
 # Функции: provider_init_once, provider_force_redetect, provider_set_manual_menu
 # (внутр.: _detect_api_simple)
-source "$SCRIPT_DIR/zapret2/z4r_lib/provider.sh" 
+source "$SCRIPT_DIR/zapret2/z2r_lib/provider.sh" 
 
 # Телеметрия (вкл/выкл один раз + отправка статистики в Google Forms)
 # Функции: init_telemetry, send_stats
-source "$SCRIPT_DIR/zapret2/z4r_lib/telemetry.sh" 
+source "$SCRIPT_DIR/zapret2/z2r_lib/telemetry.sh" 
 
 # База подсказок по стратегиям (скачивание + вывод подсказки по провайдеру)
 # Функции: update_recommendations, show_hint
-source "$SCRIPT_DIR/zapret2/z4r_lib/recommendations.sh" 
+source "$SCRIPT_DIR/zapret2/z2r_lib/recommendations.sh" 
 
 # Проверка доступности ресурсов/сети (TLS 1.2/1.3) + получение домена кластера youtube (googlevideo)
 # Функции: get_yt_cluster_domain, check_access, check_access_list
-source "$SCRIPT_DIR/zapret2/z4r_lib/netcheck.sh"
+source "$SCRIPT_DIR/zapret2/z2r_lib/netcheck.sh"
 
 # “Premium” пункты 777/999 и их вспомогательные эффекты (рандом, спиннер, титулы)
 # Функции: rand_from_list, spinner_for_seconds, premium_get_or_set_title, zefeer_premium_777, zefeer_space_999
-source "$SCRIPT_DIR/zapret2/z4r_lib/premium.sh" 
+source "$SCRIPT_DIR/zapret2/z2r_lib/premium.sh" 
 
 # Логика стратегий: определение активной стратегии, статус строкой, перебор стратегий, быстрый подбор
 # Функции: get_active_strat_num, get_current_strategies_info, try_strategies, Strats_Tryer
-source "$SCRIPT_DIR/zapret2/z4r_lib/strategies.sh" 
+source "$SCRIPT_DIR/zapret2/z2r_lib/strategies.sh" 
 
 # Подменю (UI-обвязка над Strats_Tryer + доп. меню управления: FLOWOFFLOAD, TCP443, провайдер)
 # Функции: strategies_submenu, flowoffload_submenu, tcp443_submenu, provider_submenu
-source "$SCRIPT_DIR/zapret2/z4r_lib/submenus.sh" 
+source "$SCRIPT_DIR/zapret2/z2r_lib/submenus.sh" 
 
 # Действия меню (бэкапы/сбросы/переключатели)
 # Функции: backup_strats, menu_action_update_config_reset, menu_action_toggle_bolvan_ports,
 #          menu_action_toggle_fwtype, menu_action_toggle_udp_range
-source "$SCRIPT_DIR/zapret2/z4r_lib/actions.sh" 
+source "$SCRIPT_DIR/zapret2/z2r_lib/actions.sh" 
 
 change_user() {
    if /opt/zapret2/nfq2/nfqws2 --dry-run --user="nobody" 2>&1 | grep -q "queue"; then
@@ -109,31 +109,34 @@ change_user() {
 
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
- mkdir -p /opt/zapret2/lists /opt/zapret2/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret2/extra_strats/UDP/YT
- for listfile in cloudflare-ipset.txt cloudflare-ipset_v6.txt netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do curl -L -o /opt/zapret2/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/lists/$listfile; done
- curl -L "https://github.com/IndeecFOX/zapret4rocket/z2r/fake_files.tar.gz" | tar -xz -C /opt/zapret2/files/fake
- curl -L -o /opt/zapret2/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/UDP/YT/List.txt
- curl -L -o /opt/zapret2/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/RKN/List.txt
- curl -L -o /opt/zapret2/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/YT/List.txt
- touch /opt/zapret2/lists/autohostlist.txt /opt/zapret2/extra_strats/UDP/YT/{1..8}.txt /opt/zapret2/extra_strats/TCP/RKN/{1..17}.txt /opt/zapret2/extra_strats/TCP/User/{1..17}.txt /opt/zapret2/extra_strats/TCP/YT/{1..17}.txt /opt/zapret2/extra_strats/TCP/GV/{1..17}.txt /opt/zapret2/extra_strats/TCP/temp/{1..17}.txt
- if [ -d /opt/extra_strats ]; then
-  rm -rf /opt/zapret2/extra_strats
-  mv /opt/extra_strats /opt/zapret2/
-  echo "Востановление настроек подбора из резерва выполнено."
- fi
- if [ -f "/opt/netrogat.txt" ]; then
-   mv -f /opt/netrogat.txt /opt/zapret2/lists/netrogat.txt
-   echo "Востановление листа исключений выполнено."
- fi
- #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
- curl -L -o /opt/zapret2/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/config.default
- if command -v nft >/dev/null 2>&1; then
-  sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret2/config.default"
- fi
- curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-stun4all
- curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-discord-media
- cp -f /opt/zapret2/init.d/sysv/custom.d/50-stun4all /opt/zapret2/init.d/openwrt/custom.d/50-stun4all
- cp -f /opt/zapret2/init.d/sysv/custom.d/50-discord-media /opt/zapret2/init.d/openwrt/custom.d/50-discord-media
+  mkdir -p /opt/zapret2/lists /opt/zapret2/extra_strats /opt/zapret2/extra_strats/cache
+  for listfile in cloudflare-ipset.txt cloudflare-ipset_v6.txt netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do
+    curl -L -o /opt/zapret2/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/lists/$listfile
+  done
+  curl -L "https://github.com/IndeecFOX/zapret4rocket/z2r/fake_files.tar.gz" | tar -xz -C /opt/zapret2/files/fake
+  curl -L -o /opt/zapret2/extra_strats/UDP_YT_list.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/UDP/YT/List.txt
+  curl -L -o /opt/zapret2/extra_strats/TCP_RKN_list.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/RKN/List.txt
+  curl -L -o /opt/zapret2/extra_strats/TCP_YT_list.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/YT/List.txt
+  curl -L -o /opt/zapret2/extra_strats/TCP_GV_list.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/GV/List.txt
+  touch /opt/zapret2/lists/autohostlist.txt
+  if [ -d /opt/extra_strats ]; then
+    rm -rf /opt/zapret2/extra_strats
+    mv /opt/extra_strats /opt/zapret2/
+    echo "Востановление настроек подбора из резерва выполнено."
+  fi
+  if [ -f "/opt/netrogat.txt" ]; then
+    mv -f /opt/netrogat.txt /opt/zapret2/lists/netrogat.txt
+    echo "Востановление листа исключений выполнено."
+  fi
+  #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
+  curl -L -o /opt/zapret2/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/config.default
+  if command -v nft >/dev/null 2>&1; then
+    sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret2/config.default"
+  fi
+  curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-stun4all
+  curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-discord-media
+  cp -f /opt/zapret2/init.d/sysv/custom.d/50-stun4all /opt/zapret2/init.d/openwrt/custom.d/50-stun4all
+  cp -f /opt/zapret2/init.d/sysv/custom.d/50-discord-media /opt/zapret2/init.d/openwrt/custom.d/50-discord-media
 
 # cache
 mkdir -p /opt/zapret2/extra_strats/cache

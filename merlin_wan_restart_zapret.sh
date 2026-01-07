@@ -9,6 +9,6 @@ then
     wan_logger "Waiting 5000ms after connected"
     sleep 5
     wan_logger "Restarting zapret"
-    /opt/zapret/init.d/sysv/zapret restart
+    /opt/zapret2/init.d/sysv/zapret2 restart
     wan_logger "Zapret restarted"
 fi
