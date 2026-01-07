@@ -1,16 +1,14 @@
-# Zeefeer update strats 06.01.26
-#KDS and flowseal special thx 
 # this file is included from init scripts
 # change values here
 
 # can help in case /tmp has not enough space
-#TMPDIR=/opt/zapret/tmp
+#TMPDIR=@/opt/zapret2/tmp
 
 # redefine user for zapret daemons. required on Keenetic
 #WS_USER=nobody
 
 # override firewall type : iptables,nftables,ipfw
-FWTYPE=iptables
+FWTYPE=nftables
 # nftables only : set this to 0 to use pre-nat mode. default is post-nat.
 # pre-nat mode disables some bypass techniques for forwarded traffic but allows to see client IP addresses in debug log
 #POSTNAT=0
@@ -22,15 +20,22 @@ SET_MAXELEM=522288
 # too large hashsize will waste lots of RAM
 IPSET_OPT="hashsize 262144 maxelem $SET_MAXELEM"
 # dynamically generate additional ip. $1 = ipset/nfset/table name
-#IPSET_HOOK="/etc/zapret.ipset.hook"
+#IPSET_HOOK="/etc/zapret2.ipset.hook"
 
 # options for ip2net. "-4" or "-6" auto added by ipset create script
 IP2NET_OPT4="--prefix-length=22-30 --v4-threshold=3/4"
 IP2NET_OPT6="--prefix-length=56-64 --v6-threshold=5"
 # options for auto hostlist
+# NOTE : in order for these adjustment to work it's required to redirect enough starting packets
+# NOTE : set PKT_IN, PKT_OUT variables appropriately
+AUTOHOSTLIST_INCOMING_MAXSEQ=4096
+AUTOHOSTLIST_RETRANS_MAXSEQ=32768
+AUTOHOSTLIST_RETRANS_RESET=1
 AUTOHOSTLIST_RETRANS_THRESHOLD=3
 AUTOHOSTLIST_FAIL_THRESHOLD=3
-AUTOHOSTLIST_FAIL_TIME=30
+AUTOHOSTLIST_FAIL_TIME=60
+AUTOHOSTLIST_UDP_IN=1
+AUTOHOSTLIST_UDP_OUT=4
 # 1 = debug autohostlist positives to ipset/zapret-hosts-auto-debug.log
 AUTOHOSTLIST_DEBUGLOG=0
 
@@ -49,145 +54,109 @@ GZIP_LISTS=1
 DESYNC_MARK=0x40000000
 DESYNC_MARK_POSTNAT=0x20000000
 
-TPWS_SOCKS_ENABLE=0
-# tpws socks listens on this port on localhost and LAN interfaces
-TPPORT_SOCKS=987
-# use <HOSTLIST> and <HOSTLIST_NOAUTO> placeholders to engage standard hostlists and autohostlist in ipset dir
-# hostlist markers are replaced to empty string if MODE_FILTER does not satisfy
-# <HOSTLIST_NOAUTO> appends ipset/zapret-hosts-auto.txt as normal list
-TPWS_SOCKS_OPT="
---filter-tcp=80 --methodeol <HOSTLIST> --new
---filter-tcp=443 --split-pos=1,midsld --disorder <HOSTLIST>
-"
+# do not pass outgoing traffic to tpws/nfqws not marked with this bit
+# this setting allows to write your own rules to limit traffic that should be fooled
+# for example based on source IP or incoming interface name
+# no filter if not defined
+#FILTER_MARK=0x10000000
 
-TPWS_ENABLE=0
-TPWS_PORTS=80,443
-# use <HOSTLIST> and <HOSTLIST_NOAUTO> placeholders to engage standard hostlists and autohostlist in ipset dir
-# hostlist markers are replaced to empty string if MODE_FILTER does not satisfy
-# <HOSTLIST_NOAUTO> appends ipset/zapret-hosts-auto.txt as normal list
-TPWS_OPT="
---filter-tcp=80 --methodeol <HOSTLIST> --new
---filter-tcp=443 --split-pos=1,midsld --disorder <HOSTLIST>
-"
 
-NFQWS_ENABLE=1
+NFQWS2_ENABLE=1
 # redirect outgoing traffic with connbytes limiter applied in both directions.
-NFQWS_PORTS_TCP=80,443,2053,2083,2087,2096,8443
-NFQWS_PORTS_UDP=443
+NFQWS2_PORTS_TCP=80,443
+NFQWS2_PORTS_UDP=443
 # PKT_OUT means connbytes dir original
 # PKT_IN means connbytes dir reply
-# this is --dpi-desync-cutoff=nX kernel mode implementation for linux. it saves a lot of CPU.
-NFQWS_TCP_PKT_OUT=$((6+$AUTOHOSTLIST_RETRANS_THRESHOLD))
-NFQWS_TCP_PKT_IN=3
-NFQWS_UDP_PKT_OUT=$((6+$AUTOHOSTLIST_RETRANS_THRESHOLD))
-NFQWS_UDP_PKT_IN=0
+NFQWS2_TCP_PKT_OUT=20
+NFQWS2_TCP_PKT_IN=10
+NFQWS2_UDP_PKT_OUT=5
+NFQWS2_UDP_PKT_IN=3
 # redirect outgoing traffic without connbytes limiter and incoming with connbytes limiter
 # normally it's needed only for stateless DPI that matches every packet in a single TCP session
 # typical example are plain HTTP keep alives
 # this mode can be very CPU consuming. enable with care !
-#NFQWS_PORTS_TCP_KEEPALIVE=80
-#NFQWS_PORTS_UDP_KEEPALIVE=
+#NFQWS2_PORTS_TCP_KEEPALIVE=80
+#NFQWS2_PORTS_UDP_KEEPALIVE=
 # use <HOSTLIST> and <HOSTLIST_NOAUTO> placeholders to engage standard hostlists and autohostlist in ipset dir
 # hostlist markers are replaced to empty string if MODE_FILTER does not satisfy
 # <HOSTLIST_NOAUTO> appends ipset/zapret-hosts-auto.txt as normal list
+NFQWS2_OPT="
 
-# just notes: --debug=@/opt/zapret/debug.log
-#Стратегия DISCORD вместо просто fake. Если закомментировать - будет использоваться просто fake
-NFQWS_OPT_DESYNC_DISCORD_MEDIA="--dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-repeats=6"
-#Стратегия войсов ТГ, ВА и т.п. вместо просто fake. Если закомментировать - будет использоваться просто fake
-NFQWS_OPT_DESYNC_STUN="--dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-repeats=6"
-NFQWS_OPT="
-'Лист для исключения из фильтрации доменов по TCP.'
---filter-tcp=80,443,8443 --hostlist-domains=none.com --hostlist=/opt/zapret/lists/netrogat.txt --new
-'Запасные стратегии UDP QUIC YouTube'
---filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/1.txt --dpi-desync=fake,ipfrag2 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_5.bin --dpi-desync-cutoff=n3 --dpi-desync-repeats=3 --new
---filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/2.txt --dpi-desync=fake,udplen --dpi-desync-udplen-increment=4 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_4.bin --dpi-desync-cutoff=n3 --dpi-desync-repeats=2 --new
---filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/3.txt --dpi-desync=fake,udplen --dpi-desync-udplen-increment=8 --dpi-desync-udplen-pattern=0xFEA82025 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_4.bin --dpi-desync-cutoff=n4 --dpi-desync-repeats=2 --new
---filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/4.txt --dpi-desync=fake,udplen --dpi-desync-udplen-increment=25 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_5.bin --dpi-desync-repeats=2 --dpi-desync-cutoff=n3 --new
---filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/5.txt --dpi-desync=fake --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_1.bin --dpi-desync-cutoff=n3 --dpi-desync-repeats=6 --new
---filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/6.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_initial_www_google_com.bin --new
---filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/7.txt --dpi-desync=fake --dpi-desync-repeats=8 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_initial_www_google_com.bin --new
---filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/8.txt --dpi-desync=fake --dpi-desync-repeats=11 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_initial_www_google_com.bin --new
-'Запасные стратегии только для TCP user domain листов имеющие приоритет над всеми другими. Безразборный режим тут же'
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/1.txt --hostlist=/opt/zapret/extra_strats/TCP/User/1.txt --dpi-desync=fake,multidisorder --dpi-desync-split-pos=7,sld+1 --dpi-desync-fake-tls=0x0F0F0F0F --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --dpi-desync-fake-tls-mod=rnd,dupsid,sni=fonts.google.com --dpi-desync-fooling=badseq --dpi-desync-autottl 2:2-12 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/2.txt --hostlist=/opt/zapret/extra_strats/TCP/User/2.txt --dpi-desync=fake --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/3.txt --hostlist=/opt/zapret/extra_strats/TCP/User/3.txt --dpi-desync=fake,multisplit --dpi-desync-split-pos=sld+1 --dpi-desync-fake-tls=0x0F0F0E0F --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_14.bin --dpi-desync-fake-tls-mod=rnd,dupsid --dpi-desync-fooling=md5sig --dpi-desync-autottl --dup=2 --dup-fooling=md5sig --dup-autottl --dup-cutoff=n3 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/4.txt --hostlist=/opt/zapret/extra_strats/TCP/User/4.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --dpi-desync-fake-tls-mod=none --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/5.txt --hostlist=/opt/zapret/extra_strats/TCP/User/5.txt --dpi-desync=hostfakesplit --dpi-desync-hostfakesplit-mod=host=rzd.ru --dpi-desync-hostfakesplit-midhost=host-2 --dpi-desync-split-seqovl=726 --dpi-desync-fooling=badsum,badseq --dpi-desync-badseq-increment=0 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/6.txt --hostlist=/opt/zapret/extra_strats/TCP/User/6.txt --ipcache-hostname --dpi-desync=syndata,multisplit --dpi-desync-split-seqovl=1 --dpi-desync-split-pos=1,sld+1,endsld-2 --dpi-desync-fake-syndata=/opt/zapret/files/fake/syn_packet.bin --dup=2 --dup-cutoff=n3 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/7.txt --hostlist=/opt/zapret/extra_strats/TCP/User/7.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-badseq-increment=10000000 --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/8.txt --hostlist=/opt/zapret/extra_strats/TCP/User/8.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/9.txt --hostlist=/opt/zapret/extra_strats/TCP/User/9.txt --dpi-desync=hostfakesplit --dpi-desync-repeats=4 --dpi-desync-fooling=ts --dpi-desync-hostfakesplit-mod=host=ozon.ru --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/10.txt --hostlist=/opt/zapret/extra_strats/TCP/User/10.txt --dpi-desync=fake,split --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fakedsplit-pattern=0x00 --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/11.txt --hostlist=/opt/zapret/extra_strats/TCP/User/11.txt --dpi-desync=fake,fakeddisorder --dpi-desync-split-pos=10,midsld --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --dpi-desync-fake-tls-mod=rnd,dupsid,sni=fonts.google.com --dpi-desync-fake-tls=0x0F0F0F0F --dpi-desync-fake-tls-mod=none --dpi-desync-fakedsplit-pattern=/opt/zapret/files/fake/tls_clienthello_vk_com.bin --dpi-desync-split-seqovl=336 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_gosuslugi_ru.bin --dpi-desync-fooling=ts --dpi-desync-badseq-increment=0 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/12.txt --hostlist=/opt/zapret/extra_strats/TCP/User/12.txt --dpi-desync=fake,multisplit --dpi-desync-split-seqovl=654 --dpi-desync-split-pos=1 --dpi-desync-fooling=ts --dpi-desync-repeats=8 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/13.txt --hostlist=/opt/zapret/extra_strats/TCP/User/13.txt --dpi-desync=fake,split2 --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-badseq-increment=1000 --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/14.txt --hostlist=/opt/zapret/extra_strats/TCP/User/14.txt --dpi-desync=fake --dpi-desync-fake-tls-mod=none --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-badseq-increment=2 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/15.txt --hostlist=/opt/zapret/extra_strats/TCP/User/15.txt --dpi-desync=fake,fakedsplit --dpi-desync-split-pos=1 --dpi-desync-fooling=ts --dpi-desync-badseq-increment=2 --dpi-desync-repeats=8 --dpi-desync-fake-tls-mod=rnd,dupsid,sni=www.google.com --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/16.txt --hostlist=/opt/zapret/extra_strats/TCP/User/16.txt --dpi-desync=fake,split2 --dpi-desync-split-seqovl=681 --dpi-desync-split-pos=1 --dpi-desync-fooling=ts --dpi-desync-repeats=8 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --dpi-desync-fake-tls-mod=rnd,dupsid,sni=www.google.com --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt --hostlist=/opt/zapret/extra_strats/TCP/temp/17.txt --hostlist=/opt/zapret/extra_strats/TCP/User/17.txt --dpi-desync=fake,multidisorder --dpi-desync-split-pos=1,midsld --dpi-desync-repeats=11 --dpi-desync-fooling=ts --dpi-desync-fake-tls-mod=rnd,dupsid,sni=www.google.com --new
-'Запасные стратегии googlevideo.com'
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/1.txt --dpi-desync=fake,multidisorder --dpi-desync-split-pos=1,midsld --dpi-desync-fooling=badsum --dpi-desync-fake-tls-mod=rnd,dupsid,sni=www.google.com --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/2.txt --dpi-desync=fake --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/3.txt --dpi-desync=fake,multisplit --dpi-desync-split-pos=sld+1 --dpi-desync-fake-tls=0x0F0F0E0F --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_14.bin --dpi-desync-fake-tls-mod=rnd,dupsid --dpi-desync-fooling=md5sig --dpi-desync-autottl --dup=2 --dup-fooling=md5sig --dup-autottl --dup-cutoff=n3 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/4.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --dpi-desync-fake-tls-mod=none --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/5.txt --dpi-desync=hostfakesplit --dpi-desync-hostfakesplit-mod=host=rzd.ru --dpi-desync-hostfakesplit-midhost=host-2 --dpi-desync-split-seqovl=726 --dpi-desync-fooling=badsum,badseq --dpi-desync-badseq-increment=0 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/6.txt --dpi-desync=multisplit --dpi-desync-split-pos=1,sniext+1 --dpi-desync-split-seqovl=1 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/7.txt --dpi-desync-autottl --orig-ttl=1 --orig-mod-start=s1 --orig-mod-cutoff=d1 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/8.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/9.txt --ip-id=zero --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/10.txt --dpi-desync=fake,split --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fakedsplit-pattern=0x00 --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/11.txt --dpi-desync=fake,fakeddisorder --dpi-desync-split-pos=10,midsld --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --dpi-desync-fake-tls-mod=rnd,dupsid,sni=fonts.google.com --dpi-desync-fake-tls=0x0F0F0F0F --dpi-desync-fake-tls-mod=none --dpi-desync-fakedsplit-pattern=/opt/zapret/files/fake/tls_clienthello_vk_com.bin --dpi-desync-split-seqovl=336 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_gosuslugi_ru.bin --dpi-desync-fooling=ts --dpi-desync-badseq-increment=0 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/12.txt --dpi-desync=fake,multisplit --dpi-desync-split-seqovl=654 --dpi-desync-split-pos=1 --dpi-desync-fooling=ts --dpi-desync-repeats=8 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/13.txt --dpi-desync=fake --dpi-desync=multisplit --dpi-desync-split-seqovl=1 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/14.txt --dpi-desync=fake --dpi-desync-fake-tls-mod=none --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-badseq-increment=2 --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/15.txt --dpi-desync=fake,fakedsplit --dpi-desync-split-pos=1 --dpi-desync-fooling=ts --dpi-desync-badseq-increment=2 --dpi-desync-repeats=8 --dpi-desync-fake-tls-mod=rnd,dupsid,sni=www.google.com --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/16.txt --dpi-desync=multidisorder --dpi-desync-split-pos=2,5,105,host+5,sld-1,endsld-5,endsld --new
---filter-tcp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/GV/17.txt --dpi-desync=fake,multidisorder --dpi-desync-split-pos=1,midsld --dpi-desync-repeats=11 --dpi-desync-fooling=ts --dpi-desync-fake-tls-mod=rnd,dupsid,sni=www.google.com --new
-'Запасные стратегии TCP YouTube интерфейса и остального РКН листа'
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/1.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/1.txt --dpi-desync=fake,multidisorder --dpi-desync-split-pos=1,midsld --dpi-desync-fooling=badsum --dpi-desync-fake-tls-mod=rnd,dupsid,sni=www.google.com --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/2.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/2.txt --dpi-desync=fake --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/3.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/3.txt --dpi-desync=fake,multisplit --dpi-desync-split-pos=sld+1 --dpi-desync-fake-tls=0x0F0F0E0F --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_14.bin --dpi-desync-fake-tls-mod=rnd,dupsid --dpi-desync-fooling=md5sig --dpi-desync-autottl --dup=2 --dup-fooling=md5sig --dup-autottl --dup-cutoff=n3 --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/4.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/4.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --dpi-desync-fake-tls-mod=none --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/5.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/5.txt --dpi-desync=hostfakesplit --dpi-desync-hostfakesplit-mod=host=rzd.ru --dpi-desync-hostfakesplit-midhost=host-2 --dpi-desync-split-seqovl=726 --dpi-desync-fooling=badsum,badseq --dpi-desync-badseq-increment=0 --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/6.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/6.txt --ipcache-hostname --dpi-desync=syndata,multisplit --dpi-desync-split-seqovl=1 --dpi-desync-split-pos=1,sld+1,endsld-2 --dpi-desync-fake-syndata=/opt/zapret/files/fake/syn_packet.bin --dup=2 --dup-cutoff=n3 --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/7.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/7.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_4pda_to.bin --dpi-desync-fake-tls-mod=none --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/8.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/8.txt --dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/9.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/9.txt --dpi-desync=hostfakesplit --dpi-desync-repeats=4 --dpi-desync-fooling=ts --dpi-desync-hostfakesplit-mod=host=ozon.ru --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/10.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/10.txt --dpi-desync=fake,split --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-fakedsplit-pattern=0x00 --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/11.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/11.txt --dpi-desync=fake,fakeddisorder --dpi-desync-split-pos=10,midsld --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --dpi-desync-fake-tls-mod=rnd,dupsid,sni=fonts.google.com --dpi-desync-fake-tls=0x0F0F0F0F --dpi-desync-fake-tls-mod=none --dpi-desync-fakedsplit-pattern=/opt/zapret/files/fake/tls_clienthello_vk_com.bin --dpi-desync-split-seqovl=336 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_gosuslugi_ru.bin --dpi-desync-fooling=ts --dpi-desync-badseq-increment=0 --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/12.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/12.txt --dpi-desync=fake,multisplit --dpi-desync-split-seqovl=654 --dpi-desync-split-pos=1 --dpi-desync-fooling=ts --dpi-desync-repeats=8 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/13.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/13.txt --dpi-desync=fake --dpi-desync=multisplit --dpi-desync-split-seqovl=1 --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/14.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/14.txt --dpi-desync=fake --dpi-desync-fake-tls-mod=none --dpi-desync-repeats=6 --dpi-desync-fooling=ts --dpi-desync-badseq-increment=2 --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/15.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/15.txt --dpi-desync=fake,fakedsplit --dpi-desync-split-pos=1 --dpi-desync-fooling=ts --dpi-desync-badseq-increment=2 --dpi-desync-repeats=8 --dpi-desync-fake-tls-mod=rnd,dupsid,sni=www.google.com --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/16.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/16.txt --dpi-desync=multidisorder --dpi-desync-split-pos=2,5,105,host+5,sld-1,endsld-5,endsld --new
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/TCP/YT/17.txt --hostlist=/opt/zapret/extra_strats/TCP/RKN/17.txt --dpi-desync=fake,multidisorder --dpi-desync-split-pos=1,midsld --dpi-desync-repeats=11 --dpi-desync-fooling=ts --dpi-desync-fake-tls-mod=rnd,dupsid,sni=www.google.com --new
-'Две стратегии googlevideo.com YT. Если подбором не активированы стратегии выше, то используются они'
---filter-tcp=443 --hostlist-domains=googlevideo.com --ipcache-hostname --dpi-desync=syndata,multisplit --dpi-desync-split-seqovl=1 --dpi-desync-split-pos=1,sld+1,endsld-2 --dpi-desync-fake-syndata=/opt/zapret/files/fake/syn_packet.bin --dup=2 --dup-cutoff=n3 --new
---filter-udp=443 --hostlist-domains=googlevideo.com --dpi-desync=fake --dpi-desync-repeats=6 --new
-'Стратегия исходящих трансляций'
---filter-tcp=443 --ipset=/opt/zapret/lists/russia-youtube-rtmps.txt --dpi-desync=syndata --dpi-desync-fake-syndata=/opt/zapret/files/fake/syn_packet.bin --dup=2 --dup-cutoff=n3 --new
-'Стратегия YouTube UDP QUIC, кроме GV'
---filter-udp=443 --hostlist=/opt/zapret/lists/russia-youtubeQ.txt --dpi-desync=fake,udplen --dpi-desync-udplen-increment=8 --dpi-desync-udplen-pattern=0x0F0F0E0F --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_6.bin --dpi-desync-cutoff=n3 --dpi-desync-repeats=2 --new
-'Стратегия YouTube TCP без GV'
---skip --filter-tcp=443 --hostlist=/opt/zapret/lists/russia-youtube.txt --dpi-desync=fake,multidisorder --dpi-desync-split-pos=7,sld+1 --dpi-desync-fake-tls=0x0F0F0F0F --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_4.bin --dpi-desync-fake-tls-mod=rnd,dupsid,sni=fonts.google.com --dpi-desync-fooling=ts --dpi-desync-autottl --new
---filter-tcp=443 --hostlist=/opt/zapret/lists/russia-youtube.txt --ipcache-hostname --dpi-desync=syndata,multisplit --dpi-desync-split-seqovl=1 --dpi-desync-split-pos=1,sld+1,endsld-2 --dpi-desync-fake-syndata=/opt/zapret/files/fake/syn_packet.bin --dup=2 --dup-cutoff=n3 --new
-'Обход блокировки анонсеров rutracker.org и сайтов по HTTP'
---filter-tcp=80 --hostlist-domains=t-ru.org --hostlist=/opt/zapret/extra_strats/TCP/RKN/List.txt --dpi-desync=fake,multisplit --dpi-desync-split-seqovl=2 --dpi-desync-split-pos=host+1 --dpi-desync-fake-http=0x0E0E0F0E --dpi-desync-fooling=md5sig --new
-'Обход сайтов по httpS'
---filter-tcp=443,2053,2083,2087,2096,8443 --hostlist=/opt/zapret/extra_strats/TCP/RKN/List.txt --dpi-desync=fake --dpi-desync-fooling=ts --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --new
-'Обход войса Discord. Отключено в дефолте, если обход скриптом bol-van'
---skip --filter-udp=50000-50099,1400,3478-3481,5349,19294-19344 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-repeats=6 --new
-'Стратегия обхода UDP игр и т.п.'
---skip --filter-udp=1026-65531 --dpi-desync=fake --dpi-desync-autottl=2 --dpi-desync-repeats=10 --dpi-desync-any-protocol=1 --dpi-desync-fake-unknown-udp=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-cutoff=n2 --new
-'Фикс чтобы new не убирать выше'
---filter-tcp=80 --hostlist-domains=EndStratsHere.com
+--debug=@/opt/zapret2/debug.log
+--qnum 300 --filter-tcp=80,443,2053,2083,2087,2096,8443 <HOSTLIST> --in-range=-s5556 --lua-desync=circular --in-range=x
+
+# общий фильтр для всех стратегий
+
+--blob=maxru:@/opt/zapret/files/fake/tls_clienthello_max_ru.bin
+--blob=google_www:@/opt/zapret/files/fake/tls_clienthello_www_google_com.bin
+--payload=tls_client_hello,http_req,http_reply 
+
+--lua-desync=fake:blob=maxru:tcp_ts_up:strategy=1
+--lua-desync=fake:blob=maxru:tls_mod=none:repeats=6:tcp_ts_up:strategy=2
+--lua-desync=fake:blob=google_www:repeats=6:tcp_ts_up:tcp_ack_inc=10000000:strategy=3
+--lua-desync=fake:blob=google_www:tls_mod=none:repeats=6:tcp_ts_up:tcp_ack_inc=2:strategy=4
+--lua-desync=fake:blob=google_www:tls_mod=rnd,dupsid,sni=www.google.com:repeats=8:tcp_ts_up:tcp_ack_inc=2:strategy=5
+--lua-desync=fake:blob=google_www:repeats=6:tcp_ts_up:tcp_ack_inc=1000:strategy=6
+--lua-desync=fake:blob=google_www:repeats=6:tcp_ts_up:tcp_ack_inc=1000:strategy=7
+--lua-desync=fakedsplit:pos=1:nofake1:strategy=7
+--lua-desync=fake:blob=google_www:repeats=6:tcp_ts_up:tcp_ack_inc=1000:strategy=8
+--lua-desync=fakedsplit:pos=1:nofake1:strategy=8
+--lua-desync=fake:blob=google_www:repeats=6:tcp_ts_up:strategy=9
+--lua-desync=fakedsplit:pattern=0x00:strategy=9
+--lua-desync=fake:blob=google_www:tls_mod=rnd,dupsid,sni=www.google.com:repeats=8:tcp_ts_up:tcp_ack_inc=2:strategy=10
+--lua-desync=fakedsplit:pos=1:strategy=10
+--lua-desync=fake:blob=google_www:tls_mod=rnd,dupsid,sni=www.google.com:repeats=8:tcp_ts_up:strategy=11
+--lua-desync=fakedsplit:pos=1:nofake1:seqovl=681:seqovl_pattern=google_www:strategy=11
+--lua-desync=fake:blob=google_www:tls_mod=rnd,dupsid,sni=www.google.com:repeats=11:tcp_ts_up:strategy=12
+--lua-desync=multidisorder:pos=1,midsld:strategy=12
+--lua-desync=fake:blob=maxru:repeats=8:tcp_ts_up:strategy=13
+--lua-desync=multisplit:pos=1:seqovl=654:seqovl_pattern=maxru:strategy=13
+--lua-desync=hostfakesplit:midhost=host-2:host_mod=host=rzd.ru:seqovl=726:tcp_ack=-66000:tcp_ack_inc=0:strategy=14
+--lua-desync=hostfakesplit:host_mod=host=ozon.ru:repeats=4:tcp_ts_up:strategy=15
+
+--lua-desync=fake:blob=maxru:tls_mod=rnd,dupsid,sni=fonts.google.com:tcp_md5:ip_autottl=-1,2-12:strategy=16
+--lua-desync=fakedsplit:pos=7,sld+1:nofake1:strategy=16
+--lua-desync=multidisorder:pos=1:strategy=16
+--lua-desync=pktmod:tcp_ack=-66000:tcp_ts_up:strategy=16
+# Strategy 17: fake + multisplit с tcp_seq=1000000
+--lua-desync=fake:blob=maxru:tcp_seq=1000000:repeats=1:strategy=17
+--lua-desync=multisplit:pos=2:strategy=17
+
+# Strategy 18: fake + multisplit с tcp_ts=-1000
+--lua-desync=fake:blob=maxru:tcp_ts=-1000:repeats=1:strategy=18
+--lua-desync=multisplit:pos=2:strategy=18
+
+# Strategy 19: fake + fakeddisorder с tcp_flags_unset=ACK
+--lua-desync=fake:blob=maxru:tcp_flags_unset=ACK:tls_mod=rnd,dupsid,padencap:repeats=1:strategy=19
+--lua-desync=fakeddisorder:pos=2:tcp_flags_unset=ACK:strategy=19
+
+--new
+
+--filter-tcp=80,443 --hostlist=/opt/zapret2/discord.txt
+--payload=tls_client_hello
+--lua-desync=fake:blob=0x00000000:tcp_seq=-3000:repeats=1 --lua-desync=fake:blob=fake_default_tls:tcp_seq=-3000:tls_mod=rnd,dupsid:repeats=1
+--new
+
+--filter-udp=443 --hostlist=/opt/zapret2/yt.txt  --in-range=-s5556 --lua-desync=circular:fails=6:retrans=4 --in-range=x 
+--payload=quic_initial
+--blob=quic_google:@/opt/zapret/files/fake/quic_initial_www_google_com.bin
+--blob=quic5:@/opt/zapret/files/fake/quic_5.bin
+
+--lua-desync=fake:blob=quic5:ipfrag=cutoff3:repeats=3:strategy=1
+--lua-desync=udplen:increment=4:strategy=2 --lua-desync=fake:blob=quic5:ipfrag=cutoff3:repeats=2:strategy=2
+--lua-desync=udplen:increment=8:pattern=0xFEA82025:strategy=2 --lua-desync=fake:blob=quic5:ipfrag=cutoff4:repeats=2:strategy=2
+--lua-desync=udplen:increment=25:strategy=2 --lua-desync=fake:blob=quic5:repeats=2:ipfrag=cutoff3:strategy=2
+--lua-desync=fake:blob=quic_google:ipfrag=cutoff3:repeats=6:strategy=2
+--lua-desync=fake:blob=quic_google:repeats=6:strategy=2
+--lua-desync=fake:blob=quic_google:repeats=8:strategy=2
+--lua-desync=fake:blob=quic_google:repeats=11:strategy=2
 "
 
-# none,ipset,hostlist,autohostlist
-MODE_FILTER=none
 
-# openwrt only : donttouch,none,software,hardware
+# none,ipset,hostlist,autohostlist
+MODE_FILTER=hostlist
+
+# donttouch,none,software,hardware
 FLOWOFFLOAD=donttouch
 
 # openwrt: specify networks to be treated as LAN. default is "lan"
@@ -196,28 +165,28 @@ FLOWOFFLOAD=donttouch
 #OPENWRT_WAN4="wan vpn"
 #OPENWRT_WAN6="wan6 vpn6"
 
-# for routers based on desktop linux and macos. has no effect in openwrt.
+# for routers based on classic linux. has no effect in openwrt.
 # CHOOSE LAN and optinally WAN/WAN6 NETWORK INTERFACES
 # or leave them commented if its not router
-# it's possible to specify multiple interfaces like this : IFACE_LAN="eth0 eth1 eth2"
+# it's possible to specify multiple interfaces like this : IFACE_WAN="eth0 eth1 eth2"
 # if IFACE_WAN6 is not defined it take the value of IFACE_WAN
 #IFACE_LAN=eth0
-#IFACE_WAN=eth0
+#IFACE_WAN=eth1
 #IFACE_WAN6="ipsec0 wireguard0 he_net"
 
 # should start/stop command of init scripts apply firewall rules ?
 # not applicable to openwrt with firewall3+iptables
 INIT_APPLY_FW=1
 # firewall apply hooks
-#INIT_FW_PRE_UP_HOOK="/etc/firewall.zapret.hook.pre_up"
-#INIT_FW_POST_UP_HOOK="/etc/firewall.zapret.hook.post_up"
-#INIT_FW_PRE_DOWN_HOOK="/etc/firewall.zapret.hook.pre_down"
-#INIT_FW_POST_DOWN_HOOK="/etc/firewall.zapret.hook.post_down"
+#INIT_FW_PRE_UP_HOOK="/etc/firewall.zapret2.hook.pre_up"
+#INIT_FW_POST_UP_HOOK="/etc/firewall.zapret2.hook.post_up"
+#INIT_FW_PRE_DOWN_HOOK="/etc/firewall.zapret2.hook.pre_down"
+#INIT_FW_POST_DOWN_HOOK="/etc/firewall.zapret2.hook.post_down"
 
 # do not work with ipv4
 #DISABLE_IPV4=1
 # do not work with ipv6
-DISABLE_IPV6=0
+DISABLE_IPV6=1
 
 # drop icmp time exceeded messages for nfqws tampered connections
 # in POSTNAT mode this can interfere with default mtr/traceroute in tcp or udp mode. use source port not redirected to nfqws
