@@ -10,7 +10,7 @@ ENTRY_RKN="entry.1527830884"
 
 # 2. Пути к файлам (используем простые форматы)
 CACHE_DIR="/opt/zapret2/extra_strats/cache"
-TELEMETRY_CFG="$CACHE_DIR/telemetry.config"
+TELEMETRY_CFG="/opt/zapret2/z2r_lib/telemetry.config"
 PROVIDER_TXT="$CACHE_DIR/provider.txt"
 
 # Функция инициализации (Спрашивает пользователя один раз)
