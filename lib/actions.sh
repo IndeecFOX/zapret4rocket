@@ -37,7 +37,7 @@ menu_action_update_config_reset() {
 
   backup_strats
 
-  /opt/zapret2/init.d/sysv/zapret2 stop
+  "$ZAPRET2_INIT" stop
 
   rm -rf /opt/zapret2/lists /opt/zapret2/extra_strats
 
@@ -56,7 +56,7 @@ menu_action_update_config_reset() {
 
   cp -f /opt/zapret2/config.default /opt/zapret2/config
 
-  /opt/zapret2/init.d/sysv/zapret2 start
+  "$ZAPRET2_INIT" start
 
   # ВАЖНО: check_access_list — это по сути интерактивный тест (он сам печатает и может ждать Enter),
   # поэтому лучше вызывать его из get_menu отдельным пунктом ("01"), а не тут.
@@ -96,7 +96,7 @@ menu_action_toggle_bolvan_ports() {
     return 0
   fi
 
-  /opt/zapret2/init.d/sysv/zapret2 restart
+  "$ZAPRET2_INIT" restart
   echo -e "${green}Выполнение переключений завершено.${plain}"
   return 0
 }
@@ -105,13 +105,13 @@ menu_action_toggle_fwtype() {
   if grep -q '^FWTYPE=iptables$' "/opt/zapret2/config"; then
     sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret2/config"
     /opt/zapret2/install_prereq.sh
-    /opt/zapret2/init.d/sysv/zapret2 restart
+    "$ZAPRET2_INIT" restart
     echo -e "${green}Zapret moode: nftables.${plain}"
 
   elif grep -q '^FWTYPE=nftables$' "/opt/zapret2/config"; then
     sed -i 's/^FWTYPE=nftables$/FWTYPE=iptables/' "/opt/zapret2/config"
     /opt/zapret2/install_prereq.sh
-    /opt/zapret2/init.d/sysv/zapret2 restart
+    "$ZAPRET2_INIT" restart
     echo -e "${green}Zapret moode: iptables.${plain}"
 
   else
@@ -137,7 +137,7 @@ menu_action_toggle_udp_range() {
     return 0
   fi
 
-  /opt/zapret2/init.d/sysv/zapret2 restart
+  "$ZAPRET2_INIT" restart
   echo -e "${green}Выполнение переключений завершено.${plain}"
   return 0
 }
