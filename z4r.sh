@@ -3,7 +3,7 @@
 set -e
 
 #Переменная содержащая версию на случай невозможности получить информацию о lastest с github
-DEFAULT_VER="72.6"
+DEFAULT_VER="0.8.2"
 
 #Чтобы удобнее красить текст
 plain='\033[0m'
@@ -35,7 +35,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
 
 # Проверяем наличие всех нужных lib-файлов, иначе запускаем внешний скрипт
 missing_libs=0
-LIB_DIR="$SCRIPT_DIR/zapret/z4r_lib"
+LIB_DIR="$SCRIPT_DIR/zapret2/z4r_lib"
 for lib in ui.sh provider.sh telemetry.sh recommendations.sh netcheck.sh premium.sh strategies.sh submenus.sh actions.sh; do
   if [ ! -f "$LIB_DIR/$lib" ]; then
     missing_libs=1
@@ -59,49 +59,49 @@ fi
 
 # UI helpers (пауза/печать пунктов меню/совместимость старого кода)
 # Функции: pause_enter, submenu_item, exit_to_menu
-source "$SCRIPT_DIR/zapret/z4r_lib/ui.sh" 
+source "$SCRIPT_DIR/zapret2/z4r_lib/ui.sh" 
 
 # Определение провайдера/города + ручная установка/сброс кэша
 # Функции: provider_init_once, provider_force_redetect, provider_set_manual_menu
 # (внутр.: _detect_api_simple)
-source "$SCRIPT_DIR/zapret/z4r_lib/provider.sh" 
+source "$SCRIPT_DIR/zapret2/z4r_lib/provider.sh" 
 
 # Телеметрия (вкл/выкл один раз + отправка статистики в Google Forms)
 # Функции: init_telemetry, send_stats
-source "$SCRIPT_DIR/zapret/z4r_lib/telemetry.sh" 
+source "$SCRIPT_DIR/zapret2/z4r_lib/telemetry.sh" 
 
 # База подсказок по стратегиям (скачивание + вывод подсказки по провайдеру)
 # Функции: update_recommendations, show_hint
-source "$SCRIPT_DIR/zapret/z4r_lib/recommendations.sh" 
+source "$SCRIPT_DIR/zapret2/z4r_lib/recommendations.sh" 
 
 # Проверка доступности ресурсов/сети (TLS 1.2/1.3) + получение домена кластера youtube (googlevideo)
 # Функции: get_yt_cluster_domain, check_access, check_access_list
-source "$SCRIPT_DIR/zapret/z4r_lib/netcheck.sh"
+source "$SCRIPT_DIR/zapret2/z4r_lib/netcheck.sh"
 
 # “Premium” пункты 777/999 и их вспомогательные эффекты (рандом, спиннер, титулы)
 # Функции: rand_from_list, spinner_for_seconds, premium_get_or_set_title, zefeer_premium_777, zefeer_space_999
-source "$SCRIPT_DIR/zapret/z4r_lib/premium.sh" 
+source "$SCRIPT_DIR/zapret2/z4r_lib/premium.sh" 
 
 # Логика стратегий: определение активной стратегии, статус строкой, перебор стратегий, быстрый подбор
 # Функции: get_active_strat_num, get_current_strategies_info, try_strategies, Strats_Tryer
-source "$SCRIPT_DIR/zapret/z4r_lib/strategies.sh" 
+source "$SCRIPT_DIR/zapret2/z4r_lib/strategies.sh" 
 
 # Подменю (UI-обвязка над Strats_Tryer + доп. меню управления: FLOWOFFLOAD, TCP443, провайдер)
 # Функции: strategies_submenu, flowoffload_submenu, tcp443_submenu, provider_submenu
-source "$SCRIPT_DIR/zapret/z4r_lib/submenus.sh" 
+source "$SCRIPT_DIR/zapret2/z4r_lib/submenus.sh" 
 
 # Действия меню (бэкапы/сбросы/переключатели)
 # Функции: backup_strats, menu_action_update_config_reset, menu_action_toggle_bolvan_ports,
 #          menu_action_toggle_fwtype, menu_action_toggle_udp_range
-source "$SCRIPT_DIR/zapret/z4r_lib/actions.sh" 
+source "$SCRIPT_DIR/zapret2/z4r_lib/actions.sh" 
 
 change_user() {
-   if /opt/zapret/nfq/nfqws --dry-run --user="nobody" 2>&1 | grep -q "queue"; then
+   if /opt/zapret2/nfq2/nfqws2 --dry-run --user="nobody" 2>&1 | grep -q "queue"; then
     echo "WS_USER=nobody"
-	sed -i 's/^#\(WS_USER=nobody\)/\1/' /opt/zapret/config.default
-   elif /opt/zapret/nfq/nfqws --dry-run --user="$(head -n1 /etc/passwd | cut -d: -f1)" 2>&1 | grep -q "queue"; then
+	sed -i 's/^#\(WS_USER=nobody\)/\1/' /opt/zapret2/config.default
+   elif /opt/zapret2/nfq2/nfqws2 --dry-run --user="$(head -n1 /etc/passwd | cut -d: -f1)" 2>&1 | grep -q "queue"; then
     echo "WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)"
-    sed -i "s/^#WS_USER=nobody$/WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)/" "/opt/zapret/config.default"
+    sed -i "s/^#WS_USER=nobody$/WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)/" "/opt/zapret2/config.default"
    else
     echo -e "${yellow}WS_USER не подошёл. Скорее всего будут проблемы. Если что - пишите в саппорт${plain}"
    fi
@@ -109,64 +109,64 @@ change_user() {
 
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
- mkdir -p /opt/zapret/lists /opt/zapret/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret/extra_strats/UDP/YT
- for listfile in cloudflare-ipset.txt cloudflare-ipset_v6.txt netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do curl -L -o /opt/zapret/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/lists/$listfile; done
- curl -L "https://github.com/IndeecFOX/zapret4rocket/raw/master/fake_files.tar.gz" | tar -xz -C /opt/zapret/files/fake
- curl -L -o /opt/zapret/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt
- curl -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
- curl -L -o /opt/zapret/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt
- touch /opt/zapret/lists/autohostlist.txt /opt/zapret/extra_strats/UDP/YT/{1..8}.txt /opt/zapret/extra_strats/TCP/RKN/{1..17}.txt /opt/zapret/extra_strats/TCP/User/{1..17}.txt /opt/zapret/extra_strats/TCP/YT/{1..17}.txt /opt/zapret/extra_strats/TCP/GV/{1..17}.txt /opt/zapret/extra_strats/TCP/temp/{1..17}.txt
+ mkdir -p /opt/zapret2/lists /opt/zapret2/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret2/extra_strats/UDP/YT
+ for listfile in cloudflare-ipset.txt cloudflare-ipset_v6.txt netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do curl -L -o /opt/zapret2/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/lists/$listfile; done
+ curl -L "https://github.com/IndeecFOX/zapret4rocket/raw/master/fake_files.tar.gz" | tar -xz -C /opt/zapret2/files/fake
+ curl -L -o /opt/zapret2/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt
+ curl -L -o /opt/zapret2/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
+ curl -L -o /opt/zapret2/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt
+ touch /opt/zapret2/lists/autohostlist.txt /opt/zapret2/extra_strats/UDP/YT/{1..8}.txt /opt/zapret2/extra_strats/TCP/RKN/{1..17}.txt /opt/zapret2/extra_strats/TCP/User/{1..17}.txt /opt/zapret2/extra_strats/TCP/YT/{1..17}.txt /opt/zapret2/extra_strats/TCP/GV/{1..17}.txt /opt/zapret2/extra_strats/TCP/temp/{1..17}.txt
  if [ -d /opt/extra_strats ]; then
-  rm -rf /opt/zapret/extra_strats
-  mv /opt/extra_strats /opt/zapret/
+  rm -rf /opt/zapret2/extra_strats
+  mv /opt/extra_strats /opt/zapret2/
   echo "Востановление настроек подбора из резерва выполнено."
  fi
  if [ -f "/opt/netrogat.txt" ]; then
-   mv -f /opt/netrogat.txt /opt/zapret/lists/netrogat.txt
+   mv -f /opt/netrogat.txt /opt/zapret2/lists/netrogat.txt
    echo "Востановление листа исключений выполнено."
  fi
  #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
- curl -L -o /opt/zapret/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/config.default
+ curl -L -o /opt/zapret2/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/config.default
  if command -v nft >/dev/null 2>&1; then
-  sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret/config.default"
+  sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret2/config.default"
  fi
- curl -L -o /opt/zapret/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-stun4all
- curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
- cp -f /opt/zapret/init.d/sysv/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all
- cp -f /opt/zapret/init.d/sysv/custom.d/50-discord-media /opt/zapret/init.d/openwrt/custom.d/50-discord-media
+ curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-stun4all
+ curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-discord-media
+ cp -f /opt/zapret2/init.d/sysv/custom.d/50-stun4all /opt/zapret2/init.d/openwrt/custom.d/50-stun4all
+ cp -f /opt/zapret2/init.d/sysv/custom.d/50-discord-media /opt/zapret2/init.d/openwrt/custom.d/50-discord-media
 
 # cache
-mkdir -p /opt/zapret/extra_strats/cache
+mkdir -p /opt/zapret2/extra_strats/cache
 
 }
 
 #Удаление старого запрета, если есть
 remove_zapret() {
- if [ -f "/opt/zapret/init.d/sysv/zapret" ] && [ -f "/opt/zapret/config" ]; then
- 	/opt/zapret/init.d/sysv/zapret stop
+ if [ -f "/opt/zapret2/init.d/sysv/zapret2" ] && [ -f "/opt/zapret2/config" ]; then
+ 	/opt/zapret2/init.d/sysv/zapret2 stop
  fi
- if [ -f "/opt/zapret/config" ] && [ -f "/opt/zapret/uninstall_easy.sh" ]; then
-     echo "Выполняем zapret/uninstall_easy.sh"
-     sh /opt/zapret/uninstall_easy.sh
+ if [ -f "/opt/zapret2/config" ] && [ -f "/opt/zapret2/uninstall_easy.sh" ]; then
+     echo "Выполняем zapret2/uninstall_easy.sh"
+     sh /opt/zapret2/uninstall_easy.sh
      echo "Скрипт uninstall_easy.sh выполнен."
  else
-     echo "zapret не инсталлирован в систему. Переходим к следующему шагу."
+     echo "zapret2 не инсталлирован в систему. Переходим к следующему шагу."
  fi
- if [ -d "/opt/zapret" ]; then
-     echo "Удаляем папку zapret"
-     rm -rf /opt/zapret
+ if [ -d "/opt/zapret2" ]; then
+     echo "Удаляем папку zapret2"
+     rm -rf /opt/zapret2
  else
-     echo "Папка zapret не существует."
+     echo "Папка zapret2 не существует."
  fi
 }
 
-#Запрос желаемой версии zapret
+#Запрос желаемой версии zapret2
 version_select() {
    while true; do
-	read -re -p $'\033[0;32mВведите желаемую версию zapret (Enter для новейшей версии): \033[0m' VER
+	read -re -p $'\033[0;32mВведите желаемую версию zapret2 (Enter для новейшей версии): \033[0m' VER
     # Если пустой ввод — берем значение по умолчанию
 	if [ -z "$VER" ]; then
-		lastest_release="https://api.github.com/repos/bol-van/zapret/releases/latest"
+		lastest_release="https://api.github.com/repos/bol-van/zapret2/releases/latest"
 	    # проверяем результаты по порядку
 		echo -e "${yellow}Поиск последней версии...${plain}"
     	VER1=$(curl -sL $lastest_release | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
@@ -200,11 +200,11 @@ version_select() {
     #Считаем длину
     LEN=${#VER}
     #Проверка длины и простая валидация формата (цифры и точки)
-    if [ "$LEN" -gt 4 ]; then
-        echo "Некорректный ввод. Максимальная длина — 4 символа. Попробуйте снова."
+    if [ "$LEN" -gt 5 ]; then
+        echo "Некорректный ввод. Максимальная длина — 5 символов. Попробуйте снова."
         continue
     elif ! echo "$VER" | grep -Eq '^[0-9]+(\.[0-9]+)*$'; then
-        echo "Некорректный формат версии. Пример: 72.3"
+        echo "Некорректный формат версии. Пример: 0.8.2"
         continue
     fi
     echo "Будет использоваться версия: $VER"
@@ -212,70 +212,70 @@ version_select() {
 done
 }
 
-#Скачивание, распаковка архива zapret, очистка от ненуных бинарей
+#Скачивание, распаковка архива zapret2, очистка от ненуных бинарей
 zapret_get() {
  if [[ "$OSystem" == "VPS" ]]; then
-     tarfile="zapret-v$VER.tar.gz"
+     tarfile="zapret2-v$VER.tar.gz"
  else
-     tarfile="zapret-v$VER-openwrt-embedded.tar.gz"
+     tarfile="zapret2-v$VER-openwrt-embedded.tar.gz"
  fi
- curl -L "https://github.com/bol-van/zapret/releases/download/v$VER/$tarfile" | tar -xz
- mv "zapret-v$VER" zapret
- sh /tmp/zapret/install_bin.sh
- find /tmp/zapret/binaries/* -maxdepth 0 -type d ! -name "$(basename "$(dirname "$(readlink /tmp/zapret/nfq/nfqws)")")" -exec rm -rf {} +
- mv zapret /opt/zapret
+ curl -L "https://github.com/bol-van/zapret2/releases/download/v$VER/$tarfile" | tar -xz
+ mv "zapret2-v$VER" zapret2
+ sh /tmp/zapret2/install_bin.sh
+ find /tmp/zapret2/binaries/* -maxdepth 0 -type d ! -name "$(basename "$(dirname "$(readlink /tmp/zapret2/nfq2/nfqws2)")")" -exec rm -rf {} +
+ mv zapret2 /opt/zapret2
 }
 
 #Запуск установочных скриптов и перезагрузка
 install_zapret_reboot() {
- sh -i /opt/zapret/install_easy.sh
- /opt/zapret/init.d/sysv/zapret restart
- if pidof nfqws >/dev/null; then
+ sh -i /opt/zapret2/install_easy.sh
+ /opt/zapret2/init.d/sysv/zapret2 restart
+ if pidof nfqws2 >/dev/null; then
   check_access_list
-  echo -e "\033[32mzapret перезапущен и полностью установлен\n\033[33mЕсли требуется меню (например не работают какие-то ресурсы) - введите скрипт ещё раз или просто напишите "z4r" в терминале. Саппорт: tg: zee4r\033[0m"
+  echo -e "\033[32mzapret2 перезапущен и полностью установлен\n\033[33mЕсли требуется меню (например не работают какие-то ресурсы) - введите скрипт ещё раз или просто напишите "z4r" в терминале. Саппорт: tg: zee4r\033[0m"
  else
-  echo -e "${yellow}zapret полностью установлен, но не обнаружен после запуска в исполняемых задачах через pidof\nСаппорт: tg: zee4r${plain}"
+  echo -e "${yellow}zapret2 полностью установлен, но не обнаружен после запуска в исполняемых задачах через pidof\nСаппорт: tg: zee4r${plain}"
  fi
 }
 
 #Для Entware Keenetic + merlin
 entware_fixes() {
  if [ "$hardware" = "keenetic" ]; then
-  curl -L -o /opt/zapret/init.d/sysv/zapret https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/zapret
-  chmod +x /opt/zapret/init.d/sysv/zapret
-  echo "Права выданы /opt/zapret/init.d/sysv/zapret"
+  curl -L -o /opt/zapret2/init.d/sysv/zapret2 https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/zapret
+  chmod +x /opt/zapret2/init.d/sysv/zapret2
+  echo "Права выданы /opt/zapret2/init.d/sysv/zapret2"
   curl -L -o /opt/etc/ndm/netfilter.d/000-zapret.sh https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/000-zapret.sh
   chmod +x /opt/etc/ndm/netfilter.d/000-zapret.sh
   echo "Права выданы /opt/etc/ndm/netfilter.d/000-zapret.sh"
   curl -L -o /opt/etc/init.d/S00fix https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/S00fix
   chmod +x /opt/etc/init.d/S00fix
   echo "Права выданы /opt/etc/init.d/S00fix"
-  cp -a /opt/zapret/init.d/custom.d.examples.linux/10-keenetic-udp-fix /opt/zapret/init.d/sysv/custom.d/10-keenetic-udp-fix
+  cp -a /opt/zapret2/init.d/custom.d.examples.linux/10-keenetic-udp-fix /opt/zapret2/init.d/sysv/custom.d/10-keenetic-udp-fix
   echo "10-keenetic-udp-fix скопирован"
  elif [ "$hardware" = "merlin" ]; then
-  if sed -n '167p' /opt/zapret/install_easy.sh | grep -q '^nfqws_opt_validat'; then
-	sed -i '172s/return 1/return 0/' /opt/zapret/install_easy.sh
+  if sed -n '167p' /opt/zapret2/install_easy.sh | grep -q '^nfqws_opt_validat'; then
+	sed -i '172s/return 1/return 0/' /opt/zapret2/install_easy.sh
   fi
-	grep -qxF '/opt/zapret/init.d/sysv/zapret restart-fw' /jffs/scripts/firewall-start || echo '/opt/zapret/init.d/sysv/zapret restart-fw' >> /jffs/scripts/firewall-start
+	grep -qxF '/opt/zapret2/init.d/sysv/zapret2 restart-fw' /jffs/scripts/firewall-start || echo '/opt/zapret2/init.d/sysv/zapret2 restart-fw' >> /jffs/scripts/firewall-start
 	chmod +x /jffs/scripts/firewall-start
  fi
  
- sh /opt/zapret/install_bin.sh
+ sh /opt/zapret2/install_bin.sh
  
  # #Раскомменчивание юзера под keenetic или merlin
  change_user
- #Патчинг на некоторых merlin /opt/zapret/common/linux_fw.sh
+ #Патчинг на некоторых merlin /opt/zapret2/common/linux_fw.sh
  if command -v sysctl >/dev/null 2>&1; then
   echo "sysctl доступен. Патч linux_fw.sh не требуется"
  else
-  echo "sysctl отсутствует. MerlinWRT? Патчим /opt/zapret/common/linux_fw.sh"
-  sed -i 's|sysctl -w net.netfilter.nf_conntrack_tcp_be_liberal=\$1|echo \$1 > /proc/sys/net/netfilter/nf_conntrack_tcp_be_liberal|' /opt/zapret/common/linux_fw.sh
-  sed -i 's|sysctl -q -w net.ipv4.conf.\$1.route_localnet="\$enable"|echo "\$enable" > /proc/sys/net/ipv4/conf/\$1/route_localnet|' /opt/zapret/common/linux_iphelper.sh
+  echo "sysctl отсутствует. MerlinWRT? Патчим /opt/zapret2/common/linux_fw.sh"
+  sed -i 's|sysctl -w net.netfilter.nf_conntrack_tcp_be_liberal=\$1|echo \$1 > /proc/sys/net/netfilter/nf_conntrack_tcp_be_liberal|' /opt/zapret2/common/linux_fw.sh
+  sed -i 's|sysctl -q -w net.ipv4.conf.\$1.route_localnet="\$enable"|echo "\$enable" > /proc/sys/net/ipv4/conf/\$1/route_localnet|' /opt/zapret2/common/linux_iphelper.sh
  fi
  #sed для пропуска запроса на прочтение readme, т.к. система entware. Дабы скрипт отрабатывал далее на Enter
- sed -i 's/if \[ -n "\$1" \] || ask_yes_no N "do you want to continue";/if true;/' /opt/zapret/common/installer.sh
- ln -fs /opt/zapret/init.d/sysv/zapret /opt/etc/init.d/S90-zapret
- echo "Добавлено в автозагрузку: /opt/etc/init.d/S90-zapret > /opt/zapret/init.d/sysv/zapret"
+ sed -i 's/if \[ -n "\$1" \] || ask_yes_no N "do you want to continue";/if true;/' /opt/zapret2/common/installer.sh
+ ln -fs /opt/zapret2/init.d/sysv/zapret2 /opt/etc/init.d/S90-zapret2
+ echo "Добавлено в автозагрузку: /opt/etc/init.d/S90-zapret2 > /opt/zapret2/init.d/sysv/zapret2"
 }
 
 #Запрос на установку 3x-ui или аналогов
@@ -416,8 +416,8 @@ get_menu() {
     fi
     clear
     echo -e "${cyan}========================================${plain}"
-    echo -e "${Fcyan}     zeefeer4rocket by IndeecFOX     ${plain}"
-    echo -e "${Fgreen}         Z4R - Zapret Manager          ${plain}"
+    echo -e "${Fcyan}            zeefeer4rocket             ${plain}"
+    echo -e "${Fgreen}         Z4R - zapret2 Manager          ${plain}"
     echo -e "${cyan}========================================${plain}"
     echo ""
     
@@ -438,21 +438,21 @@ get_menu() {
 '"Город/провайдер: ${plain}${PROVIDER_MENU}${yellow}"'
 '"${TITLE_MENU_LINE}"'
 \033[32mВыберите необходимое действие:\033[33m
-Enter (без цифр) - переустановка/обновление zapret
+Enter (без цифр) - переустановка/обновление zapret2
 0. Выход
 01. Проверить доступность сервисов (Тест не точен)
 1. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' ]'"${yellow}"'
-2. Стоп/пере(запуск) zapret (сейчас: '"$(pidof nfqws >/dev/null && echo "${green}Запущен${yellow}" || echo "${red}Остановлен${yellow}")"')
+2. Стоп/пере(запуск) zapret2 (сейчас: '"$(pidof nfqws2 >/dev/null && echo "${green}Запущен${yellow}" || echo "${red}Остановлен${yellow}")"')
 3. Тут могла быть ваша реклама :D (Функция перенесена во 2 пункт. Резерв)
-4. Удалить zapret
+4. Удалить zapret2
 5. Обновить стратегии, сбросить листы подбора стратегий и исключений (есть бэкап)
-6. Исключить домен из zapret обработки
+6. Исключить домен из zapret2 обработки
 7. Открыть в редакторе config (Установит nano редактор ~250kb)
-8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '"${plain}"'['"$(grep -Eq '^NFQWS_PORTS_UDP=.*443$' /opt/zapret/config && echo "Скрипты" || (grep -Eq '443,1400,3478-3481,5349,50000-50099,19294-19344$' /opt/zapret/config && echo "Классические стратегии" || echo "Незвестно"))"']'"${yellow}"'
-9. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '"${plain}"'['"$(grep -q '^FWTYPE=iptables$' /opt/zapret/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret/config && echo "nftables" || echo "Неизвестно"))"']'"${yellow}"'
-10. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '"${plain}"'['"$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=1026-65531,443' /opt/zapret/config && echo "Включен" || echo "Неизвестно"))"']'"${yellow}"'
-11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret/config)"']'"${yellow}"'
-12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '"${plain}"'['"$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")"']'"${yellow}"'
+8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '"${plain}"'['"$(grep -Eq '^NFQWS_PORTS_UDP=.*443$' /opt/zapret2/config && echo "Скрипты" || (grep -Eq '443,1400,3478-3481,5349,50000-50099,19294-19344$' /opt/zapret2/config && echo "Классические стратегии" || echo "Незвестно"))"']'"${yellow}"'
+9. Переключатель zapret2 на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '"${plain}"'['"$(grep -q '^FWTYPE=iptables$' /opt/zapret2/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret2/config && echo "nftables" || echo "Неизвестно"))"']'"${yellow}"'
+10. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '"${plain}"'['"$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret2/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=1026-65531,443' /opt/zapret2/config && echo "Включен" || echo "Неизвестно"))"']'"${yellow}"'
+11. Управление аппаратным ускорением zapret2. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret2/config)"']'"${yellow}"'
+12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '"${plain}"'['"$(num=$(sed -n '112,128p' /opt/zapret2/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")"']'"${yellow}"'
 13. Активировать доступ в меню через браузер (~3мб места)
 14. Провайдер
 777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
@@ -462,7 +462,7 @@ Enter (без цифр) - переустановка/обновление zapret
   read -re -p "" answer_menu
     case "$answer_menu" in
   "")
-    echo -e "${yellow}Вы уверены, что хотите переустановить/обновить zapret?${plain}"
+    echo -e "${yellow}Вы уверены, что хотите переустановить/обновить zapret2?${plain}"
     echo -e "${yellow}5 - Да, Enter/0 - Нет (вернуться в меню)${plain}"
     read -r ans
     if [ "$ans" = "5" ] || [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
@@ -490,12 +490,12 @@ Enter (без цифр) - переустановка/обновление zapret
     ;;
 
   "2")
-    if pidof nfqws >/dev/null; then
-      /opt/zapret/init.d/sysv/zapret stop
-      echo -e "${green}Выполнена команда остановки zapret${plain}"
+    if pidof nfqws2 >/dev/null; then
+      /opt/zapret2/init.d/sysv/zapret2 stop
+      echo -e "${green}Выполнена команда остановки zapret2${plain}"
     else
-      /opt/zapret/init.d/sysv/zapret restart
-      echo -e "${green}Выполнена команда перезапуска zapret${plain}"
+      /opt/zapret2/init.d/sysv/zapret2 restart
+      echo -e "${green}Выполнена команда перезапуска zapret2${plain}"
     fi
     pause_enter
     ;;
@@ -506,7 +506,7 @@ Enter (без цифр) - переустановка/обновление zapret
 
   "4")
     remove_zapret
-    echo -e "${yellow}zapret удалён${plain}"
+    echo -e "${yellow}zapret2 удалён${plain}"
     pause_enter
     ;;
 
@@ -518,7 +518,7 @@ Enter (без цифр) - переустановка/обновление zapret
   "6")
     read -re -p "Введите домен, который добавить в исключения (например, mydomain.com): " user_domain
     if [ -n "$user_domain" ]; then
-      echo "$user_domain" >> /opt/zapret/lists/netrogat.txt
+      echo "$user_domain" >> /opt/zapret2/lists/netrogat.txt
       echo -e "Домен ${yellow}$user_domain${plain} добавлен в исключения (netrogat.txt)."
     else
       echo "Ввод пустой, ничего не добавлено"
@@ -533,7 +533,7 @@ Enter (без цифр) - переустановка/обновление zapret
       opkg remove nano 2>/dev/null || apk del nano 2>/dev/null
       opkg install nano-full 2>/dev/null || apk add nano-full 2>/dev/null
     fi
-    nano /opt/zapret/config
+    nano /opt/zapret2/config
     # после выхода из nano
     ;;
 
@@ -682,7 +682,7 @@ if [[ "$OSystem" == "VPS" ]] && [ ! $1 ]; then
 fi
 
 #Меню и быстрый запуск подбора стратегии
- if [ -d /opt/zapret/extra_strats ] && [ -f "/opt/zapret/config" ]; then
+ if [ -d /opt/zapret2/extra_strats ] && [ -f "/opt/zapret2/config" ]; then
 	if [ $1 ]; then
 		Strats_Tryer $1
 	fi
@@ -707,7 +707,7 @@ backup_strats
 #Удаление старого запрета, если есть
 remove_zapret
 
-#Запрос желаемой версии zapret
+#Запрос желаемой версии zapret2
 echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
 version_select
 
@@ -722,7 +722,7 @@ case "$ttyd_answer" in
 	;;
 esac 
  
-#Скачивание, распаковка архива zapret и его удаление
+#Скачивание, распаковка архива zapret2 и его удаление
 zapret_get
 
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
@@ -735,7 +735,7 @@ fi
 
 #Для x-wrt
 if [[ "$release" == "x-wrt" ]]; then
-	sed -i 's/kmod-nft-nat kmod-nft-offload/kmod-nft-nat/' /opt/zapret/common/installer.sh
+	sed -i 's/kmod-nft-nat kmod-nft-offload/kmod-nft-nat/' /opt/zapret2/common/installer.sh
 fi
 
 #Запуск установочных скриптов и перезагрузка
