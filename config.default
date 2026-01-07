@@ -150,6 +150,19 @@ NFQWS2_OPT="
 --lua-desync=fake:blob=quic_google:repeats=6:strategy=6
 --lua-desync=fake:blob=quic_google:repeats=8:strategy=7
 --lua-desync=fake:blob=quic_google:repeats=11:strategy=8
+--new
+
+--filter-udp=50000-50099,1400,3478-3481,5349,19294-19344 
+--filter-l7=discord,stun 
+--payload=quic_initial 
+--blob=fake_quic_www_google:/opt/zapret/files/fake/quic_initial_www_google_com.bin 
+--lua-desync=fake:udp:blob=fake_quic_www_google:repeats=2
+--new
+
+--skip --filter-udp=1026-65531
+--blob=fake_quic_unknown_udp:/opt/zapret/files/fake/quic_initial_www_google_com.bin
+--lua-desync=fake:udp:blob=fake_quic_unknown_udp:ip_autottl=2:repeats=10
+
 "
 
 
