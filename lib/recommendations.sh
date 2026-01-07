@@ -1,7 +1,7 @@
 # ---- Recomendations module ----
 
 RECS_URL="https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/recommendations.txt"
-RECS_FILE="/opt/zapret/extra_strats/cache/recommendations.txt"
+RECS_FILE="/opt/zapret2/extra_strats/cache/recommendations.txt"
 
 # 1. Функция обновления базы
 update_recommendations() {
@@ -25,8 +25,8 @@ show_hint() {
   local my_isp=""
 
   # А. Узнаем провайдера
-  if [ -s "/opt/zapret/extra_strats/cache/provider.txt" ]; then
-    my_isp="$(cat "/opt/zapret/extra_strats/cache/provider.txt")"
+  if [ -s "/opt/zapret2/extra_strats/cache/provider.txt" ]; then
+    my_isp="$(cat "/opt/zapret2/extra_strats/cache/provider.txt")"
   fi
 
   # Б. Проверяем наличие базы
