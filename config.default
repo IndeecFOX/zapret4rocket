@@ -144,12 +144,12 @@ NFQWS2_OPT="
 
 --lua-desync=fake:blob=quic5:ipfrag=cutoff3:repeats=3:strategy=1
 --lua-desync=udplen:increment=4:strategy=2 --lua-desync=fake:blob=quic5:ipfrag=cutoff3:repeats=2:strategy=2
---lua-desync=udplen:increment=8:pattern=0xFEA82025:strategy=2 --lua-desync=fake:blob=quic5:ipfrag=cutoff4:repeats=2:strategy=2
---lua-desync=udplen:increment=25:strategy=2 --lua-desync=fake:blob=quic5:repeats=2:ipfrag=cutoff3:strategy=2
---lua-desync=fake:blob=quic_google:ipfrag=cutoff3:repeats=6:strategy=2
---lua-desync=fake:blob=quic_google:repeats=6:strategy=2
---lua-desync=fake:blob=quic_google:repeats=8:strategy=2
---lua-desync=fake:blob=quic_google:repeats=11:strategy=2
+--lua-desync=udplen:increment=8:pattern=0xFEA82025:strategy=3 --lua-desync=fake:blob=quic5:ipfrag=cutoff4:repeats=2:strategy=3
+--lua-desync=udplen:increment=25:strategy=4 --lua-desync=fake:blob=quic5:repeats=2:ipfrag=cutoff3:strategy=4
+--lua-desync=fake:blob=quic_google:ipfrag=cutoff3:repeats=6:strategy=5
+--lua-desync=fake:blob=quic_google:repeats=6:strategy=6
+--lua-desync=fake:blob=quic_google:repeats=8:strategy=7
+--lua-desync=fake:blob=quic_google:repeats=11:strategy=8
 "
 
 
