@@ -109,31 +109,34 @@ change_user() {
 
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
- mkdir -p /opt/zapret2/lists /opt/zapret2/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret2/extra_strats/UDP/YT
- for listfile in cloudflare-ipset.txt cloudflare-ipset_v6.txt netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do curl -L -o /opt/zapret2/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/lists/$listfile; done
- curl -L "https://github.com/IndeecFOX/zapret4rocket/z2r/fake_files.tar.gz" | tar -xz -C /opt/zapret2/files/fake
- curl -L -o /opt/zapret2/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/UDP/YT/List.txt
- curl -L -o /opt/zapret2/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/RKN/List.txt
- curl -L -o /opt/zapret2/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/YT/List.txt
- touch /opt/zapret2/lists/autohostlist.txt /opt/zapret2/extra_strats/UDP/YT/{1..8}.txt /opt/zapret2/extra_strats/TCP/RKN/{1..17}.txt /opt/zapret2/extra_strats/TCP/User/{1..17}.txt /opt/zapret2/extra_strats/TCP/YT/{1..17}.txt /opt/zapret2/extra_strats/TCP/GV/{1..17}.txt /opt/zapret2/extra_strats/TCP/temp/{1..17}.txt
- if [ -d /opt/extra_strats ]; then
-  rm -rf /opt/zapret2/extra_strats
-  mv /opt/extra_strats /opt/zapret2/
-  echo "Востановление настроек подбора из резерва выполнено."
- fi
- if [ -f "/opt/netrogat.txt" ]; then
-   mv -f /opt/netrogat.txt /opt/zapret2/lists/netrogat.txt
-   echo "Востановление листа исключений выполнено."
- fi
- #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
- curl -L -o /opt/zapret2/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/config.default
- if command -v nft >/dev/null 2>&1; then
-  sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret2/config.default"
- fi
- curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-stun4all
- curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-discord-media
- cp -f /opt/zapret2/init.d/sysv/custom.d/50-stun4all /opt/zapret2/init.d/openwrt/custom.d/50-stun4all
- cp -f /opt/zapret2/init.d/sysv/custom.d/50-discord-media /opt/zapret2/init.d/openwrt/custom.d/50-discord-media
+  mkdir -p /opt/zapret2/lists /opt/zapret2/extra_strats /opt/zapret2/extra_strats/cache
+  for listfile in cloudflare-ipset.txt cloudflare-ipset_v6.txt netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do
+    curl -L -o /opt/zapret2/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/lists/$listfile
+  done
+  curl -L "https://github.com/IndeecFOX/zapret4rocket/z2r/fake_files.tar.gz" | tar -xz -C /opt/zapret2/files/fake
+  curl -L -o /opt/zapret2/extra_strats/UDP_YT_list.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/UDP/YT/List.txt
+  curl -L -o /opt/zapret2/extra_strats/TCP_RKN_list.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/RKN/List.txt
+  curl -L -o /opt/zapret2/extra_strats/TCP_YT_list.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/YT/List.txt
+  curl -L -o /opt/zapret2/extra_strats/TCP_GV_list.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/GV/List.txt
+  touch /opt/zapret2/lists/autohostlist.txt
+  if [ -d /opt/extra_strats ]; then
+    rm -rf /opt/zapret2/extra_strats
+    mv /opt/extra_strats /opt/zapret2/
+    echo "Востановление настроек подбора из резерва выполнено."
+  fi
+  if [ -f "/opt/netrogat.txt" ]; then
+    mv -f /opt/netrogat.txt /opt/zapret2/lists/netrogat.txt
+    echo "Востановление листа исключений выполнено."
+  fi
+  #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
+  curl -L -o /opt/zapret2/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/config.default
+  if command -v nft >/dev/null 2>&1; then
+    sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret2/config.default"
+  fi
+  curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-stun4all
+  curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-discord-media
+  cp -f /opt/zapret2/init.d/sysv/custom.d/50-stun4all /opt/zapret2/init.d/openwrt/custom.d/50-stun4all
+  cp -f /opt/zapret2/init.d/sysv/custom.d/50-discord-media /opt/zapret2/init.d/openwrt/custom.d/50-discord-media
 
 # cache
 mkdir -p /opt/zapret2/extra_strats/cache
