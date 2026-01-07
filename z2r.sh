@@ -98,6 +98,8 @@ source "$SCRIPT_DIR/zapret2/z2r_lib/actions.sh"
 # Определяем путь до init-скрипта zapret2 (OpenWRT vs остальные)
 if [ -f "/opt/zapret2/init.d/openwrt/zapret2" ]; then
   ZAPRET2_INIT="/opt/zapret2/init.d/openwrt/zapret2"
+elif [ -f "/opt/zapret2/init.d/sysv/zapret2" ]; then
+  ZAPRET2_INIT="/opt/zapret2/init.d/sysv/zapret2"
 else
   ZAPRET2_INIT="/opt/zapret2/init.d/sysv/zapret2"
 fi
@@ -141,10 +143,11 @@ get_repo() {
   if command -v nft >/dev/null 2>&1; then
     sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret2/config.default"
   fi
-  curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-stun4all
-  curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-discord-media
-  cp -f /opt/zapret2/init.d/sysv/custom.d/50-stun4all /opt/zapret2/init.d/openwrt/custom.d/50-stun4all
-  cp -f /opt/zapret2/init.d/sysv/custom.d/50-discord-media /opt/zapret2/init.d/openwrt/custom.d/50-discord-media
+  init_dir="$(dirname "$ZAPRET2_INIT")"
+  custom_dir="$init_dir/custom.d"
+  mkdir -p "$custom_dir"
+  curl -L -o "$custom_dir/50-stun4all" https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-stun4all
+  curl -L -o "$custom_dir/50-discord-media" https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-discord-media
 
 # cache
 mkdir -p /opt/zapret2/extra_strats/cache
