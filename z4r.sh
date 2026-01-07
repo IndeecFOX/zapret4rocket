@@ -110,11 +110,11 @@ change_user() {
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
  mkdir -p /opt/zapret2/lists /opt/zapret2/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret2/extra_strats/UDP/YT
- for listfile in cloudflare-ipset.txt cloudflare-ipset_v6.txt netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do curl -L -o /opt/zapret2/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/raw/z2r/lists/$listfile; done
- curl -L "https://github.com/IndeecFOX/zapret4rocket/raw/z2r/fake_files.tar.gz" | tar -xz -C /opt/zapret2/files/fake
- curl -L -o /opt/zapret2/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/raw/z2r/extra_strats/UDP/YT/List.txt
- curl -L -o /opt/zapret2/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/raw/z2r/extra_strats/TCP/RKN/List.txt
- curl -L -o /opt/zapret2/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/raw/z2r/extra_strats/TCP/YT/List.txt
+ for listfile in cloudflare-ipset.txt cloudflare-ipset_v6.txt netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do curl -L -o /opt/zapret2/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/lists/$listfile; done
+ curl -L "https://github.com/IndeecFOX/zapret4rocket/z2r/fake_files.tar.gz" | tar -xz -C /opt/zapret2/files/fake
+ curl -L -o /opt/zapret2/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/UDP/YT/List.txt
+ curl -L -o /opt/zapret2/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/RKN/List.txt
+ curl -L -o /opt/zapret2/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/YT/List.txt
  touch /opt/zapret2/lists/autohostlist.txt /opt/zapret2/extra_strats/UDP/YT/{1..8}.txt /opt/zapret2/extra_strats/TCP/RKN/{1..17}.txt /opt/zapret2/extra_strats/TCP/User/{1..17}.txt /opt/zapret2/extra_strats/TCP/YT/{1..17}.txt /opt/zapret2/extra_strats/TCP/GV/{1..17}.txt /opt/zapret2/extra_strats/TCP/temp/{1..17}.txt
  if [ -d /opt/extra_strats ]; then
   rm -rf /opt/zapret2/extra_strats
@@ -126,7 +126,7 @@ get_repo() {
    echo "Востановление листа исключений выполнено."
  fi
  #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
- curl -L -o /opt/zapret2/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/raw/z2r/config.default
+ curl -L -o /opt/zapret2/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/config.default
  if command -v nft >/dev/null 2>&1; then
   sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret2/config.default"
  fi
@@ -241,13 +241,13 @@ install_zapret_reboot() {
 #Для Entware Keenetic + merlin
 entware_fixes() {
  if [ "$hardware" = "keenetic" ]; then
-  curl -L -o /opt/zapret2/init.d/sysv/zapret2 https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/raw/z2r/Entware/zapret
+  curl -L -o /opt/zapret2/init.d/sysv/zapret2 https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/Entware/zapret
   chmod +x /opt/zapret2/init.d/sysv/zapret2
   echo "Права выданы /opt/zapret2/init.d/sysv/zapret2"
-  curl -L -o /opt/etc/ndm/netfilter.d/000-zapret.sh https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/raw/z2r/Entware/000-zapret.sh
+  curl -L -o /opt/etc/ndm/netfilter.d/000-zapret.sh https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/Entware/000-zapret.sh
   chmod +x /opt/etc/ndm/netfilter.d/000-zapret.sh
   echo "Права выданы /opt/etc/ndm/netfilter.d/000-zapret.sh"
-  curl -L -o /opt/etc/init.d/S00fix https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/raw/z2r/Entware/S00fix
+  curl -L -o /opt/etc/init.d/S00fix https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/Entware/S00fix
   chmod +x /opt/etc/init.d/S00fix
   echo "Права выданы /opt/etc/init.d/S00fix"
   cp -a /opt/zapret2/init.d/custom.d.examples.linux/10-keenetic-udp-fix /opt/zapret2/init.d/sysv/custom.d/10-keenetic-udp-fix
