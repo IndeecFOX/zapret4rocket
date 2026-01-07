@@ -1,6 +1,6 @@
 # ---- Provider detector integration ----
 # Используем provider.txt как основной источник правды (просто строка "Provider - City")
-PROVIDER_CACHE="/opt/zapret/extra_strats/cache/provider.txt"
+PROVIDER_CACHE="/opt/zapret2/extra_strats/cache/provider.txt"
 PROVIDER_MENU="Не определён"
 PROVIDER_INIT_DONE=0
 
