@@ -37,7 +37,7 @@ menu_action_update_config_reset() {
 
   backup_strats
 
-  /opt/zapret2/init.d/sysv/zapret2 stop
+  "$ZAPRET2_INIT" stop
 
   rm -rf /opt/zapret2/lists /opt/zapret2/extra_strats
 
@@ -56,7 +56,7 @@ menu_action_update_config_reset() {
 
   cp -f /opt/zapret2/config.default /opt/zapret2/config
 
-  /opt/zapret2/init.d/sysv/zapret2 start
+  "$ZAPRET2_INIT" start
 
   # ВАЖНО: check_access_list — это по сути интерактивный тест (он сам печатает и может ждать Enter),
   # поэтому лучше вызывать его из get_menu отдельным пунктом ("01"), а не тут.
@@ -71,10 +71,10 @@ menu_action_toggle_bolvan_ports() {
     sed -i '76s/443$/443,1400,3478-3481,5349,50000-50099,19294-19344/' /opt/zapret2/config
     sed -i 's/^--skip --filter-udp=50000/--filter-udp=50000/' "/opt/zapret2/config"
 
-    rm -f /opt/zapret2/init.d/sysv/custom.d/50-discord-media \
-          /opt/zapret2/init.d/sysv/custom.d/50-stun4all \
-          /opt/zapret2/init.d/openwrt/custom.d/50-stun4all \
-          /opt/zapret2/init.d/openwrt/custom.d/50-discord-media
+    init_dir="$(dirname "$ZAPRET2_INIT")"
+    custom_dir="$init_dir/custom.d"
+    rm -f "$custom_dir/50-discord-media" \
+          "$custom_dir/50-stun4all"
 
     echo -e "${green}Уход от скриптов bol-van. Выделены порты 50000-50099,1400,3478-3481,5349 и раскомментированы стратегии DS, WA, TG${plain}"
 
@@ -82,13 +82,13 @@ menu_action_toggle_bolvan_ports() {
     sed -i 's/443,1400,3478-3481,5349,50000-50099,19294-19344$/443/' /opt/zapret2/config
     sed -i 's/^--filter-udp=50000/--skip --filter-udp=50000/' "/opt/zapret2/config"
 
-    curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-stun4all \
+    init_dir="$(dirname "$ZAPRET2_INIT")"
+    custom_dir="$init_dir/custom.d"
+    mkdir -p "$custom_dir"
+    curl -L -o "$custom_dir/50-stun4all" \
       https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-stun4all
-    curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-discord-media \
+    curl -L -o "$custom_dir/50-discord-media" \
       https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-discord-media
-
-    cp -f /opt/zapret2/init.d/sysv/custom.d/50-stun4all /opt/zapret2/init.d/openwrt/custom.d/50-stun4all
-    cp -f /opt/zapret2/init.d/sysv/custom.d/50-discord-media /opt/zapret2/init.d/openwrt/custom.d/50-discord-media
 
     echo -e "${green}Работа от скриптов bol-van. Вернули строку к виду NFQWS_PORTS_UDP=443 и добавили \"--skip \" в начале строк стратегии войса${plain}"
   else
@@ -96,7 +96,7 @@ menu_action_toggle_bolvan_ports() {
     return 0
   fi
 
-  /opt/zapret2/init.d/sysv/zapret2 restart
+  "$ZAPRET2_INIT" restart
   echo -e "${green}Выполнение переключений завершено.${plain}"
   return 0
 }
@@ -105,13 +105,13 @@ menu_action_toggle_fwtype() {
   if grep -q '^FWTYPE=iptables$' "/opt/zapret2/config"; then
     sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret2/config"
     /opt/zapret2/install_prereq.sh
-    /opt/zapret2/init.d/sysv/zapret2 restart
+    "$ZAPRET2_INIT" restart
     echo -e "${green}Zapret moode: nftables.${plain}"
 
   elif grep -q '^FWTYPE=nftables$' "/opt/zapret2/config"; then
     sed -i 's/^FWTYPE=nftables$/FWTYPE=iptables/' "/opt/zapret2/config"
     /opt/zapret2/install_prereq.sh
-    /opt/zapret2/init.d/sysv/zapret2 restart
+    "$ZAPRET2_INIT" restart
     echo -e "${green}Zapret moode: iptables.${plain}"
 
   else
@@ -137,7 +137,7 @@ menu_action_toggle_udp_range() {
     return 0
   fi
 
-  /opt/zapret2/init.d/sysv/zapret2 restart
+  "$ZAPRET2_INIT" restart
   echo -e "${green}Выполнение переключений завершено.${plain}"
   return 0
 }

@@ -95,6 +95,16 @@ source "$SCRIPT_DIR/zapret2/z2r_lib/submenus.sh"
 #          menu_action_toggle_fwtype, menu_action_toggle_udp_range
 source "$SCRIPT_DIR/zapret2/z2r_lib/actions.sh" 
 
+# Определяем путь до init-скрипта zapret2 (OpenWRT vs остальные)
+if [ -f "/opt/zapret2/init.d/openwrt/zapret2" ]; then
+  ZAPRET2_INIT="/opt/zapret2/init.d/openwrt/zapret2"
+elif [ -f "/opt/zapret2/init.d/sysv/zapret2" ]; then
+  ZAPRET2_INIT="/opt/zapret2/init.d/sysv/zapret2"
+else
+  ZAPRET2_INIT="/opt/zapret2/init.d/sysv/zapret2"
+fi
+export ZAPRET2_INIT
+
 change_user() {
    if /opt/zapret2/nfq2/nfqws2 --dry-run --user="nobody" 2>&1 | grep -q "queue"; then
     echo "WS_USER=nobody"
@@ -113,7 +123,7 @@ get_repo() {
   for listfile in cloudflare-ipset.txt cloudflare-ipset_v6.txt netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do
     curl -L -o /opt/zapret2/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/lists/$listfile
   done
-  curl -L "https://github.com/IndeecFOX/zapret4rocket/z2r/fake_files.tar.gz" | tar -xz -C /opt/zapret2/files/fake
+  curl -L "https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/fake_files.tar.gz" | tar -xz -C /opt/zapret2/files/fake
   curl -L -o /opt/zapret2/extra_strats/UDP_YT_list.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/UDP/YT/List.txt
   curl -L -o /opt/zapret2/extra_strats/TCP_RKN_list.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/RKN/List.txt
   curl -L -o /opt/zapret2/extra_strats/TCP_YT_list.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/z2r/extra_strats/TCP/YT/List.txt
@@ -133,10 +143,11 @@ get_repo() {
   if command -v nft >/dev/null 2>&1; then
     sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret2/config.default"
   fi
-  curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-stun4all
-  curl -L -o /opt/zapret2/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-discord-media
-  cp -f /opt/zapret2/init.d/sysv/custom.d/50-stun4all /opt/zapret2/init.d/openwrt/custom.d/50-stun4all
-  cp -f /opt/zapret2/init.d/sysv/custom.d/50-discord-media /opt/zapret2/init.d/openwrt/custom.d/50-discord-media
+  init_dir="$(dirname "$ZAPRET2_INIT")"
+  custom_dir="$init_dir/custom.d"
+  mkdir -p "$custom_dir"
+  curl -L -o "$custom_dir/50-stun4all" https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-stun4all
+  curl -L -o "$custom_dir/50-discord-media" https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-discord-media
 
 # cache
 mkdir -p /opt/zapret2/extra_strats/cache
@@ -145,8 +156,8 @@ mkdir -p /opt/zapret2/extra_strats/cache
 
 #Удаление старого запрета, если есть
 remove_zapret() {
- if [ -f "/opt/zapret2/init.d/sysv/zapret2" ] && [ -f "/opt/zapret2/config" ]; then
- 	/opt/zapret2/init.d/sysv/zapret2 stop
+ if [ -f "$ZAPRET2_INIT" ] && [ -f "/opt/zapret2/config" ]; then
+ 	"$ZAPRET2_INIT" stop
  fi
  if [ -f "/opt/zapret2/config" ] && [ -f "/opt/zapret2/uninstall_easy.sh" ]; then
      echo "Выполняем zapret2/uninstall_easy.sh"
@@ -232,7 +243,7 @@ zapret_get() {
 #Запуск установочных скриптов и перезагрузка
 install_zapret_reboot() {
  sh -i /opt/zapret2/install_easy.sh
- /opt/zapret2/init.d/sysv/zapret2 restart
+ "$ZAPRET2_INIT" restart
  if pidof nfqws2 >/dev/null; then
   check_access_list
   echo -e "\033[32mzapret2 перезапущен и полностью установлен\n\033[33mЕсли требуется меню (например не работают какие-то ресурсы) - введите скрипт ещё раз или просто напишите "z4r" в терминале. Саппорт: tg: zee4r\033[0m"
@@ -259,7 +270,7 @@ entware_fixes() {
   if sed -n '167p' /opt/zapret2/install_easy.sh | grep -q '^nfqws_opt_validat'; then
 	sed -i '172s/return 1/return 0/' /opt/zapret2/install_easy.sh
   fi
-	grep -qxF '/opt/zapret2/init.d/sysv/zapret2 restart-fw' /jffs/scripts/firewall-start || echo '/opt/zapret2/init.d/sysv/zapret2 restart-fw' >> /jffs/scripts/firewall-start
+	grep -qxF "$ZAPRET2_INIT restart-fw" /jffs/scripts/firewall-start || echo "$ZAPRET2_INIT restart-fw" >> /jffs/scripts/firewall-start
 	chmod +x /jffs/scripts/firewall-start
  fi
  
@@ -277,8 +288,8 @@ entware_fixes() {
  fi
  #sed для пропуска запроса на прочтение readme, т.к. система entware. Дабы скрипт отрабатывал далее на Enter
  sed -i 's/if \[ -n "\$1" \] || ask_yes_no N "do you want to continue";/if true;/' /opt/zapret2/common/installer.sh
- ln -fs /opt/zapret2/init.d/sysv/zapret2 /opt/etc/init.d/S90-zapret2
- echo "Добавлено в автозагрузку: /opt/etc/init.d/S90-zapret2 > /opt/zapret2/init.d/sysv/zapret2"
+ ln -fs "$ZAPRET2_INIT" /opt/etc/init.d/S90-zapret2
+ echo "Добавлено в автозагрузку: /opt/etc/init.d/S90-zapret2 > $ZAPRET2_INIT"
 }
 
 #Запрос на установку 3x-ui или аналогов
@@ -494,10 +505,10 @@ Enter (без цифр) - переустановка/обновление zapret
 
   "2")
     if pidof nfqws2 >/dev/null; then
-      /opt/zapret2/init.d/sysv/zapret2 stop
+      "$ZAPRET2_INIT" stop
       echo -e "${green}Выполнена команда остановки zapret2${plain}"
     else
-      /opt/zapret2/init.d/sysv/zapret2 restart
+      "$ZAPRET2_INIT" restart
       echo -e "${green}Выполнена команда перезапуска zapret2${plain}"
     fi
     pause_enter

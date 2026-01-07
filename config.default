@@ -83,7 +83,7 @@ NFQWS2_UDP_PKT_IN=3
 NFQWS2_OPT="
 
 --debug=@/opt/zapret2/debug.log
---qnum 300 --filter-tcp=80,443,2053,2083,2087,2096,8443 <HOSTLIST> --in-range=-s5556 --lua-desync=circular --in-range=x
+--qnum 300 --filter-tcp=80,443,2053,2083,2087,2096,8443 --hostlist=/opt/zapret2/extra_strats/TCP_RKN_list.txt --hostlist=/opt/zapret2/extra_strats/TCP_YT_list.txt --in-range=-s5556 --lua-desync=circular --in-range=x
 
 # общий фильтр для всех стратегий
 
@@ -91,7 +91,7 @@ NFQWS2_OPT="
 --blob=google_www:@/opt/zapret/files/fake/tls_clienthello_www_google_com.bin
 --payload=tls_client_hello,http_req,http_reply 
 
---lua-desync=fake:blob=maxru:tcp_ts_up:strategy=1
+--lua-desync=multidisorder:pos=1,midsld:strategy=1
 --lua-desync=fake:blob=maxru:tls_mod=none:repeats=6:tcp_ts_up:strategy=2
 --lua-desync=fake:blob=google_www:repeats=6:tcp_ts_up:tcp_ack_inc=10000000:strategy=3
 --lua-desync=fake:blob=google_www:tls_mod=none:repeats=6:tcp_ts_up:tcp_ack_inc=2:strategy=4
@@ -137,19 +137,32 @@ NFQWS2_OPT="
 --lua-desync=fake:blob=0x00000000:tcp_seq=-3000:repeats=1 --lua-desync=fake:blob=fake_default_tls:tcp_seq=-3000:tls_mod=rnd,dupsid:repeats=1
 --new
 
---filter-udp=443 --hostlist=/opt/zapret2/yt.txt  --in-range=-s5556 --lua-desync=circular:fails=6:retrans=4 --in-range=x 
+--filter-udp=443 --hostlist=/opt/zapret2/extra_strats/UDP_YT_list.txt  --in-range=-s5556 --lua-desync=circular:fails=6:retrans=4 --in-range=x 
 --payload=quic_initial
 --blob=quic_google:@/opt/zapret/files/fake/quic_initial_www_google_com.bin
 --blob=quic5:@/opt/zapret/files/fake/quic_5.bin
 
 --lua-desync=fake:blob=quic5:ipfrag=cutoff3:repeats=3:strategy=1
 --lua-desync=udplen:increment=4:strategy=2 --lua-desync=fake:blob=quic5:ipfrag=cutoff3:repeats=2:strategy=2
---lua-desync=udplen:increment=8:pattern=0xFEA82025:strategy=2 --lua-desync=fake:blob=quic5:ipfrag=cutoff4:repeats=2:strategy=2
---lua-desync=udplen:increment=25:strategy=2 --lua-desync=fake:blob=quic5:repeats=2:ipfrag=cutoff3:strategy=2
---lua-desync=fake:blob=quic_google:ipfrag=cutoff3:repeats=6:strategy=2
---lua-desync=fake:blob=quic_google:repeats=6:strategy=2
---lua-desync=fake:blob=quic_google:repeats=8:strategy=2
---lua-desync=fake:blob=quic_google:repeats=11:strategy=2
+--lua-desync=udplen:increment=8:pattern=0xFEA82025:strategy=3 --lua-desync=fake:blob=quic5:ipfrag=cutoff4:repeats=2:strategy=3
+--lua-desync=udplen:increment=25:strategy=4 --lua-desync=fake:blob=quic5:repeats=2:ipfrag=cutoff3:strategy=4
+--lua-desync=fake:blob=quic_google:ipfrag=cutoff3:repeats=6:strategy=5
+--lua-desync=fake:blob=quic_google:repeats=6:strategy=6
+--lua-desync=fake:blob=quic_google:repeats=8:strategy=7
+--lua-desync=fake:blob=quic_google:repeats=11:strategy=8
+--new
+
+--filter-udp=50000-50099,1400,3478-3481,5349,19294-19344 
+--filter-l7=discord,stun 
+--payload=quic_initial 
+--blob=fake_quic_www_google:/opt/zapret/files/fake/quic_initial_www_google_com.bin 
+--lua-desync=fake:udp:blob=fake_quic_www_google:repeats=2
+--new
+
+--skip --filter-udp=1026-65531
+--blob=fake_quic_unknown_udp:/opt/zapret/files/fake/quic_initial_www_google_com.bin
+--lua-desync=fake:udp:blob=fake_quic_unknown_udp:ip_autottl=2:repeats=10
+
 "
 
 
