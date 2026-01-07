@@ -66,28 +66,28 @@ flowoffload_submenu() {
       "1")
         sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=software/' "/opt/zapret2/config"
         /opt/zapret2/install_prereq.sh
-        /opt/zapret2/init.d/sysv/zapret2 restart
+        "$ZAPRET2_INIT" restart
         echo -e "${green}FLOWOFFLOAD=software применён.${plain}"
         pause_enter
         ;;
       "2")
         sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=hardware/' "/opt/zapret2/config"
         /opt/zapret2/install_prereq.sh
-        /opt/zapret2/init.d/sysv/zapret2 restart
+        "$ZAPRET2_INIT" restart
         echo -e "${green}FLOWOFFLOAD=hardware применён.${plain}"
         pause_enter
         ;;
       "3")
         sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=none/' "/opt/zapret2/config"
         /opt/zapret2/install_prereq.sh
-        /opt/zapret2/init.d/sysv/zapret2 restart
+        "$ZAPRET2_INIT" restart
         echo -e "${green}FLOWOFFLOAD=none применён.${plain}"
         pause_enter
         ;;
       "4")
         sed -i 's/^FLOWOFFLOAD=.*/FLOWOFFLOAD=donttouch/' "/opt/zapret2/config"
         /opt/zapret2/install_prereq.sh
-        /opt/zapret2/init.d/sysv/zapret2 restart
+        "$ZAPRET2_INIT" restart
         echo -e "${green}FLOWOFFLOAD=donttouch применён.${plain}"
         pause_enter
         ;;
@@ -120,7 +120,7 @@ tcp443_submenu() {
         for i in $(seq 112 128); do
           if sed -n "${i}p" /opt/zapret2/config | grep -Fq -- '--filter-tcp=443 --hostlist-domains= --h'; then
             sed -i "${i}s#--filter-tcp=443 --hostlist-domains= --h#--filter-tcp=443 --hostlist-domains=none.dom --h#" /opt/zapret2/config
-            /opt/zapret2/init.d/sysv/zapret2 restart
+            "$ZAPRET2_INIT" restart
             echo -e "${green}Выполнена команда перезапуска zapret${plain}"
             echo "Безразборный режим отключен"
             break
@@ -132,7 +132,7 @@ tcp443_submenu() {
             echo -n > "/opt/zapret2/extra_strats/TCP/temp/$f_clear.txt"
           done
           sed -i "$((111 + answer_bezr))s/--hostlist-domains=none\.dom/--hostlist-domains=/" /opt/zapret2/config
-          /opt/zapret2/init.d/sysv/zapret2 restart
+          "$ZAPRET2_INIT" restart
           echo -e "${green}Выполнена команда перезапуска zapret. ${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443. Проверка доступа к meduza.io${plain}"
           check_access_list
         fi
