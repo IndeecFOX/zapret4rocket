@@ -83,7 +83,7 @@ NFQWS2_UDP_PKT_IN=3
 NFQWS2_OPT="
 
 --debug=@/opt/zapret2/debug.log
---qnum 300 --filter-tcp=80,443,2053,2083,2087,2096,8443 <HOSTLIST> --in-range=-s5556 --lua-desync=circular --in-range=x
+--qnum 300 --filter-tcp=80,443,2053,2083,2087,2096,8443 --hostlist=/opt/zapret2/extra_strats/TCP_RKN_list.txt --hostlist=/opt/zapret2/extra_strats/TCP_YT_list.txt --in-range=-s5556 --lua-desync=circular --in-range=x
 
 # общий фильтр для всех стратегий
 
@@ -91,7 +91,7 @@ NFQWS2_OPT="
 --blob=google_www:@/opt/zapret/files/fake/tls_clienthello_www_google_com.bin
 --payload=tls_client_hello,http_req,http_reply 
 
---lua-desync=fake:blob=maxru:tcp_ts_up:strategy=1
+--lua-desync=multidisorder:pos=1,midsld:strategy=1
 --lua-desync=fake:blob=maxru:tls_mod=none:repeats=6:tcp_ts_up:strategy=2
 --lua-desync=fake:blob=google_www:repeats=6:tcp_ts_up:tcp_ack_inc=10000000:strategy=3
 --lua-desync=fake:blob=google_www:tls_mod=none:repeats=6:tcp_ts_up:tcp_ack_inc=2:strategy=4
@@ -137,7 +137,7 @@ NFQWS2_OPT="
 --lua-desync=fake:blob=0x00000000:tcp_seq=-3000:repeats=1 --lua-desync=fake:blob=fake_default_tls:tcp_seq=-3000:tls_mod=rnd,dupsid:repeats=1
 --new
 
---filter-udp=443 --hostlist=/opt/zapret2/yt.txt  --in-range=-s5556 --lua-desync=circular:fails=6:retrans=4 --in-range=x 
+--filter-udp=443 --hostlist=/opt/zapret2/extra_strats/UDP_YT_list.txt  --in-range=-s5556 --lua-desync=circular:fails=6:retrans=4 --in-range=x 
 --payload=quic_initial
 --blob=quic_google:@/opt/zapret/files/fake/quic_initial_www_google_com.bin
 --blob=quic5:@/opt/zapret/files/fake/quic_5.bin
@@ -154,7 +154,7 @@ NFQWS2_OPT="
 
 
 # none,ipset,hostlist,autohostlist
-MODE_FILTER=hostlist
+MODE_FILTER=none
 
 # donttouch,none,software,hardware
 FLOWOFFLOAD=donttouch
