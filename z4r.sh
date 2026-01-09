@@ -256,8 +256,13 @@ entware_fixes() {
   if sed -n '167p' /opt/zapret/install_easy.sh | grep -q '^nfqws_opt_validat'; then
 	sed -i '172s/return 1/return 0/' /opt/zapret/install_easy.sh
   fi
-	grep -qxF '/opt/zapret/init.d/sysv/zapret restart-fw' /jffs/scripts/firewall-start || echo '/opt/zapret/init.d/sysv/zapret restart-fw' >> /jffs/scripts/firewall-start
+  FW="/jffs/scripts/firewall-start"
+  if [ ! -f "$FW" ]; then
+    echo "$FW не найден, пропускаю добавление правила"
+  else
+    grep -qxF '/opt/zapret/init.d/sysv/zapret restart-fw' "$FW" || echo '/opt/zapret/init.d/sysv/zapret restart-fw' >> "$FW"
 	chmod +x /jffs/scripts/firewall-start
+  fi
  fi
  
  sh /opt/zapret/install_bin.sh
