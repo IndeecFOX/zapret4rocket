@@ -663,9 +663,15 @@ commit_date=$(curl -s --max-time 30 "https://api.github.com/repos/IndeecFOX/zapr
 if [[ -z "$commit_date" ]]; then
     echo -e "${red}Не был получен доступ к api.github.com (таймаут 30 сек). Возможны проблемы при установке.${plain}"
 	if [ "$hardware" = "keenetic" ]; then
-		echo "Добавляем ip с от DNS 1.1.1.1 к api.github.com и пытаемся снова"
-		ndmc -c "ip host api.github.com $(nslookup api.github.com 1.1.1.1 | sed -n 's/^Address [0-9]*: \([0-9.]*\).*/\1/p' | tail -n1)"
-		echo -e "${yellow}zeefeer обновлен (UTC +0): $(curl -s --max-time 10 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+		echo "Добавляем ip с от DNS 8.8.8.8 к api.github.com и пытаемся снова"
+		IP_ghub=$(nslookup api.github.com 8.8.8.8 | sed -n '/^Name:/,$ s/^Address [0-9]*: \([0-9.]\{7,15\}\).*/\1/p' | head -n1)
+		if [ -z "$IP_ghub" ]; then
+    		echo "ERROR: api.github.com not resolved with 8.8.8.8 DNS"
+		else
+			echo $IP_ghub
+			ndmc -c "ip host api.github.com $IP_ghub"
+			echo -e "${yellow}zeefeer обновлен (UTC +0): $(curl -s --max-time 10 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+		fi
 	fi
 else
     echo -e "${yellow}zeefeer обновлен (UTC +0): $commit_date ${plain}"
@@ -675,8 +681,14 @@ fi
 if [[ -z "$(curl -s --max-time 10 "https://raw.githubusercontent.com/test")" ]]; then
     echo -e "${red}Не был получен доступ к raw.githubusercontent.com (таймаут 10 сек). Возможны проблемы при установке.${plain}"
 	if [ "$hardware" = "keenetic" ]; then
-		echo "Добавляем ip с от DNS 1.1.1.1 к raw.githubusercontent.com и пытаемся снова"
-		ndmc -c "ip host raw.githubusercontent.com $(nslookup raw.githubusercontent.com 1.1.1.1 | sed -n 's/^Address [0-9]*: \([0-9.]*\).*/\1/p' | tail -n1)"
+		echo "Добавляем ip с от DNS 8.8.8.8 к raw.githubusercontent.com и пытаемся снова"
+		IP_ghub2=$(nslookup raw.githubusercontent.com 8.8.8.8 | sed -n '/^Name:/,$ s/^Address [0-9]*: \([0-9.]\{7,15\}\).*/\1/p' | head -n1)
+		if [ -z "$IP_ghub2" ]; then
+    		echo "ERROR: raw.githubusercontent.com not resolved with 8.8.8.8 DNS"
+		else
+			echo $IP_ghub2
+			ndmc -c "ip host raw.githubusercontent.com $IP_ghub2"
+		fi
 	fi
 fi
 
