@@ -419,7 +419,7 @@ get_menu() {
     if [[ -s "$PREMIUM_TITLE_FILE" ]]; then
       TITLE_MENU_LINE="\n${pink}Титул:${plain} $(cat "$PREMIUM_TITLE_FILE")${yellow}\n"
     fi
-    clear
+    #clear
     echo -e "${cyan}========================================${plain}"
     echo -e "${Fcyan}     zeefeer4rocket by IndeecFOX     ${plain}"
     echo -e "${Fgreen}         Z4R - Zapret Manager          ${plain}"
@@ -448,7 +448,7 @@ Enter (без цифр) - переустановка/обновление zapret
 01. Проверить доступность сервисов (Тест не точен)
 1. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' ]'"${yellow}"'
 2. Стоп/пере(запуск) zapret (сейчас: '"$(pidof nfqws >/dev/null && echo "${green}Запущен${yellow}" || echo "${red}Остановлен${yellow}")"')
-3. Тут могла быть ваша реклама :D (Функция перенесена во 2 пункт. Резерв)
+3. Показать домены которые zapret посчитал не доступными
 4. Удалить zapret
 5. Обновить стратегии, сбросить листы подбора стратегий и исключений (есть бэкап)
 6. Исключить домен из zapret обработки
@@ -506,7 +506,8 @@ Enter (без цифр) - переустановка/обновление zapret
     ;;
 
   "3")
-    # Резерв: просто вернемся в меню
+    cat /opt/zapret/lists/autohostlist.txt
+	pause_enter
     ;;
 
   "4")
