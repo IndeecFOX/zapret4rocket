@@ -131,6 +131,14 @@ tcp443_submenu() {
             echo -n > "/opt/zapret/extra_strats/TCP/User/$f_clear.txt"
             echo -n > "/opt/zapret/extra_strats/TCP/temp/$f_clear.txt"
           done
+          echo "Добавить ru домены в исключения? (Обычно не заблокированы и могут ломаться режимом)"
+          read -re -p "Enter - да, 1 - нет: " add_ru
+          if [ -n "$add_ru" ]; then
+            echo "Пропуск добавления ru доменов."
+          else
+            echo "ru" >> /opt/zapret/lists/netrogat.txt
+            echo -e "Домены ru добавлены в исключения (netrogat.txt)."
+          fi
           sed -i "$((111 + answer_bezr))s/--hostlist-domains=none\.dom/--hostlist-domains=/" /opt/zapret/config
           /opt/zapret/init.d/sysv/zapret restart
           echo -e "${green}Выполнена команда перезапуска zapret. ${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443. Проверка доступа к meduza.io${plain}"
