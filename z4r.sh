@@ -260,7 +260,7 @@ entware_fixes() {
   if [ ! -f "$FW" ]; then
     echo "$FW не найден, пропускаю добавление правила"
   else
-    grep -qxF '/opt/zapret/init.d/sysv/zapret restart-fw' "$FW" || echo '/opt/zapret/init.d/sysv/zapret restart-fw' >> "$FW"
+    grep -qxF '/opt/zapret/init.d/sysv/zapret restart' "$FW" || echo '/opt/zapret/init.d/sysv/zapret restart' >> "$FW"
 	chmod +x /jffs/scripts/firewall-start
   fi
  fi
