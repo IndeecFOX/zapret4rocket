@@ -30,6 +30,7 @@ strategies_submenu() {
         ;;
       "5")
         local user_domain=""
+        echo "Через пробел можно указать несколько доменов, но проверка будет недоступна"
         read -re -p "Введите домен (например mydomain.com) или Enter для выхода: " user_domain
         [ -z "$user_domain" ] && continue
         Strats_Tryer "$user_domain"
