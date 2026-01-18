@@ -522,8 +522,15 @@ Enter (без цифр) - переустановка/обновление zapret
     ;;
 
   "6")
-    read -re -p "Введите домен, который добавить в исключения (например, mydomain.com): " user_domain
-    if [ -n "$user_domain" ]; then
+	read -re -p "Показать список доменов в исключениях? 1 - да, enter - нет: " open_netrogat
+    if [ "$open_netrogat" == "1" ]; then
+		cat /opt/zapret/lists/netrogat.txt
+		open_netrogat=""
+    fi
+    read -re -p "Введите домен, который добавить в исключения (например, mydomain.com или 0 для выхода): " user_domain
+	if [ "$user_domain" == "0" ] ; then
+	 echo "Ввод отменён"
+    elif [ -n "$user_domain" ]; then
       echo "$user_domain" >> /opt/zapret/lists/netrogat.txt
       echo -e "Домен ${yellow}$user_domain${plain} добавлен в исключения (netrogat.txt)."
     else
