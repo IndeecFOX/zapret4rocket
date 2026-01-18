@@ -109,8 +109,8 @@ try_strategies() {
             # Если передано дополнительное действие (final_action), выполняем его
             if [[ -n "$final_action" ]]; then
 				user_domain="$(echo "$user_domain" | sed 's/[[:space:]]\+/\n/g')"
-				echo "$user_domain" | tr ',' '\n' | sed 's/^[[:space:]]*//'
-                eval "$final_action"
+				echo "$user_domain" >> "/opt/zapret/extra_strats/TCP/User/\${strat_num}.txt\"
+                #eval "$final_action" заменили на прямую команду выше
             fi
             return
             
