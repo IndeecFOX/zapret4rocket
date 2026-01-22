@@ -420,26 +420,11 @@ get_menu() {
       TITLE_MENU_LINE="\n${pink}Титул:${plain} $(cat "$PREMIUM_TITLE_FILE")${yellow}\n"
     fi
     #clear
-    echo -e "${cyan}========================================${plain}"
-    echo -e "${Fcyan}     zeefeer4rocket by IndeecFOX     ${plain}"
-    echo -e "${Fgreen}         Z4R - Zapret Manager          ${plain}"
-    echo -e "${cyan}========================================${plain}"
-    echo ""
-    
     echo -e '
-'"${red}"'      *
-     ***            '"${Fcyan}"'by Dmitriy Utkin:
-      *
-'"${green}"'     /|\             '"${plain}"'.   .      .
-'"${green}"'    //|\\\             '"${plain}"'.     '"${Fred}"'* '"${plain}"'.   .
-'"${green}"'   ///|\\\\\                 '"${green}"'/ \  '"${plain}"'.
-'"${green}"'  ////|\\\\\\\           '"${plain}"'.   '"${green}"'/ '"${Fcyan}"'* '"${green}"'\      '"${plain}"'.
-'"${green}"'   ///|\\\\\\               '"${green}"'/  .  \   '"${plain}"'.
-'"${green}"'  ////|\\\\\\\\         '"${plain}"'.   '"${green}"'/ '"${Fpink}"'* . '"${Fyellow}"'* '"${green}"'\
-'"${green}"' /////|\\\\\\\\\\           '"${green}"'/  .   .  \  '"${plain}"'.
-'"${green}"'  ////|\\\\\\\\\      '"${plain}"'.   '"${green}"'/ '"${Fcyan}"'* . '"${plain}"'* . '"${Fred}"'* '"${green}"'\   '"${plain}"'.
-'"${green}"' /////|\\\\\\\\\\\        '"${green}"'/_____________\
-'"${green}"'//////|\\\\\\\\\\\\\      '"${plain}"'.     '"${green}"'[___]   '"${plain}"'.  .
+░░░▀▀█░█▀▀░█▀▀░█▀▀░█▀▀░█▀▀░█▀▄░░░
+░░░▄▀░░█▀▀░█▀▀░█▀▀░█▀▀░█▀▀░█▀▄░░░
+░░░▀▀▀░▀▀▀░▀▀▀░▀░░░▀▀▀░▀▀▀░▀░▀░░░
+
 '"Город/провайдер: ${plain}${PROVIDER_MENU}${yellow}"'
 '"${TITLE_MENU_LINE}"'
 \033[32mВыберите необходимое действие:\033[33m
