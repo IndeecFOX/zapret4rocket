@@ -529,6 +529,7 @@ Enter (без цифр) - переустановка/обновление zapret
     fi
 	echo "Через пробел можно укзазывать сразу несколько доменов"
     read -re -p "Введите домен, который добавить в исключения (например, mydomain.com или 0 для выхода): " user_domain
+	user_domain=$(sed -E 's~https?://~~g; s~([^[:space:]]+)/~\1~g' <<< "$user_domain")
 	user_domain="$(echo "$user_domain" | sed 's/[[:space:]]\+/\n/g')"
 	if [ "$user_domain" == "0" ] ; then
 	 echo "Ввод отменён"
