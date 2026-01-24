@@ -155,6 +155,7 @@ remove_zapret() {
  if [ -d "/opt/zapret" ]; then
      echo "Удаляем папку zapret"
      rm -rf /opt/zapret
+	 rm -rf /tmp/zapret
  else
      echo "Папка zapret не существует."
  fi
