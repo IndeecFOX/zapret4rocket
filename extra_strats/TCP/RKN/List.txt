@@ -1,3 +1,7 @@
+snd.sc
+sndcdn.com
+soundcloud.com
+userbenchmark.com
 mediafilez.forgecdn.net
 nhle.com
 meet.google.com
