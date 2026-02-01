@@ -3,7 +3,7 @@
 set -e
 
 #Переменная содержащая версию на случай невозможности получить информацию о lastest с github
-DEFAULT_VER="72.6"
+DEFAULT_VER="72.9"
 
 #Чтобы удобнее красить текст
 plain='\033[0m'
@@ -45,9 +45,9 @@ done
 
 if [ "$missing_libs" -ne 0 ]; then
   echo "Не найдены нужные файлы в $LIB_DIR. Запускаю внешний z4r..."
-  if command -v curl >/dev/null 2>&1; then
+  if which curl >/dev/null 2>&1; then
     exec sh -c 'curl -fsSL "https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r" | sh'
-  elif command -v wget >/dev/null 2>&1; then
+  elif which wget >/dev/null 2>&1; then
     exec sh -c 'wget -qO- "https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r" | sh'
   else
     echo "Ошибка: нет curl или wget для загрузки внешнего z4r."
@@ -78,7 +78,7 @@ source "$SCRIPT_DIR/zapret/z4r_lib/recommendations.sh"
 # Функции: get_yt_cluster_domain, check_access, check_access_list
 source "$SCRIPT_DIR/zapret/z4r_lib/netcheck.sh"
 
-# “Premium” пункты 777/999 и их вспомогательные эффекты (рандом, спиннер, титулы)
+# "Premium" пункты 777/999 и их вспомогательные эффекты (рандом, спиннер, титулы)
 # Функции: rand_from_list, spinner_for_seconds, premium_get_or_set_title, zefeer_premium_777, zefeer_space_999
 source "$SCRIPT_DIR/zapret/z4r_lib/premium.sh" 
 
@@ -98,7 +98,7 @@ source "$SCRIPT_DIR/zapret/z4r_lib/actions.sh"
 change_user() {
    if /opt/zapret/nfq/nfqws --dry-run --user="nobody" 2>&1 | grep -q "queue"; then
     echo "WS_USER=nobody"
-	sed -i 's/^#\(WS_USER=nobody\)/\1/' /opt/zapret/config.default
+    sed -i 's/^#\(WS_USER=nobody\)/\1/' /opt/zapret/config.default
    elif /opt/zapret/nfq/nfqws --dry-run --user="$(head -n1 /etc/passwd | cut -d: -f1)" 2>&1 | grep -q "queue"; then
     echo "WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)"
     sed -i "s/^#WS_USER=nobody$/WS_USER=$(head -n1 /etc/passwd | cut -d: -f1)/" "/opt/zapret/config.default"
@@ -119,15 +119,15 @@ get_repo() {
  if [ -d /opt/extra_strats ]; then
   rm -rf /opt/zapret/extra_strats
   mv /opt/extra_strats /opt/zapret/
-  echo "Востановление настроек подбора из резерва выполнено."
+  echo "Восстановление настроек подбора из резерва выполнено."
  fi
  if [ -f "/opt/netrogat.txt" ]; then
    mv -f /opt/netrogat.txt /opt/zapret/lists/netrogat.txt
-   echo "Востановление листа исключений выполнено."
+   echo "Восстановление листа исключений выполнено."
  fi
  #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
  curl -L -o /opt/zapret/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/config.default
- if command -v nft >/dev/null 2>&1; then
+ if which nft >/dev/null 2>&1; then
   sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret/config.default"
  fi
  curl -L -o /opt/zapret/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-stun4all
@@ -143,7 +143,7 @@ mkdir -p /opt/zapret/extra_strats/cache
 #Удаление старого запрета, если есть
 remove_zapret() {
  if [ -f "/opt/zapret/init.d/sysv/zapret" ] && [ -f "/opt/zapret/config" ]; then
- 	/opt/zapret/init.d/sysv/zapret stop
+    /opt/zapret/init.d/sysv/zapret stop
  fi
  if [ -f "/opt/zapret/config" ] && [ -f "/opt/zapret/uninstall_easy.sh" ]; then
      echo "Выполняем zapret/uninstall_easy.sh"
@@ -155,7 +155,6 @@ remove_zapret() {
  if [ -d "/opt/zapret" ]; then
      echo "Удаляем папку zapret"
      rm -rf /opt/zapret
-	 rm -rf /tmp/zapret
  else
      echo "Папка zapret не существует."
  fi
@@ -164,40 +163,40 @@ remove_zapret() {
 #Запрос желаемой версии zapret
 version_select() {
    while true; do
-	read -re -p $'\033[0;32mВведите желаемую версию zapret (Enter для новейшей версии): \033[0m' VER
+    read -re -p $'\033[0;32mВведите желаемую версию zapret (Enter для новейшей версии): \033[0m' VER
     # Если пустой ввод — берем значение по умолчанию
-	if [ -z "$VER" ]; then
-		lastest_release="https://api.github.com/repos/bol-van/zapret/releases/latest"
-	    # проверяем результаты по порядку
-		echo -e "${yellow}Поиск последней версии...${plain}"
-    	VER1=$(curl -sL $lastest_release | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
-		if [ ${#VER1} -ge 2 ]; then
-			VER="$VER1"
-			echo -e "${green}Выбрано: $VER (метод: sed -E)${plain}"
-		else
-			VER2=$(curl -sL $lastest_release | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 | sed 's/^v//')
-			if [ ${#VER2} -ge 2 ]; then
-				VER="$VER2"
-				echo -e "${green}Выбрано: $VER (метод: grep+cut)${plain}"
-			else
-				VER3=$(curl -sL $lastest_release | grep '"tag_name":' | sed -r 's/.*"v([^"]+)".*/\1/')
-				if [ ${#VER3} -ge 2 ]; then
-					VER="$VER3"
-					echo -e "${green}Выбрано: $VER (метод: sed -r)${plain}"
-				else
-					VER4=$(curl -sL $lastest_release | grep '"tag_name":' | awk -F'"' '{print $4}' | sed 's/^v//')
-					if [ ${#VER4} -ge 2 ]; then
-						VER="$VER4"
-						echo -e "${green}Выбрано: $VER (метод: awk)${plain}"
-					else
-						echo -e "${yellow}Не удалось получить информацию о последней версии с GitHub. Будет использоваться версия $DEFAULT_VER.${plain}"
-						VER="$DEFAULT_VER"
-					fi
-				fi
-			fi
-    	fi
-    	break
-	fi
+    if [ -z "$VER" ]; then
+        lastest_release="https://api.github.com/repos/bol-van/zapret/releases/latest"
+        # проверяем результаты по порядку
+        echo -e "${yellow}Поиск последней версии...${plain}"
+        VER1=$(curl -sL $lastest_release | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+        if [ ${#VER1} -ge 2 ]; then
+            VER="$VER1"
+            echo -e "${green}Выбрано: $VER (метод: sed -E)${plain}"
+        else
+            VER2=$(curl -sL $lastest_release | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 | sed 's/^v//')
+            if [ ${#VER2} -ge 2 ]; then
+                VER="$VER2"
+                echo -e "${green}Выбрано: $VER (метод: grep+cut)${plain}"
+            else
+                VER3=$(curl -sL $lastest_release | grep '"tag_name":' | sed -r 's/.*"v([^"]+)".*/\1/')
+                if [ ${#VER3} -ge 2 ]; then
+                    VER="$VER3"
+                    echo -e "${green}Выбрано: $VER (метод: sed -r)${plain}"
+                else
+                    VER4=$(curl -sL $lastest_release | grep '"tag_name":' | awk -F'"' '{print $4}' | sed 's/^v//')
+                    if [ ${#VER4} -ge 2 ]; then
+                        VER="$VER4"
+                        echo -e "${green}Выбрано: $VER (метод: awk)${plain}"
+                    else
+                        echo -e "${yellow}Не удалось получить информацию о последней версии с GitHub. Будет использоваться версия $DEFAULT_VER.${plain}"
+                        VER="$DEFAULT_VER"
+                    fi
+                fi
+            fi
+        fi
+        break
+    fi
     #Считаем длину
     LEN=${#VER}
     #Проверка длины и простая валидация формата (цифры и точки)
@@ -213,7 +212,7 @@ version_select() {
 done
 }
 
-#Скачивание, распаковка архива zapret, очистка от ненуных бинарей
+#Скачивание, распаковка архива zapret, очистка от ненужных бинарей
 zapret_get() {
  if [[ "$OSystem" == "VPS" ]]; then
      tarfile="zapret-v$VER.tar.gz"
@@ -255,14 +254,14 @@ entware_fixes() {
   echo "10-keenetic-udp-fix скопирован"
  elif [ "$hardware" = "merlin" ]; then
   if sed -n '167p' /opt/zapret/install_easy.sh | grep -q '^nfqws_opt_validat'; then
-	sed -i '172s/return 1/return 0/' /opt/zapret/install_easy.sh
+    sed -i '172s/return 1/return 0/' /opt/zapret/install_easy.sh
   fi
   FW="/jffs/scripts/firewall-start"
   if [ ! -f "$FW" ]; then
     echo "$FW не найден, пропускаю добавление правила"
   else
     grep -qxF '/opt/zapret/init.d/sysv/zapret restart' "$FW" || echo '/opt/zapret/init.d/sysv/zapret restart' >> "$FW"
-	chmod +x /jffs/scripts/firewall-start
+    chmod +x /jffs/scripts/firewall-start
   fi
  fi
  
@@ -271,7 +270,7 @@ entware_fixes() {
  # #Раскомменчивание юзера под keenetic или merlin
  change_user
  #Патчинг на некоторых merlin /opt/zapret/common/linux_fw.sh
- if command -v sysctl >/dev/null 2>&1; then
+ if which sysctl >/dev/null 2>&1; then
   echo "sysctl доступен. Патч linux_fw.sh не требуется"
  else
   echo "sysctl отсутствует. MerlinWRT? Патчим /opt/zapret/common/linux_fw.sh"
@@ -282,6 +281,45 @@ entware_fixes() {
  sed -i 's/if \[ -n "\$1" \] || ask_yes_no N "do you want to continue";/if true;/' /opt/zapret/common/installer.sh
  ln -fs /opt/zapret/init.d/sysv/zapret /opt/etc/init.d/S90-zapret
  echo "Добавлено в автозагрузку: /opt/etc/init.d/S90-zapret > /opt/zapret/init.d/sysv/zapret"
+}
+
+#Alpine Linux fixes
+alpine_fixes() {
+    echo -e "${yellow}Применяем исправления для Alpine Linux...${plain}"
+    
+    # Устанавливаем необходимые пакеты
+    apk update
+    apk add --no-cache coreutils grep gzip ipset xtables-addons nftables
+    
+    # Проверяем наличие nftables
+    if which nft >/dev/null 2>&1; then
+        echo "nftables доступен"
+        apk add nftables
+    fi
+    
+    # Создаем необходимые симлинки для совместимости
+    if [ ! -f /usr/sbin/ip ] && [ -f /sbin/ip ]; then
+        ln -sf /sbin/ip /usr/sbin/ip
+    fi
+    
+    if [ ! -f /usr/sbin/iptables ] && [ -f /sbin/iptables ]; then
+        ln -sf /sbin/iptables /usr/sbin/iptables
+    fi
+    
+    # Патчим скрипты для работы с OpenRC
+    if [ -f /opt/zapret/install_easy.sh ]; then
+        # Заменяем sysctl на прямой запись в /proc/sys
+        sed -i 's|sysctl -w net.netfilter.nf_conntrack_tcp_be_liberal=\$1|echo \$1 > /proc/sys/net/netfilter/nf_conntrack_tcp_be_liberal|' /opt/zapret/common/linux_fw.sh 2>/dev/null || true
+        sed -i 's|sysctl -q -w net.ipv4.conf.\$1.route_localnet="\$enable"|echo "\$enable" > /proc/sys/net/ipv4/conf/\$1/route_localnet|' /opt/zapret/common/linux_iphelper.sh 2>/dev/null || true
+    fi
+    
+    # Добавляем zapret в автозагрузку через OpenRC
+    if [ -d /etc/init.d ]; then
+        ln -sf /opt/zapret/init.d/sysv/zapret /etc/init.d/zapret 2>/dev/null || true
+        rc-update add zapret default 2>/dev/null || echo "Не удалось добавить zapret в автозагрузку OpenRC"
+    fi
+    
+    echo -e "${green}Исправления для Alpine Linux применены${plain}"
 }
 
 #Запрос на установку 3x-ui или аналогов
@@ -299,10 +337,14 @@ get_panel() {
      bash <(curl -Ls https://raw.githubusercontent.com/angristan/wireguard-install/refs/heads/master/wireguard-install.sh)
  elif [[ "$clean_answer" == "3PROXY" ]]; then
      echo "Установка 3proxy (by SnoyIatk). Доустановка с apt build-essential для сборки (debian/ubuntu)"
-	 apt update && apt install build-essential
-     bash <(curl -Ls https://raw.githubusercontent.com/SnoyIatk/3proxy/master/3proxyinstall.sh)
-     curl -L -o /etc/3proxy/.proxyauth https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/refs/heads/master/del.proxyauth
-     curl -L -o /etc/3proxy/3proxy.cfg https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/refs/heads/master/3proxy.cfg
+	if which apt >/dev/null 2>&1; then
+ 	   apt update && apt install build-essential -y
+	elif which apk >/dev/null 2>&1; then
+  	  apk update && apk add build-base
+	fi
+    bash <(curl -Ls https://raw.githubusercontent.com/SnoyIatk/3proxy/master/3proxyinstall.sh)
+    curl -L -o /etc/3proxy/.proxyauth https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/refs/heads/master/del.proxyauth
+    curl -L -o /etc/3proxy/3proxy.cfg https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/refs/heads/master/3proxy.cfg
  elif [[ "$clean_answer" == "MARZBAN" ]]; then
      echo "Установка Marzban"
      bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install
@@ -319,17 +361,58 @@ ttyd_webssh() {
  
  ttyd_login_have="-c "${ttyd_login}": bash z4r"
  if [[ "$ttyd_login" == "0" ]]; then
-	echo "Отключение логина в веб. Перевод с z4r на CLI логин."
+    echo "Отключение логина в веб. Перевод с z4r на CLI логин."
     ttyd_login_have="login"
  fi
  
  if [[ "$OSystem" == "VPS" ]]; then
-	echo -e "${yellow}Установка ttyd for VPS${plain}"
-	systemctl stop ttyd 2>/dev/null || true
-	curl -L -o /usr/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64
-	chmod +x /usr/bin/ttyd
-	
-	cat > /etc/systemd/system/ttyd.service <<EOF
+    echo -e "${yellow}Установка ttyd for VPS${plain}"
+    systemctl stop ttyd 2>/dev/null || true
+    # Для Alpine используем apk, для других - скачиваем бинарник
+    if which apk >/dev/null 2>&1; then
+        apk add ttyd
+    else
+        curl -L -o /usr/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64
+        chmod +x /usr/bin/ttyd
+    fi
+    
+    # Для Alpine (OpenRC)
+    if [ -d /etc/init.d ]; then
+        cat > /etc/init.d/ttyd <<EOF
+#!/sbin/openrc-run
+
+name="ttyd"
+description="ttyd WebSSH Service"
+command="/usr/bin/ttyd"
+command_args="-p 17681 -W -a ${ttyd_login_have}"
+command_background=true
+pidfile="/run/\${RC_SVCNAME}.pid"
+output_log="/var/log/ttyd.log"
+error_log="/var/log/ttyd.err"
+
+depend() {
+    need net
+    after firewall
+}
+
+start_pre() {
+    checkpath -d -m 0755 -o root:root /run
+}
+
+start_post() {
+    echo "ttyd started on port 17681"
+}
+
+stop_post() {
+    echo "ttyd stopped"
+}
+EOF
+        chmod +x /etc/init.d/ttyd
+        rc-update add ttyd default
+        rc-service ttyd start
+    else
+        # Для systemd
+        cat > /etc/systemd/system/ttyd.service <<EOF
 [Unit]
 Description=ttyd WebSSH Service
 After=network.target
@@ -342,25 +425,39 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
-
-	systemctl daemon-reload
-	systemctl enable ttyd
-	systemctl start ttyd
+        systemctl daemon-reload
+        systemctl enable ttyd
+        systemctl start ttyd
+    fi
  elif [[ "$OSystem" == "WRT" ]]; then
-	echo -e "${yellow}Установка ttyd for WRT${plain}"
-	/etc/init.d/ttyd stop 2>/dev/null || true
-	opkg install ttyd 2>/dev/null || apk add ttyd 2>/dev/null
-    uci set ttyd.@ttyd[0].interface=''
-    uci set ttyd.@ttyd[0].command="-p 17681 -W -a ${ttyd_login_have}"
-	uci commit ttyd
-	/etc/init.d/ttyd enable
-	/etc/init.d/ttyd start
+    echo -e "${yellow}Установка ttyd for WRT${plain}"
+    /etc/init.d/ttyd stop 2>/dev/null || true
+    if which opkg >/dev/null 2>&1; then
+        opkg install ttyd 2>/dev/null
+    elif which apk >/dev/null 2>&1; then
+        apk add ttyd 2>/dev/null
+    fi
+    if [ -f /etc/config/ttyd ]; then
+        uci set ttyd.@ttyd[0].interface=''
+        uci set ttyd.@ttyd[0].command="-p 17681 -W -a ${ttyd_login_have}"
+        uci commit ttyd
+    fi
+    if [ -f /etc/init.d/ttyd ]; then
+        /etc/init.d/ttyd enable
+        /etc/init.d/ttyd start
+    else
+        echo "ttyd init скрипт не найден"
+    fi
  elif [[ "$OSystem" == "entware" ]]; then
-	echo -e "${yellow}Установка ttyd for Entware${plain}"
-	/opt/etc/init.d/S99ttyd stop 2>/dev/null || true
-	opkg install ttyd 2>/dev/null || apk add ttyd 2>/dev/null
-	
-	cat > /opt/etc/init.d/S99ttyd <<EOF
+    echo -e "${yellow}Установка ttyd for Entware${plain}"
+    /opt/etc/init.d/S99ttyd stop 2>/dev/null || true
+    if which opkg >/dev/null 2>&1; then
+        opkg install ttyd 2>/dev/null
+    elif which apk >/dev/null 2>&1; then
+        apk add ttyd 2>/dev/null
+    fi
+    
+    cat > /opt/etc/init.d/S99ttyd <<EOF
 #!/bin/sh
 
 START=99
@@ -389,19 +486,19 @@ EOF
   chmod +x /opt/etc/init.d/S99ttyd
   /opt/etc/init.d/S99ttyd start
   sleep 1
-  if netstat -tuln | grep -q ':17681'; then
-	echo -e "${green}Порт 17681 для службы ttyd слушается${plain}"
+  if netstat -tuln 2>/dev/null | grep -q ':17681'; then
+    echo -e "${green}Порт 17681 для службы ttyd слушается${plain}"
   else
-	echo -e "${red}Порт 17681 для службы ttyd не прослушивается${plain}"
+    echo -e "${red}Порт 17681 для службы ttyd не прослушивается${plain}"
   fi
  fi
 
  if pidof ttyd >/dev/null; then
-	echo -e "Проверка...${green}Служба ttyd запущена.${plain}"
+    echo -e "Проверка...${green}Служба ttyd запущена.${plain}"
  else
-	echo -e "Проверка...${red}Служба ttyd не запущена! Если у вас Entware, то после перезагрузки роутера служба скорее всего заработает!${plain}"
+    echo -e "Проверка...${red}Служба ttyd не запущена! Если у вас Entware, то после перезагрузки роутера служба скорее всего заработает!${plain}"
  fi
- echo -e "${plain}Выполнение установки завершено. ${green}Доступ по ip вашего роутера/VPS в формате ip:17681, например 192.168.1.1:17681 или mydomain.com:17681 ${yellow}логин: ${ttyd_login} пароль - не испольузется.${plain} Был выполнен выход из скрипта для сохранения состояния."
+ echo -e "${plain}Выполнение установки завершено. ${green}Доступ по ip вашего роутера/VPS в формате ip:17681, например 192.168.1.1:17681 или mydomain.com:17681 ${yellow}логин: ${ttyd_login} пароль - не используется.${plain} Был выполнен выход из скрипта для сохранения состояния."
 }
 
 #Меню, проверка состояний и вывод с чтением ответа
@@ -414,9 +511,9 @@ get_menu() {
     init_telemetry
     update_recommendations  
   while true; do
-  	local strategies_status
+    local strategies_status
     strategies_status=$(get_current_strategies_info)
-	TITLE_MENU_LINE=""
+    TITLE_MENU_LINE=""
     if [[ -s "$PREMIUM_TITLE_FILE" ]]; then
       TITLE_MENU_LINE="\n${pink}Титул:${plain} $(cat "$PREMIUM_TITLE_FILE")${yellow}\n"
     fi
@@ -439,14 +536,14 @@ Enter (без цифр) - переустановка/обновление zapret
 5. Обновить стратегии, сбросить листы подбора стратегий и исключений (есть бэкап)
 6. Исключить домен из zapret обработки
 7. Открыть в редакторе config (Установит nano редактор ~250kb)
-8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '"${plain}"'['"$(grep -Eq '^NFQWS_PORTS_UDP=.*443$' /opt/zapret/config && echo "Скрипты" || (grep -Eq '443,1400,3478-3481,5349,50000-50099,19294-19344$' /opt/zapret/config && echo "Классические стратегии" || echo "Незвестно"))"']'"${yellow}"'
+8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '"${plain}"'['"$(grep -Eq '^NFQWS_PORTS_UDP=.*443$' /opt/zapret/config && echo "Скрипты" || (grep -Eq '443,1400,3478-3481,5349,50000-50099,19294-19344$' /opt/zapret/config && echo "Классические стратегии" || echo "Неизвестно"))"']'"${yellow}"'
 9. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '"${plain}"'['"$(grep -q '^FWTYPE=iptables$' /opt/zapret/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret/config && echo "nftables" || echo "Неизвестно"))"']'"${yellow}"'
 10. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '"${plain}"'['"$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=1026-65531,443' /opt/zapret/config && echo "Включен" || echo "Неизвестно"))"']'"${yellow}"'
 11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret/config)"']'"${yellow}"'
 12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '"${plain}"'['"$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")"']'"${yellow}"'
-13. Активировать доступ в меню через браузер (~3мб места)
+13. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
 14. Провайдер
-777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, Nomand, Kovi, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
+777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
     if [[ -f "$PREMIUM_FLAG" ]]; then
       echo -e "${red}999. Секретный пункт. Нажимать на свой страх и риск${plain}"
     fi
@@ -457,7 +554,7 @@ Enter (без цифр) - переустановка/обновление zapret
     echo -e "${yellow}5 - Да, Enter/0 - Нет (вернуться в меню)${plain}"
     read -r ans
     if [ "$ans" = "5" ] || [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
-      # подтверждение: выходим из get_menu и уходим в “тело” (переустановка/обновление)
+      # подтверждение: выходим из get_menu и уходим в "тело" (переустановка/обновление)
       return 0
     else
       # отмена: остаёмся в меню, цикл while true продолжится
@@ -493,7 +590,7 @@ Enter (без цифр) - переустановка/обновление zapret
 
   "3")
     cat /opt/zapret/lists/autohostlist.txt
-	pause_enter
+    pause_enter
     ;;
 
   "4")
@@ -508,17 +605,17 @@ Enter (без цифр) - переустановка/обновление zapret
     ;;
 
   "6")
-	read -re -p "Показать список доменов в исключениях? 1 - да, enter - нет: " open_netrogat
+    read -re -p "Показать список доменов в исключениях? 1 - да, enter - нет: " open_netrogat
     if [ "$open_netrogat" == "1" ]; then
-		cat /opt/zapret/lists/netrogat.txt
-		open_netrogat=""
+        cat /opt/zapret/lists/netrogat.txt
+        open_netrogat=""
     fi
-	echo "Через пробел можно укзазывать сразу несколько доменов"
+    echo "Через пробел можно указывать сразу несколько доменов"
     read -re -p "Введите домен, который добавить в исключения (например: test.com или https://test.com/ или 0 для выхода): " user_domain
-	user_domain=$(sed -E 's~https?://~~g; s~([^[:space:]]+)/~\1~g' <<< "$user_domain")
-	user_domain="$(echo "$user_domain" | sed 's/[[:space:]]\+/\n/g')"
-	if [ "$user_domain" == "0" ] ; then
-	 echo "Ввод отменён"
+    user_domain=$(sed -E 's~https?://~~g; s~([^[:space:]]+)/~\1~g' <<< "$user_domain")
+    user_domain="$(echo "$user_domain" | sed 's/[[:space:]]\+/\n/g')"
+    if [ "$user_domain" == "0" ] ; then
+     echo "Ввод отменён"
     elif [ -n "$user_domain" ]; then
       echo "$user_domain" >> /opt/zapret/lists/netrogat.txt
       echo -e "Домен ${yellow}$user_domain${plain} добавлен в исключения (netrogat.txt)."
@@ -530,10 +627,19 @@ Enter (без цифр) - переустановка/обновление zapret
 
   "7")
     if [[ "$OSystem" == "VPS" ]]; then
-      apt install nano
+      if which apt >/dev/null 2>&1; then
+        apt install nano -y
+      elif which apk >/dev/null 2>&1; then
+        apk add nano
+      fi
     else
-      opkg remove nano 2>/dev/null || apk del nano 2>/dev/null
-      opkg install nano-full 2>/dev/null || apk add nano-full 2>/dev/null
+      if which opkg >/dev/null 2>&1; then
+        opkg remove nano 2>/dev/null
+        opkg install nano-full 2>/dev/null
+      elif which apk >/dev/null 2>&1; then
+        apk del nano 2>/dev/null
+        apk add nano 2>/dev/null
+      fi
     fi
     nano /opt/zapret/config
     # после выхода из nano
@@ -607,11 +713,17 @@ else
     echo "Не удалось определить ОС. Прекращение работы скрипта." >&2
     exit 1
 fi
+
+# Определение Alpine Linux
+if [[ "$ID" == "alpine" ]] || grep -qi "alpine" /etc/os-release 2>/dev/null || [ -f /etc/alpine-release ]; then
+    release="alpine"
+fi
+
 if [[ "$release" == "entware" ]]; then
  if [ -d /jffs ] || uname -a | grep -qi "Merlin"; then
     hardware="merlin"
  elif grep -Eqi "netcraze|keenetic" /proc/version; then
-   	hardware="keenetic"
+    hardware="keenetic"
  else
   echo -e "${yellow}Железо не определено. Будем считать что это Keenetic. Если будут проблемы - пишите в саппорт.${plain}"
   hardware="keenetic"
@@ -627,49 +739,55 @@ fi
 
 #Запуск скрипта под нужную версию
 if [[ "$release" == "ubuntu" || "$release" == "debian" || "$release" == "endeavouros" || "$release" == "arch" ]]; then
-	OSystem="VPS"
+    OSystem="VPS"
 elif [[ "$release" == "openwrt" || "$release" == "immortalwrt" || "$release" == "asuswrt" || "$release" == "x-wrt" || "$release" == "kwrt" || "$release" == "istoreos" ]]; then
-	OSystem="WRT"
+    OSystem="WRT"
 elif [[ "$release" == "entware" || "$hardware" = "keenetic" ]]; then
-	OSystem="entware"
+    OSystem="entware"
+elif [[ "$release" == "alpine" ]]; then
+    OSystem="alpine"
 else
-	read -re -p $'\033[31mДля этой ОС нет подходящей функции. Или ОС определение выполнено некорректно.\033[33m Рекомендуется обратиться в чат поддержки
+    read -re -p $'\033[31mДля этой ОС нет подходящей функции. Или ОС определение выполнено некорректно.\033[33m Рекомендуется обратиться в чат поддержки
 Enter - выход
 1 - Плюнуть и продолжить как OpenWRT
 2 - Плюнуть и продолжить как entware
-3 - Плюнуть и продолжить как VPS\033[0m\n' os_answer
-	case "$os_answer" in
-	"1")
-		OSystem="WRT"
-	;;
-	"2")
-		OSystem="entware"
-	;;
-	"3")
-		OSystem="VPS"
-	;;
-	*)
-		echo "Выбран выход"
-		exit 0
-	;;
-esac 
+3 - Плюнуть и продолжить как VPS
+4 - Плюнуть и продолжить как Alpine\033[0m\n' os_answer
+    case "$os_answer" in
+    "1")
+        OSystem="WRT"
+    ;;
+    "2")
+        OSystem="entware"
+    ;;
+    "3")
+        OSystem="VPS"
+    ;;
+    "4")
+        OSystem="alpine"
+    ;;
+    *)
+        echo "Выбран выход"
+        exit 0
+    ;;
+    esac 
 fi
 
-#Инфа о времени обновления скрпта
+#Инфа о времени обновления скрипта
 commit_date=$(curl -s --max-time 30 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4)
 if [[ -z "$commit_date" ]]; then
     echo -e "${red}Не был получен доступ к api.github.com (таймаут 30 сек). Возможны проблемы при установке.${plain}"
-	if [ "$hardware" = "keenetic" ]; then
-		echo "Добавляем ip с от DNS 8.8.8.8 к api.github.com и пытаемся снова"
-		IP_ghub=$(nslookup api.github.com 8.8.8.8 | sed -n '/^Name:/,$ s/^Address [0-9]*: \([0-9.]\{7,15\}\).*/\1/p' | head -n1)
-		if [ -z "$IP_ghub" ]; then
-    		echo "ERROR: api.github.com not resolved with 8.8.8.8 DNS"
-		else
-			echo $IP_ghub
-			ndmc -c "ip host api.github.com $IP_ghub"
-			echo -e "${yellow}zeefeer обновлен (UTC +0): $(curl -s --max-time 10 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
-		fi
-	fi
+    if [ "$hardware" = "keenetic" ]; then
+        echo "Добавляем ip с от DNS 8.8.8.8 к api.github.com и пытаемся снова"
+        IP_ghub=$(nslookup api.github.com 8.8.8.8 | sed -n '/^Name:/,$ s/^Address [0-9]*: \([0-9.]\{7,15\}\).*/\1/p' | head -n1)
+        if [ -z "$IP_ghub" ]; then
+            echo "ERROR: api.github.com not resolved with 8.8.8.8 DNS"
+        else
+            echo $IP_ghub
+            ndmc -c "ip host api.github.com $IP_ghub"
+            echo -e "${yellow}zeefeer обновлен (UTC +0): $(curl -s --max-time 10 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+        fi
+    fi
 else
     echo -e "${yellow}zeefeer обновлен (UTC +0): $commit_date ${plain}"
 fi
@@ -677,16 +795,16 @@ fi
 #Проверка доступности raw.githubusercontent.com
 if [[ -z "$(curl -s --max-time 10 "https://raw.githubusercontent.com/test")" ]]; then
     echo -e "${red}Не был получен доступ к raw.githubusercontent.com (таймаут 10 сек). Возможны проблемы при установке.${plain}"
-	if [ "$hardware" = "keenetic" ]; then
-		echo "Добавляем ip с от DNS 8.8.8.8 к raw.githubusercontent.com и пытаемся снова"
-		IP_ghub2=$(nslookup raw.githubusercontent.com 8.8.8.8 | sed -n '/^Name:/,$ s/^Address [0-9]*: \([0-9.]\{7,15\}\).*/\1/p' | head -n1)
-		if [ -z "$IP_ghub2" ]; then
-    		echo "ERROR: raw.githubusercontent.com not resolved with 8.8.8.8 DNS"
-		else
-			echo $IP_ghub2
-			ndmc -c "ip host raw.githubusercontent.com $IP_ghub2"
-		fi
-	fi
+    if [ "$hardware" = "keenetic" ]; then
+        echo "Добавляем ip с от DNS 8.8.8.8 к raw.githubusercontent.com и пытаемся снова"
+        IP_ghub2=$(nslookup raw.githubusercontent.com 8.8.8.8 | sed -n '/^Name:/,$ s/^Address [0-9]*: \([0-9.]\{7,15\}\).*/\1/p' | head -n1)
+        if [ -z "$IP_ghub2" ]; then
+            echo "ERROR: raw.githubusercontent.com not resolved with 8.8.8.8 DNS"
+        else
+            echo $IP_ghub2
+            ndmc -c "ip host raw.githubusercontent.com $IP_ghub2"
+        fi
+    fi
 fi
 
 #Выполнение общего для всех ОС кода с ответвлениями под ОС
@@ -697,21 +815,41 @@ fi
 
 #Меню и быстрый запуск подбора стратегии
  if [ -d /opt/zapret/extra_strats ] && [ -f "/opt/zapret/config" ]; then
-	if [ $1 ]; then
-		Strats_Tryer $1
-	fi
+    if [ $1 ]; then
+        Strats_Tryer $1
+    fi
     get_menu
  fi
  
 #entware keenetic and merlin preinstal env.
 if [ "$hardware" = "keenetic" ]; then
- opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy 2>/dev/null || apk add coreutils-sort grep gzip ipset iptables xtables-addons_legacy 2>/dev/null
- opkg install kmod_ndms 2>/dev/null || apk add kmod_ndms 2>/dev/null || echo -e "\033[31mНе удалось установить kmod_ndms. Если у вас не keenetic - игнорируйте.\033[0m"
+ if which opkg >/dev/null 2>&1; then
+    opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy 2>/dev/null
+ elif which apk >/dev/null 2>&1; then
+    apk add coreutils-sort grep gzip ipset iptables xtables-addons 2>/dev/null
+ fi
+ if which opkg >/dev/null 2>&1; then
+    opkg install kmod_ndms 2>/dev/null || echo -e "\033[31mНе удалось установить kmod_ndms. Если у вас не keenetic - игнорируйте.\033[0m"
+ fi
 elif [ "$hardware" = "merlin" ]; then
- opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy 2>/dev/null || apk add coreutils-sort grep gzip ipset iptables xtables-addons_legacy 2>/dev/null
+ if which opkg >/dev/null 2>&1; then
+    opkg install coreutils-sort grep gzip ipset iptables xtables-addons_legacy 2>/dev/null
+ elif which apk >/dev/null 2>&1; then
+    apk add coreutils-sort grep gzip ipset iptables xtables-addons 2>/dev/null
+ fi
 fi
 
-#Проверка наличия каталога opt и его создание при необходиомости (для некоторых роутеров), переход в tmp
+# Alpine Linux preinstall
+if [[ "$OSystem" == "alpine" ]]; then
+    echo -e "${yellow}Обнаружен Alpine Linux, устанавливаем необходимые пакеты...${plain}"
+    apk update
+    apk add --no-cache curl wget grep gzip ipset iptables coreutils
+    if which nft >/dev/null 2>&1; then
+        apk add nftables
+    fi
+fi
+
+#Проверка наличия каталога opt и его создание при необходимости (для некоторых роутеров), переход в tmp
 mkdir -p /opt
 cd /tmp
 
@@ -726,14 +864,14 @@ echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api
 version_select
 
 #Запрос на установку web-ssh
-read -re -p $'\033[33mАктивировать доступ в меню через браузер (~3мб места)? 1 - Да, Enter - нет\033[0m\n' ttyd_answer
+read -re -p $'\033[33mАктивировать доступ в меню через браузер (web-ssh) (~3мб места)? 1 - Да, Enter - нет\033[0m\n' ttyd_answer
 case "$ttyd_answer" in
-	"1")
-		ttyd_webssh
-	;;
-	*)
-		echo "Пропуск (пере)установки web-терминала"
-	;;
+    "1")
+        ttyd_webssh
+    ;;
+    *)
+        echo "Пропуск (пере)установки web-терминала"
+    ;;
 esac 
  
 #Скачивание, распаковка архива zapret и его удаление
@@ -742,14 +880,19 @@ zapret_get
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo
 
+#Для Alpine Linux
+if [[ "$OSystem" == "alpine" ]]; then
+    alpine_fixes
+fi
+
 #Для Keenetic и merlin
 if [[ "$OSystem" == "entware" ]]; then
- entware_fixes
+    entware_fixes
 fi
 
 #Для x-wrt
 if [[ "$release" == "x-wrt" ]]; then
-	sed -i 's/kmod-nft-nat kmod-nft-offload/kmod-nft-nat/' /opt/zapret/common/installer.sh
+    sed -i 's/kmod-nft-nat kmod-nft-offload/kmod-nft-nat/' /opt/zapret/common/installer.sh
 fi
 
 #Запуск установочных скриптов и перезагрузка
