@@ -158,6 +158,21 @@ remove_zapret() {
  else
      echo "Папка zapret не существует."
  fi
+ if [[ "$OSystem" == "entware" ]]; then
+	rm -fv /opt/etc/init.d/S90-zapret /opt/etc/ndm/netfilter.d/000-zapret.sh /opt/etc/init.d/S00fix
+ fi
+ read -re -p $'\033[33mУдалить функционал доступа в меню через браузер (web-ssh)? Enter - Да, 1 - нет\033[0m\n' ttyd_answer_del
+ case "$ttyd_answer_del" in
+    "1")
+        echo "Пропущено"
+    ;;
+    *)
+		apk del ttyd 2>/dev/null || true
+		opkg remove ttyd 2>/dev/null || true
+		rm -f /usr/bin/ttyd
+		echo "Процесс удаления завершён"
+    ;;
+ esac 
 }
 
 #Запрос желаемой версии zapret
@@ -377,7 +392,7 @@ ttyd_webssh() {
     fi
     
     # Для Alpine (OpenRC)
-    if [ -d /etc/init.d ]; then
+    if [[ "$release" == "alpine" ]]; then
         cat > /etc/init.d/ttyd <<EOF
 #!/sbin/openrc-run
 
@@ -709,14 +724,11 @@ elif [[ -f /opt/etc/entware_release ]]; then
     release="entware"
 elif [[ -f /etc/entware_release ]]; then
     release="entware"
+elif [[ "$ID" == "alpine" ]] || grep -qi "alpine" /etc/os-release 2>/dev/null || [ -f /etc/alpine-release ]; then
+    release="alpine"
 else
     echo "Не удалось определить ОС. Прекращение работы скрипта." >&2
     exit 1
-fi
-
-# Определение Alpine Linux
-if [[ "$ID" == "alpine" ]] || grep -qi "alpine" /etc/os-release 2>/dev/null || [ -f /etc/alpine-release ]; then
-    release="alpine"
 fi
 
 if [[ "$release" == "entware" ]]; then
