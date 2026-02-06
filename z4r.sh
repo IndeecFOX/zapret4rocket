@@ -381,7 +381,7 @@ ttyd_webssh() {
  fi
  
  if [[ "$OSystem" == "VPS" ]]; then
-    echo -e "${yellow}Установка ttyd for VPS${plain}"
+    echo -e "${yellow}Установка ttyd for VPS/LinuxOS${plain}"
     systemctl stop ttyd 2>/dev/null || true
     # Для Alpine используем apk, для других - скачиваем бинарник
     if which apk >/dev/null 2>&1; then
@@ -750,7 +750,7 @@ else
 fi
 
 #Запуск скрипта под нужную версию
-if [[ "$release" == "ubuntu" || "$release" == "debian" || "$release" == "endeavouros" || "$release" == "arch" ]]; then
+if [[ "$release" == "ubuntu" || "$release" == "debian" || "$release" == "endeavouros" || "$release" == "arch" || "$release" == "vyos" ]]; then
     OSystem="VPS"
 elif [[ "$release" == "openwrt" || "$release" == "immortalwrt" || "$release" == "asuswrt" || "$release" == "x-wrt" || "$release" == "kwrt" || "$release" == "istoreos" ]]; then
     OSystem="WRT"
@@ -763,7 +763,7 @@ else
 Enter - выход
 1 - Плюнуть и продолжить как OpenWRT
 2 - Плюнуть и продолжить как entware
-3 - Плюнуть и продолжить как VPS
+3 - Плюнуть и продолжить как VPS/LinuxOS
 4 - Плюнуть и продолжить как Alpine\033[0m\n' os_answer
     case "$os_answer" in
     "1")
