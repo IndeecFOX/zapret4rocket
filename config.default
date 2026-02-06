@@ -179,7 +179,7 @@ NFQWS_OPT="
 'Обход войса Discord. Отключено в дефолте, если обход скриптом bol-van'
 --skip --filter-udp=50000-50099,1400,3478-3481,5349,19294-19344 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-repeats=6 --new
 'Стратегия обхода UDP игр и т.п.'
---skip --filter-udp=1026-65531 --dpi-desync=fake --dpi-desync-repeats=10 --dpi-desync-any-protocol=1 --dpi-desync-fake-unknown-udp=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-cutoff=n4 --new
+--skip --filter-udp=1026-65531 --dpi-desync=fake --dpi-desync-repeats=10 --dpi-desync-any-protocol=1 --dpi-desync-fake-unknown-udp=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-cutoff=n2 --new
 'Логгирование недоступных доменов'
 --filter-tcp=443 --hostlist-domains=emptylistfix.com --hostlist-auto-fail-threshold=2 --hostlist-auto-retrans-threshold=2 --hostlist-auto=/opt/zapret/lists/autohostlist.txt --hostlist-exclude=/opt/zapret/extra_strats/TCP/RKN/List.txt
 "
