@@ -122,9 +122,6 @@ tcp443_submenu() {
         for i in $(seq 112 128); do
           if sed -n "${i}p" /opt/zapret/config | grep -Fq -- '--filter-tcp=443 --hostlist-domains= --h'; then
             sed -i "${i}s#--filter-tcp=443 --hostlist-domains= --h#--filter-tcp=443 --hostlist-domains=none.dom --h#" /opt/zapret/config
-            /opt/zapret/init.d/sysv/zapret restart
-            echo -e "${green}Выполнена команда перезапуска zapret${plain}"
-            echo "Безразборный режим отключен"
             break
           fi
         done
@@ -143,10 +140,13 @@ tcp443_submenu() {
           fi
           sed -i "$((111 + answer_bezr))s/--hostlist-domains=none\.dom/--hostlist-domains=/" /opt/zapret/config
           /opt/zapret/init.d/sysv/zapret restart
-          echo -e "${green}Выполнена команда перезапуска zapret. ${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443. Проверка доступа к meduza.io${plain}"
-          check_access_list
+          echo -e "${green}Выполнена команда перезапуска zapret. ${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443"
+          hosters_check
+		else
+			/opt/zapret/init.d/sysv/zapret restart
+            echo -e "${green}Выполнена команда перезапуска zapret. Безразборный режим отключен!${plain}"
         fi
-        read -n 1 -s -r -p "Нажмите любую клавишу для продолжения..."
+        pause_enter
       else
         echo -e "${yellow}Неверный ввод.${plain}"
         sleep 1
