@@ -368,6 +368,80 @@ get_panel() {
  fi
 }
 
+hosters_check() {
+	BIN_THR_BYTES=$((24*1024))
+	PARALLEL=25
+
+	TESTS=(
+	"US.CF-01|🇺🇸 Cloudflare|$BIN_THR_BYTES|1|https://img.wzstats.gg/cleaver/gunFullDisplay"
+	"US.CF-02|🇺🇸 Cloudflare|104319|1|https://genshin.jmp.blue/characters/all#"
+	"US.CF-03|🇺🇸 Cloudflare|109863|1|https://api.frankfurter.dev/v1/2000-01-01..2002-12-31"
+	"US.CF-04|🇨🇦 Cloudflare|79655|1|https://www.bigcartel.com/"
+	"US.DO-01|🇺🇸 DigitalOcean|195612|2|https://genderize.io/"
+	"DE.HE-01|🇩🇪 Hetzner|$BIN_THR_BYTES|1|https://j.dejure.org/jcg/doctrine/doctrine_banner.webp"
+	"DE.HE-02|🇩🇪 Hetzner|162646|1|https://accesorioscelular.com/tienda/css/plugins.css"
+	"FI.HE-01|🇫🇮 Hetzner|$BIN_THR_BYTES|1|https://251b5cd9.nip.io/1MB.bin"
+	"FI.HE-02|🇫🇮 Hetzner|$BIN_THR_BYTES|1|https://nioges.com/libs/fontawesome/webfonts/fa-solid-900.woff2"
+	"FI.HE-03|🇫🇮 Hetzner|$BIN_THR_BYTES|1|https://5fd8bdae.nip.io/1MB.bin"
+	"FI.HE-04|🇫🇮 Hetzner|$BIN_THR_BYTES|1|https://5fd8bca5.nip.io/1MB.bin"
+	"FR.OVH-01|🇫🇷 OVH|75872|1|https://eu.api.ovh.com/console/rapidoc-min.js"
+	"FR.OVH-02|🇫🇷 OVH|$BIN_THR_BYTES|1|https://ovh.sfx.ovh/10M.bin"
+	"SE.OR-01|🇸🇪 Oracle|$BIN_THR_BYTES|1|https://oracle.sfx.ovh/10M.bin"
+	"DE.AWS-01|🇩🇪 AWS|$BIN_THR_BYTES|1|https://www.getscope.com/assets/fonts/fa-solid-900.woff2"
+	"US.AWS-01|🇺🇸 AWS|215419|1|https://corp.kaltura.com/wp-content/cache/min/1/wp-content/themes/airfleet/dist/styles/theme.css"
+	"US.GC-01|🇺🇸 Google Cloud|176277|1|https://api.usercentrics.eu/gvl/v3/en.json"
+	"US.FST-01|🇺🇸 Fastly|77597|1|https://www.jetblue.com/footer/footer-element-es2015.js"
+	"CA.FST-01|🇨🇦 Fastly|84086|1|https://ssl.p.jwpcdn.com/player/v/8.40.5/bidding.js"
+	"US.AKM-01|🇺🇸 Akamai|$BIN_THR_BYTES|1|https://www.roxio.com/static/roxio/images/products/creator/nxt9/call-action-footer-bg.jpg"
+	"PL.AKM-01|🇵🇱 Akamai|$BIN_THR_BYTES|1|https://media-assets.stryker.com/is/image/stryker/gateway_1?\$max_width_1410\$"
+	"US.CDN77-01|🇺🇸 CDN77|$BIN_THR_BYTES|1|https://cdn.eso.org/images/banner1920/eso2520a.jpg"
+	"FR.CNTB-01|🇫🇷 Contabo|$BIN_THR_BYTES|1|https://xdmarineshop.gr/index.php?route=index"
+	"NL.SW-01|🇳🇱 Scaleway|$BIN_THR_BYTES|1|https://www.velivole.fr/img/header.jpg"
+	"US.CNST-01|🇺🇸 Constant|$BIN_THR_BYTES|1|https://cdn.xuansiwei.com/common/lib/font-awesome/4.7.0/fontawesome-webfont.woff2?v=4.7.0"
+	)
+
+	echo -e "${yellow}Проверка 16кб блока хостеров:"
+	check_one() {
+		IFS='|' read -r id provider thr times url <<< "$1"
+
+		total=0
+		code=0
+
+		for ((i=1;i<=times;i++)); do
+			read bytes code <<< $(curl -L -s \
+				-H "Range: bytes=0-${thr}" \
+				--connect-timeout 5 \
+				--max-time 5 -o /dev/null -w '%{size_download} %{http_code}' "$url")
+
+			total=$((total+bytes))
+		done
+
+		avg=$((total/times))
+
+		if (( avg >= thr )) && [[ "$code" =~ ^2|3 ]]; then
+			echo -e "\033[0;32m$id OK${plain} ${avg}b [$provider]"
+			echo OK >> /tmp/cdn_ok
+		else
+			echo -e "\033[0;31m$id FAIL${plain} ${avg}b code=$code [$provider]"
+			echo FAIL >> /tmp/cdn_fail
+		fi
+	}
+
+	export -f check_one
+
+	rm -f /tmp/cdn_ok /tmp/cdn_fail
+
+	printf "%s\n" "${TESTS[@]}" | xargs -I{} -P "$PARALLEL" bash -c 'check_one "$@"' _ {}
+
+	OK_COUNT=$( [ -f /tmp/cdn_ok ] && wc -l < /tmp/cdn_ok || echo 0 )
+	FAIL_COUNT=$( [ -f /tmp/cdn_fail ] && wc -l < /tmp/cdn_fail || echo 0 )
+
+	echo
+	echo -e "${yellow}=== SUMMARY ===${plain}"
+	echo -e "${green}OK:${plain} ${OK_COUNT:-0}"
+	echo -e "${red}FAIL:${plain} ${FAIL_COUNT:-0}"
+}
+
 #webssh ttyd
 ttyd_webssh() {
  echo -e $'\033[33mВведите логин для доступа к zeefeer через браузер (0 - отказ от логина через web в z4r и переход на логин в ssh (может помочь в safari). Enter - пустой логин, \033[31mно не рекомендуется, панель может быть доступна из интернета!)\033[0m'
@@ -540,25 +614,26 @@ get_menu() {
 
 '"Город/провайдер: ${plain}${PROVIDER_MENU}${yellow}"'
 '"${TITLE_MENU_LINE}"'
-\033[32mВыберите необходимое действие:\033[33m
-Enter (без цифр) - переустановка/обновление zapret
-0. Выход
-01. Проверить доступность сервисов (Тест не точен)
-1. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' ]'"${yellow}"'
-2. Стоп/пере(запуск) zapret (сейчас: '"$(pidof nfqws >/dev/null && echo "${green}Запущен${yellow}" || echo "${red}Остановлен${yellow}")"') Для restart введите 22
-3. Показать домены которые zapret посчитал не доступными
-4. Удалить zapret
-5. Обновить стратегии, сбросить листы подбора стратегий и исключений (есть бэкап)
-6. Исключить домен из zapret обработки
-7. Открыть в редакторе config (Установит nano редактор ~250kb)
-8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '"${plain}"'['"$(grep -Eq '^NFQWS_PORTS_UDP=.*443$' /opt/zapret/config && echo "Скрипты" || (grep -Eq '443,1400,3478-3481,5349,50000-50099,19294-19344$' /opt/zapret/config && echo "Классические стратегии" || echo "Неизвестно"))"']'"${yellow}"'
-9. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '"${plain}"'['"$(grep -q '^FWTYPE=iptables$' /opt/zapret/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret/config && echo "nftables" || echo "Неизвестно"))"']'"${yellow}"'
-10. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '"${plain}"'['"$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=1026-65531,443' /opt/zapret/config && echo "Включен" || echo "Неизвестно"))"']'"${yellow}"'
-11. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret/config)"']'"${yellow}"'
-12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '"${plain}"'['"$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")"']'"${yellow}"'
-13. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
-14. Провайдер
-777. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
+'"${green}"'Выберите необходимое действие:'"${yellow}"'
+'"${cyan}"'Enter'"${yellow}"' (без цифр) - переустановка/обновление zapret
+'"${cyan}"'0'"${yellow}"'. Выход
+'"${cyan}"'01'"${yellow}"'. Проверить доступность сервисов (Тест не всегда точен). '"${cyan}"'001'"${yellow}"' - проверка 16кб блока зарубежных хостеров (актуально для безразборного режима)
+'"${cyan}"'1'"${yellow}"'. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' ]'"${yellow}"'
+'"${cyan}"'2'"${yellow}"'. Стоп/пере(запуск) zapret (сейчас: '"$(pidof nfqws >/dev/null && echo "${green}Запущен${yellow}" || echo "${red}Остановлен${yellow}")"') Для restart введите '"${cyan}"'22'"${yellow}"'
+'"${cyan}"'3'"${yellow}"'. Показать домены которые zapret посчитал не доступными
+'"${cyan}"'4'"${yellow}"'. Удалить zapret
+'"${cyan}"'5'"${yellow}"'. Обновить стратегии, сбросить листы подбора стратегий и исключений (есть бэкап)
+'"${cyan}"'6'"${yellow}"'. Исключить домен из zapret обработки
+'"${cyan}"'7'"${yellow}"'. Открыть в редакторе config (Установит nano редактор ~250kb)
+'"${cyan}"'8'"${yellow}"'. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '"${plain}"'['"$(grep -Eq '^NFQWS_PORTS_UDP=.*443$' /opt/zapret/config && echo "Скрипты" || (grep -Eq '443,1400,3478-3481,5349,50000-50099,19294-19344$' /opt/zapret/config && echo "Классические стратегии" || echo "Неизвестно"))"']'"${yellow}"'
+'"${cyan}"'9'"${yellow}"'. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '"${plain}"'['"$(grep -q '^FWTYPE=iptables$' /opt/zapret/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret/config && echo "nftables" || echo "Неизвестно"))"']'"${yellow}"'
+'"${cyan}"'10'"${yellow}"'. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '"${plain}"'['"$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=1026-65531,443' /opt/zapret/config && echo "Включен" || echo "Неизвестно"))"']'"${yellow}"'
+'"${cyan}"'11'"${yellow}"'. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret/config)"']'"${yellow}"'
+'"${cyan}"'12'"${yellow}"'. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '"${plain}"'['"$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")"']'"${yellow}"'
+'"${cyan}"'13'"${yellow}"'. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
+'"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: ilovepdf.com)
+'"${cyan}"'15'"${yellow}"'. Провайдер (Поверхностные рекомендации стратетий)
+'"${cyan}"'777'"${yellow}"'. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
     if [[ -f "$PREMIUM_FLAG" ]]; then
       echo -e "${red}999. Секретный пункт. Нажимать на свой страх и риск${plain}"
     fi
@@ -584,6 +659,11 @@ Enter (без цифр) - переустановка/обновление zapret
 
   "01")
     check_access_list
+    pause_enter
+    ;;
+
+  "001")
+    hosters_check
     pause_enter
     ;;
 
@@ -689,6 +769,19 @@ Enter (без цифр) - переустановка/обновление zapret
     ;;
 
   "14")
+    read -re -p "Введите новый SNI для fake файла или Enter для выхода без изменений: " NEW_SNI
+	if [[ -z "$NEW_SNI" ]]; then
+		echo "Пустой ввод. Изменений не будет."
+	else
+		sed -i -E "s|(=sni=)[^[:space:]]+( --)|\1${NEW_SNI}\2|g" "/opt/zapret/config"
+		/opt/zapret/init.d/sysv/zapret restart
+		echo -e "${green}Выполнен перезапуск zapret. SNI теперь фейкуется под:${plain} $NEW_SNI"
+		hosters_check
+	fi
+	pause_enter
+    ;;
+	
+  "15")
     provider_submenu      # сабменю само в цикле и выходит через return
     ;;
 
@@ -791,9 +884,9 @@ Enter - выход
 fi
 
 #Инфа о времени обновления скрипта
-commit_date=$(curl -s --max-time 30 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4)
+commit_date=$(curl -s --max-time 15 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4)
 if [[ -z "$commit_date" ]]; then
-    echo -e "${red}Не был получен доступ к api.github.com (таймаут 30 сек). Возможны проблемы при установке.${plain}"
+    echo -e "${red}Не был получен доступ к api.github.com (таймаут 15 сек). Возможны проблемы при установке.${plain}"
     if [ "$hardware" = "keenetic" ]; then
         echo "Добавляем ip с от DNS 8.8.8.8 к api.github.com и пытаемся снова"
         IP_ghub=$(nslookup api.github.com 8.8.8.8 | sed -n '/^Name:/,$ s/^Address [0-9]*: \([0-9.]\{7,15\}\).*/\1/p' | head -n1)
