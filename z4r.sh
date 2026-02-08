@@ -680,6 +680,7 @@ get_menu() {
       /opt/zapret/init.d/sysv/zapret restart
       echo -e "${green}Выполнена команда перезапуска zapret${plain}"
     fi
+	echo -e ""
     pause_enter
     ;;
 
@@ -788,6 +789,7 @@ get_menu() {
   "22")
     /opt/zapret/init.d/sysv/zapret restart
     echo -e "${green}Выполнена команда перезапуска zapret${plain}"
+	echo -e ""
     ;;
 
   "777")
