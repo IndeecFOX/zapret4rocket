@@ -368,6 +368,7 @@ get_panel() {
  fi
 }
 
+#Функция проверки хостеров на 16кб блок
 hosters_check() {
 	BIN_THR_BYTES=$((24*1024))
 	PARALLEL=25
@@ -431,7 +432,22 @@ hosters_check() {
 
 	rm -f /tmp/cdn_ok /tmp/cdn_fail
 
-	printf "%s\n" "${TESTS[@]}" | xargs -I{} -P "$PARALLEL" bash -c 'check_one "$@"' _ {}
+	pids_parallels=()
+	for test_parallel in "${TESTS[@]}"; do
+		check_one "$test_parallel" &
+		_parallels+=($!)
+
+		# ограничение параллельных задач
+		if [ "${#_parallels[@]}" -ge "$PARALLEL" ]; then
+			wait "${_parallels[0]}"
+			_parallels=("${_parallels[@]:1}")
+		fi
+	done
+
+	# ждём оставшиеся
+	for pid_parallel in "${_parallels[@]}"; do
+		wait "$pid_parallel"
+	done
 
 	OK_COUNT=$( [ -f /tmp/cdn_ok ] && wc -l < /tmp/cdn_ok || echo 0 )
 	FAIL_COUNT=$( [ -f /tmp/cdn_fail ] && wc -l < /tmp/cdn_fail || echo 0 )
