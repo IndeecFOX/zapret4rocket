@@ -3,7 +3,7 @@ avito.ru
 netflix.com
 vsetop.org
 jnn-pa.googleapis.com
-twitch.tv
+userapi.com
 ttvnw.net
 static-cdn.jtvnw.net
 steamcommunity.com
@@ -24,3 +24,5 @@ encrypted-tbn3.gstatic.com
 encrypted-tbn1.gstatic.com
 encrypted-tbn2.gstatic.com
 raw.githubusercontent.com
+api.github.com
+
