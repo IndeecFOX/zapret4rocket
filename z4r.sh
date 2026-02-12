@@ -649,7 +649,7 @@ get_menu() {
 '"${cyan}"'13'"${yellow}"'. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
 '"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
 '"${cyan}"'15'"${yellow}"'. Провайдер (Поверхностные рекомендации стратетий)
-'"${cyan}"'777'"${yellow}"'. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
+'"${cyan}"'777'"${yellow}"'. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
     if [[ -f "$PREMIUM_FLAG" ]]; then
       echo -e "${red}999. Секретный пункт. Нажимать на свой страх и риск${plain}"
     fi
@@ -809,7 +809,7 @@ get_menu() {
     ;;
 
   "777")
-   echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, GeGunT, Nomand, Kovi, blagodarenya, mikhyan, andric62, Whoze, Necronicle, Andrei_5288515371, Dina_turat, Nergalss, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, skuwakin, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028, umad, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 активирован. Наверное. Так же благодарю поддержавших проект yavladik, hey_enote, VssA, vladdrazz, Alexey_Tob, Bor1sBr1tva, Azamatstd, iMLT, Qu3Bee, SasayKudasay1, alexander_novikoff, MarsKVV, porfenon123, bobrishe_dazzle, kotov38, Levonkas, DA00001, geodomin, I_ZNA_I, CMyTHblN PacKoJlbHNK и анонимов${plain}"
+   echo -e "${green}Специальный zeefeer premium для Valery ProD, avg97, Xoz, GeGunT, Nomand, Kovi, blagodarenya, mikhyan, andric62, Whoze, Necronicle, Andrei_5288515371, Dina_turat, Nergalss, Александра, АлександраП, vecheromholodno, ЕвгенияГ, Dyadyabo, izzzgoy, Grigaraz, Reconnaissance, comandante1928, rudnev2028, umad, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 активирован. Наверное. Так же благодарю поддержавших проект yavladik, hey_enote, VssA, Meeos, vladdrazz, Alexey_Tob, Bor1sBr1tva, Azamatstd, iMLT, Qu3Bee, SasayKudasay1, alexander_novikoff, MarsKVV, porfenon123, bobrishe_dazzle, kotov38, Levonkas, DA00001, geodomin, I_ZNA_I, CMyTHblN PacKoJlbHNK и анонимов${plain}"
    zefeer_premium_777
    exit_to_menu
    ;;
