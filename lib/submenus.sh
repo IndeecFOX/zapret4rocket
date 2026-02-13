@@ -104,59 +104,6 @@ flowoffload_submenu() {
   done
 }
 
-tcp443_submenu() {
-  while true; do
-  clear
-  num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1)
-  echo -e "${yellow}Безразборный режим по стратегии: ${plain}$((num ? num : 0))"
-  echo -e "\033[33mС каким номером применить стратегию? (1-17, 0 - отключение безразборного режима, Enter - выход) \033[31mПри активации кастомно подобранные домены будут очищены:${plain}"
-  read -re -p " " answer_bezr
-  
-  case "$answer_bezr" in
-    "" )
-      return
-      ;;
-    *)
-      if echo "$answer_bezr" | grep -Eq '^[0-9]+$' && [ "$answer_bezr" -ge 0 ] && [ "$answer_bezr" -le 17 ]; then
-        #Отключение
-        for i in $(seq 112 128); do
-          if sed -n "${i}p" /opt/zapret/config | grep -Fq -- '--filter-tcp=443 --hostlist-domains= --h'; then
-            sed -i "${i}s#--filter-tcp=443 --hostlist-domains= --h#--filter-tcp=443 --hostlist-domains=none.dom --h#" /opt/zapret/config
-            break
-          fi
-        done
-        if [ "$answer_bezr" -ge 1 ] && [ "$answer_bezr" -le 17 ]; then
-          for f_clear in $(seq 1 17); do
-            echo -n > "/opt/zapret/extra_strats/TCP/User/$f_clear.txt"
-            echo -n > "/opt/zapret/extra_strats/TCP/temp/$f_clear.txt"
-          done
-          echo "Добавить ru домены в исключения? (Обычно не заблокированы и могут ломаться режимом)"
-          read -re -p "Enter - да, 1 - нет: " add_ru
-          if [ -n "$add_ru" ]; then
-            echo "Пропуск добавления ru доменов."
-          else
-            echo "ru" >> /opt/zapret/lists/netrogat.txt
-            echo -e "Домены ru добавлены в исключения (netrogat.txt)."
-          fi
-          sed -i "$((111 + answer_bezr))s/--hostlist-domains=none\.dom/--hostlist-domains=/" /opt/zapret/config
-          /opt/zapret/init.d/sysv/zapret restart
-          echo -e "${green}Выполнена команда перезапуска zapret. ${yellow}Безразборный режим активирован на $answer_bezr стратегии для TCP-443"
-          hosters_check
-		else
-			/opt/zapret/init.d/sysv/zapret restart
-            echo -e "${green}Выполнена команда перезапуска zapret. Безразборный режим отключен!${plain}"
-        fi
-        pause_enter
-      else
-        echo -e "${yellow}Неверный ввод.${plain}"
-        sleep 1
-        pause_enter
-      fi
-      ;;
-  esac
-done
-}
-
 provider_submenu() {
   provider_init_once
 
