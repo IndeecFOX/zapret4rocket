@@ -606,6 +606,91 @@ EOF
  echo -e "${plain}Выполнение установки завершено. ${green}Доступ по ip вашего роутера/VPS в формате ip:17681, например 192.168.1.1:17681 или mydomain.com:17681 ${yellow}логин: ${ttyd_login} пароль - не используется.${plain} Был выполнен выход из скрипта для сохранения состояния."
 }
 
+#Функция получения инфы о статусе безразборного режима для отображения в меню
+get_bezr_status() {
+	#Источник сраты
+	SRC_START="--filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt"
+
+	#Извлечение ядра (стратегии)
+	CORE_BEZR=$(sed -n "s|.*$SRC_START\(.*\)--new.*|\1|p" "/opt/zapret/config" | head -n 1)
+	[ -z "$CORE_BEZR" ] && { echo "Ошибка: SRC_START не найден. Вероятно старый конфиг. Обновление через 5 пункт меню или переустановкой."; exit 1; }
+	CORE_BEZR_TRIMMED=$(echo "$CORE_BEZR" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
+
+	#Поиск потенциальных строк (YT и RKN с цифрами)
+	POTENTIAL_LINES_BEZR=$(grep -n "/extra_strats/TCP/YT/[0-9]\+\.txt" "/opt/zapret/config" | grep "/extra_strats/TCP/RKN/[0-9]\+\.txt")
+
+	if [ -z "$POTENTIAL_LINES_BEZR" ]; then
+		echo "Ошибка: Строки с путями стратегий не найдены."
+		exit 1
+	fi
+
+	# Поиск нужной строки и извлечение номера стратегии
+	STRATEGY_ID_BEZR=""
+	while IFS= read -r line; do
+		L_TEXT_BEZR=$(echo "$line" | cut -d: -f2-)
+
+		if [[ "$L_TEXT_BEZR" == *"$CORE_BEZR_TRIMMED"* ]]; then
+			# Извлекаем число из части /TCP/RKN/X.txt и используем sed с обратной ссылкой \1 для захвата цифр
+			STRATEGY_ID_BEZR=$(echo "$L_TEXT_BEZR" | sed -n 's|.*/extra_strats/TCP/RKN/\([0-9]\+\)\.txt.*|\1|p')
+			break
+		fi
+	done <<< "$POTENTIAL_LINES_BEZR"
+
+	if [ -n "$STRATEGY_ID_BEZR" ]; then
+		echo "$STRATEGY_ID_BEZR"
+	else
+		echo "Выключен"
+	fi
+}
+
+#Функция работы с безразборным режимом v2
+bezrazbor_selector() {
+	clear
+	echo -e "Текущий статус: ${yellow}$(get_bezr_status)${plain}"
+	echo "Введите номер стратегии (1-17), '0' для отключения режима или нажмите Enter для возврата к меню: "
+	read -re -p "" STRAT_NUM_BEZR
+
+	if [ -z "$STRAT_NUM_BEZR" ]; then
+		return
+	fi
+
+	if [ "$STRAT_NUM_BEZR" = "0" ]; then
+		# Если ввели 0 - отрубаем безразборный режим
+		NEW_PARAMS_BEZR="--hostlist-domains=bezrazbor.disabled"
+		echo "Режим сброса: выбрано $NEW_PARAMS_BEZR"
+	else
+		# Ищем строку-донор для указанного номера. Убираем экранирование \ перед --new, чтобы не было warning
+		NEW_LINE_BEZR=$(grep "RKN/${STRAT_NUM_BEZR}.txt" "/opt/zapret/config" | grep "\-\-new" | head -n 1)
+
+		if [ -z "$NEW_LINE_BEZR" ]; then
+			echo "Ошибка: Стратегия с номером $STRAT_NUM_BEZR не найдена в файле."
+			pause_enter
+			return
+		fi
+
+		# Извлекаем параметры из донора (всё, что после RKN/номер.txt и до --new)
+		NEW_PARAMS_BEZR=$(echo "$NEW_LINE_BEZR" | sed -n "s/.*RKN\/${STRAT_NUM_BEZR}\.txt \(.*\) --new/\1/p")
+		
+		# Если параметры после .txt отсутствуют, пробуем альтернативный захват (после none.dom)
+		if [ -z "$NEW_PARAMS_BEZR" ]; then
+			NEW_PARAMS_BEZR=$(echo "$NEW_LINE_BEZR" | sed -n 's/.*none.dom \(.*\) --new/\1/p')
+		fi
+		
+		echo "Выбраны параметры для стратегии $STRAT_NUM_BEZR: $NEW_PARAMS_BEZR"
+	fi
+
+	#Применение изменений в файле. Используем модифицированную строку sed
+	sed -i "s|\(2096,8443 --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt \).*\( --new\)|\1$NEW_PARAMS_BEZR\2|" "/opt/zapret/config"
+	if [ $? -eq 0 ]; then
+		echo -e "${yelow}Выполняем перезапуск zapret${plain}"
+		/opt/zapret/init.d/sysv/zapret restart
+		echo -e "${green}Успешно! Файл /opt/zapret/config обновлен. Zapret перезапущен${plain}"
+	else
+		echo -e "${red}Ошибка при записи в файл${plain}"
+	fi
+	pause_enter
+}
+
 #Меню, проверка состояний и вывод с чтением ответа
 get_menu() {
     TITLE_MENU_LINE=""
@@ -635,8 +720,8 @@ get_menu() {
 '"${cyan}"'0'"${yellow}"'. Выход
 '"${cyan}"'01'"${yellow}"'. Проверить доступность сервисов (Тест не всегда точен). '"${cyan}"'001'"${yellow}"' - проверка 16кб блока зарубежных хостеров (актуально для безразборного режима)
 '"${cyan}"'1'"${yellow}"'. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' ]'"${yellow}"'
-'"${cyan}"'2'"${yellow}"'. Стоп/пере(запуск) zapret (сейчас: '"$(pidof nfqws >/dev/null && echo "${green}Запущен${yellow}" || echo "${red}Остановлен${yellow}")"') Для restart введите '"${cyan}"'22'"${yellow}"'
-'"${cyan}"'3'"${yellow}"'. Показать домены которые zapret посчитал не доступными
+'"${cyan}"'2'"${yellow}"'. '"$(pidof nfqws >/dev/null && echo "Остановить ${green}запущенный ${yellow}zapret" || echo "Запустить ${red}остановленный ${yellow}zapret")"'. Для restart введите '"${cyan}"'22'"${yellow}"'
+'"${cyan}"'3'"${yellow}"'. Показать домены которые zapret посчитал недоступными
 '"${cyan}"'4'"${yellow}"'. Удалить zapret
 '"${cyan}"'5'"${yellow}"'. Обновить стратегии, сбросить листы подбора стратегий и исключений (есть бэкап)
 '"${cyan}"'6'"${yellow}"'. Исключить домен из zapret обработки
@@ -645,7 +730,7 @@ get_menu() {
 '"${cyan}"'9'"${yellow}"'. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '"${plain}"'['"$(grep -q '^FWTYPE=iptables$' /opt/zapret/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret/config && echo "nftables" || echo "Неизвестно"))"']'"${yellow}"'
 '"${cyan}"'10'"${yellow}"'. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '"${plain}"'['"$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=1026-65531,443' /opt/zapret/config && echo "Включен" || echo "Неизвестно"))"']'"${yellow}"'
 '"${cyan}"'11'"${yellow}"'. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret/config)"']'"${yellow}"'
-'"${cyan}"'12'"${yellow}"'. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '"${plain}"'['"$(num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")"']'"${yellow}"'
+'"${cyan}"'12'"${yellow}"'. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '"${plain}"'['"$(get_bezr_status)"']'"${yellow}"'
 '"${cyan}"'13'"${yellow}"'. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
 '"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
 '"${cyan}"'15'"${yellow}"'. Провайдер (Поверхностные рекомендации стратетий)
@@ -777,7 +862,7 @@ get_menu() {
     ;;
 
   "12")
-    tcp443_submenu        # сабменю само в цикле и выходит через return
+    bezrazbor_selector
     ;;
 
   "13")
