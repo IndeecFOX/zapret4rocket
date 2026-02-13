@@ -730,7 +730,7 @@ get_menu() {
 '"${cyan}"'9'"${yellow}"'. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '"${plain}"'['"$(grep -q '^FWTYPE=iptables$' /opt/zapret/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret/config && echo "nftables" || echo "Неизвестно"))"']'"${yellow}"'
 '"${cyan}"'10'"${yellow}"'. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '"${plain}"'['"$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=1026-65531,443' /opt/zapret/config && echo "Включен" || echo "Неизвестно"))"']'"${yellow}"'
 '"${cyan}"'11'"${yellow}"'. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret/config)"']'"${yellow}"'
-'"${cyan}"'12'"${yellow}"'. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '"${plain}"'['"$(get_bezr_status)"']'"${yellow}"'
+'"${cyan}"'12'"${yellow}"'. Меню (Де)Активации работы по всем доменам TCP-443,2053,2083,2087,2096,8443 без хост-листов (не затрагивает youtube стратегии и кастомные домены) (безразборный режим) Сейчас: '"${plain}"'['"$(get_bezr_status)"']'"${yellow}"'
 '"${cyan}"'13'"${yellow}"'. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
 '"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
 '"${cyan}"'15'"${yellow}"'. Провайдер (Поверхностные рекомендации стратетий)
