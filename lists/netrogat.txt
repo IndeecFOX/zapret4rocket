@@ -8,6 +8,7 @@ ttvnw.net
 static-cdn.jtvnw.net
 steamcommunity.com
 steampowered.com
+steamstatic.com
 tarkov.com
 escapefromtarkov.com
 browser-intake-datadoghq.com
@@ -27,5 +28,6 @@ encrypted-tbn1.gstatic.com
 encrypted-tbn2.gstatic.com
 raw.githubusercontent.com
 api.github.com
+
 
 
