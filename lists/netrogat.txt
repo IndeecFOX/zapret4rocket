@@ -18,6 +18,7 @@ okcdn.ru
 api.mycdn.me
 rutube.ru
 vk.com
+appsflyer.com
 vk.ru
 ogs.google.com
 encrypted-tbn0.gstatic.com
@@ -26,4 +27,5 @@ encrypted-tbn1.gstatic.com
 encrypted-tbn2.gstatic.com
 raw.githubusercontent.com
 api.github.com
+
 
