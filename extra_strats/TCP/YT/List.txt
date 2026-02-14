@@ -16,4 +16,8 @@ youtube.googleapis.com
 youtubei.googleapis.com
 yt-video-upload.l.google.com
 wide-youtube.l.google.com
+instantmessaging-pa.googleapis.com
+remotedesktop.google.com
+remotedesktop-pa.googleapis.com
+instantmessaging-pa.clients6.google.com
 
