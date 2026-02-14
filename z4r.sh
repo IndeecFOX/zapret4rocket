@@ -684,6 +684,14 @@ bezrazbor_selector() {
 	if [ $? -eq 0 ]; then
 		echo -e "${yelow}Выполняем перезапуск zapret${plain}"
 		/opt/zapret/init.d/sysv/zapret restart
+		echo "Добавить ru домены в исключения? (Обычно не заблокированы и могут ломаться режимом)"
+        read -re -p "Enter - да, 1 - нет: " add_ru
+        if [ -n "$add_ru" ]; then
+          echo "Пропуск добавления ru доменов."
+        else
+          echo "ru" >> /opt/zapret/lists/netrogat.txt
+          echo -e "Домены ru добавлены в исключения (netrogat.txt)."
+        fi
 		echo -e "${green}Успешно! Файл /opt/zapret/config обновлен. Zapret перезапущен${plain}"
 	else
 		echo -e "${red}Ошибка при записи в файл${plain}"
