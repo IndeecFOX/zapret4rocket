@@ -18,6 +18,7 @@ strategies_submenu() {
     submenu_item "	3" "YouTube (TCP. Видеопоток/GV домен)." "17 вариантов (Приоритетнее безразборного режима)"
     submenu_item "	4" "RKN (Популярные блокированные сайты. Дискорд в т.ч.)." "17 вариантов"
     submenu_item "	5" "Отдельный домен." "17 вариантов (Приоритетнее безразборного режима)"
+	submenu_item "	9" "$(grep -q "fooling=ts,badsum" "/opt/zapret/config" && echo "Переключить фулинг с ${yellow}ts+badsum на ts" || echo "Переключить фулинг с ${yellow}ts на ts+badsum")" "Может помочь с Discord или иными ресурсами"
     submenu_item "	0" "Назад"
     echo ""
 
@@ -37,6 +38,13 @@ strategies_submenu() {
         Strats_Tryer "$user_domain"
         pause_enter
         ;;
+	  "9")
+		echo "Выполняем переключение и перезапуск zapret"
+		sed -i '/fooling=ts,badsum/s/ts,badsum/ts/; t; s/fooling=ts/fooling=ts,badsum/' /opt/zapret/config
+		/opt/zapret/init.d/sysv/zapret restart
+		echo -e "${green}Выполнено переключение фулинга. Запрет перезапущен ${plain}"
+		pause_enter
+		;;
       "0"|"")
         return
         ;;
