@@ -10,7 +10,7 @@ get_config_rollback_menu_hint() {
       backup_ts="$backup_ts UTC"
     fi
     [ -z "$backup_ts" ] && backup_ts="неизвестно"
-    echo " | 50 - откат на бэкап от $backup_ts"
+    echo -e " | ${cyan}50${yellow} - откат на бэкап от $backup_ts"
   fi
 }
 
