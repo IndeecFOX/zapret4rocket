@@ -6,9 +6,14 @@ strategies_submenu() {
   while true; do
     local strategies_status
     strategies_status=$(get_current_strategies_info)
+    check_config_default_update_notice
     clear
 
     echo -e "${cyan}--- Управление стратегиями ---${plain}"
+    if [ -n "$CONFIG_UPDATE_NOTICE" ]; then
+      echo -e "${green}${CONFIG_UPDATE_NOTICE}${plain}"
+      echo -e "${green}Введите 55 для обновления config (аналог пункта 5 в главном меню).${plain}"
+    fi
     echo -e "${yellow}Подобрать стратегию? (1-5 для подбора, 0 или Enter для отмены)${plain}"
     echo -e "  Текущие стратегии [${strategies_status}]"
     echo -e 
@@ -18,6 +23,9 @@ strategies_submenu() {
     submenu_item "	3" "YouTube (TCP. Видеопоток/GV домен)." "17 вариантов (Приоритетнее безразборного режима)"
     submenu_item "	4" "RKN (Популярные блокированные сайты. Дискорд в т.ч.)." "17 вариантов"
     submenu_item "	5" "Отдельный домен." "17 вариантов (Приоритетнее безразборного режима)"
+    if [ -n "$CONFIG_UPDATE_NOTICE" ]; then
+      submenu_item " 55" "Обновить config (пункт 5 главного меню)"
+    fi
 	submenu_item "	9" "$(grep -q "fooling=ts,badsum" "/opt/zapret/config" && echo "Переключить фулинг с ${yellow}ts+badsum на ts" || echo "Переключить фулинг с ${yellow}ts на ts+badsum")" "Может помочь с Discord или иными ресурсами"
     submenu_item "	0" "Назад"
     echo ""
@@ -37,6 +45,15 @@ strategies_submenu() {
         [ -z "$user_domain" ] && continue
         Strats_Tryer "$user_domain"
         pause_enter
+        ;;
+      "55")
+        if [ -n "$CONFIG_UPDATE_NOTICE" ]; then
+          menu_action_update_config_reset
+          pause_enter
+        else
+          echo -e "${yellow}Неверный ввод.${plain}"
+          sleep 1
+        fi
         ;;
 	  "9")
 		echo "Выполняем переключение и перезапуск zapret"
