@@ -37,6 +37,93 @@ get_current_strategies_info() {
     echo -e "YT_UDP:$(colorize_num "$s_udp") YT_TCP:$(colorize_num "$s_tcp") YT_GV:$(colorize_num "$s_gv") RKN:$(colorize_num "$s_rkn")"
 }
 
+# Проверка обновлений config.default в репозитории без скачивания файла.
+# Использует commits API с path=config.default и кэширует результат.
+CONFIG_UPDATE_CACHE_DIR="/opt/zapret/extra_strats/cache"
+CONFIG_UPDATE_TTL_SEC=21600
+CONFIG_UPDATE_BASE_SHA_FILE="$CONFIG_UPDATE_CACHE_DIR/config_base_sha"
+CONFIG_UPDATE_REMOTE_SHA_FILE="$CONFIG_UPDATE_CACHE_DIR/config_remote_sha"
+CONFIG_UPDATE_REMOTE_DATE_FILE="$CONFIG_UPDATE_CACHE_DIR/config_remote_date"
+CONFIG_UPDATE_LAST_CHECK_FILE="$CONFIG_UPDATE_CACHE_DIR/config_last_check"
+CONFIG_UPDATE_HAS_UPDATE_FILE="$CONFIG_UPDATE_CACHE_DIR/config_has_update"
+CONFIG_UPDATE_NOTICE=""
+
+_config_update_latest_remote() {
+    local api_url="https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1"
+    local body remote_sha remote_date
+
+    body="$(curl -s --max-time 8 "$api_url")"
+    remote_sha="$(echo "$body" | grep -m1 '"sha"' | cut -d'"' -f4)"
+    remote_date="$(echo "$body" | grep -m1 '"date"' | cut -d'"' -f4)"
+
+    if [ -n "$remote_sha" ]; then
+        echo "$remote_sha|$remote_date"
+        return 0
+    fi
+    return 1
+}
+
+config_update_mark_repo_synced() {
+    mkdir -p "$CONFIG_UPDATE_CACHE_DIR" 2>/dev/null || true
+    local latest remote_sha remote_date now_ts
+    latest="$(_config_update_latest_remote 2>/dev/null)" || return 0
+
+    remote_sha="${latest%%|*}"
+    remote_date="${latest#*|}"
+    now_ts="$(date +%s 2>/dev/null || echo 0)"
+
+    echo "$remote_sha" > "$CONFIG_UPDATE_BASE_SHA_FILE"
+    echo "$remote_sha" > "$CONFIG_UPDATE_REMOTE_SHA_FILE"
+    echo "$remote_date" > "$CONFIG_UPDATE_REMOTE_DATE_FILE"
+    echo "$now_ts" > "$CONFIG_UPDATE_LAST_CHECK_FILE"
+    echo "0" > "$CONFIG_UPDATE_HAS_UPDATE_FILE"
+}
+
+check_config_default_update_notice() {
+    mkdir -p "$CONFIG_UPDATE_CACHE_DIR" 2>/dev/null || true
+
+    local now_ts last_ts has_update base_sha remote_sha remote_date latest
+    now_ts="$(date +%s 2>/dev/null || echo 0)"
+    last_ts="$(cat "$CONFIG_UPDATE_LAST_CHECK_FILE" 2>/dev/null || echo 0)"
+    has_update="$(cat "$CONFIG_UPDATE_HAS_UPDATE_FILE" 2>/dev/null || echo 0)"
+    base_sha="$(cat "$CONFIG_UPDATE_BASE_SHA_FILE" 2>/dev/null || true)"
+    remote_sha="$(cat "$CONFIG_UPDATE_REMOTE_SHA_FILE" 2>/dev/null || true)"
+    remote_date="$(cat "$CONFIG_UPDATE_REMOTE_DATE_FILE" 2>/dev/null || true)"
+
+    if [ $((now_ts - last_ts)) -ge "$CONFIG_UPDATE_TTL_SEC" ] || [ -z "$remote_sha" ]; then
+        latest="$(_config_update_latest_remote 2>/dev/null)" || latest=""
+        if [ -n "$latest" ]; then
+            remote_sha="${latest%%|*}"
+            remote_date="${latest#*|}"
+            echo "$remote_sha" > "$CONFIG_UPDATE_REMOTE_SHA_FILE"
+            echo "$remote_date" > "$CONFIG_UPDATE_REMOTE_DATE_FILE"
+            echo "$now_ts" > "$CONFIG_UPDATE_LAST_CHECK_FILE"
+        fi
+    fi
+
+    # Первая инициализация базы: не тревожим пользователя, пока не появится новое изменение после первого check.
+    if [ -z "$base_sha" ] && [ -n "$remote_sha" ]; then
+        echo "$remote_sha" > "$CONFIG_UPDATE_BASE_SHA_FILE"
+        echo "0" > "$CONFIG_UPDATE_HAS_UPDATE_FILE"
+        CONFIG_UPDATE_NOTICE=""
+        return 0
+    fi
+
+    if [ -n "$base_sha" ] && [ -n "$remote_sha" ] && [ "$base_sha" != "$remote_sha" ]; then
+        has_update=1
+        echo "1" > "$CONFIG_UPDATE_HAS_UPDATE_FILE"
+        if [ -n "$remote_date" ]; then
+            CONFIG_UPDATE_NOTICE="В репозитории есть обновление config.default (UTC +0: $remote_date)"
+        else
+            CONFIG_UPDATE_NOTICE="В репозитории есть обновление config.default"
+        fi
+    else
+        has_update=0
+        echo "0" > "$CONFIG_UPDATE_HAS_UPDATE_FILE"
+        CONFIG_UPDATE_NOTICE=""
+    fi
+}
+
 #Функция для функции подбора стратегий
 try_strategies() {
     local count="$1"
