@@ -130,6 +130,7 @@ get_repo() {
  if which nft >/dev/null 2>&1; then
   sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret/config.default"
  fi
+ config_update_mark_repo_synced
  curl -L -o /opt/zapret/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-stun4all
  curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
  cp -f /opt/zapret/init.d/sysv/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all
@@ -731,7 +732,7 @@ get_menu() {
 '"${cyan}"'2'"${yellow}"'. '"$(pidof nfqws >/dev/null && echo "Остановить ${green}запущенный ${yellow}zapret" || echo "Запустить ${red}остановленный ${yellow}zapret")"'. Для restart введите '"${cyan}"'22'"${yellow}"'
 '"${cyan}"'3'"${yellow}"'. Показать домены которые zapret посчитал недоступными
 '"${cyan}"'4'"${yellow}"'. Удалить zapret
-'"${cyan}"'5'"${yellow}"'. Обновить стратегии, сбросить листы подбора стратегий и исключений (есть бэкап)
+'"${cyan}"'5'"${yellow}"'. Обновить стратегии, сбросить листы подбора стратегий и исключений (есть бэкап)'"$(get_config_rollback_menu_hint)"'
 '"${cyan}"'6'"${yellow}"'. Исключить домен из zapret обработки
 '"${cyan}"'7'"${yellow}"'. Открыть в редакторе config (Установит nano редактор ~250kb)
 '"${cyan}"'8'"${yellow}"'. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '"${plain}"'['"$(grep -Eq '^NFQWS_PORTS_UDP=.*443$' /opt/zapret/config && echo "Скрипты" || (grep -Eq '443,1400,3478-3481,5349,50000-50099,19294-19344$' /opt/zapret/config && echo "Классические стратегии" || echo "Неизвестно"))"']'"${yellow}"'
@@ -807,6 +808,13 @@ get_menu() {
   "5")
     menu_action_update_config_reset
     pause_enter
+    ;;
+
+  "50")
+    if [ -n "$(get_config_rollback_menu_hint)" ]; then
+      menu_action_restore_config_backup
+      pause_enter
+    fi
     ;;
 
   "6")
