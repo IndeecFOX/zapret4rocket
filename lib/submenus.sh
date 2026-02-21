@@ -12,7 +12,7 @@ strategies_submenu() {
     echo -e "${cyan}--- Управление стратегиями ---${plain}"
     if [ -n "$CONFIG_UPDATE_NOTICE" ]; then
       echo -e "${green}${CONFIG_UPDATE_NOTICE}${plain}"
-      echo -e "${green}Введите 55 для обновления config (аналог пункта 5 в главном меню).${plain}"
+      echo -e "${green}При желании можете ввести 55 для обновления config (Обновление зифира как через пункт 5 в главном меню).${plain}"
     fi
     echo -e "${yellow}Подобрать стратегию? (1-5 для подбора, 0 или Enter для отмены)${plain}"
     echo -e "  Текущие стратегии [${strategies_status}]"
