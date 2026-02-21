@@ -1,3 +1,32 @@
+CONFIG_ROLLBACK_CACHE_DIR="/opt/zapret/extra_strats/cache"
+CONFIG_ROLLBACK_FILE="$CONFIG_ROLLBACK_CACHE_DIR/config.rollback.bak"
+
+# Возвращает строку-подсказку для пункта 5 главного меню, если есть бэкап конфига для отката.
+get_config_rollback_menu_hint() {
+  if [ -s "$CONFIG_ROLLBACK_FILE" ]; then
+    local backup_ts
+    backup_ts="$(stat -c '%y' "$CONFIG_ROLLBACK_FILE" 2>/dev/null | cut -d'.' -f1)"
+    if [ -n "$backup_ts" ]; then
+      backup_ts="$backup_ts UTC"
+    fi
+    [ -z "$backup_ts" ] && backup_ts="неизвестно"
+    echo -e " | ${cyan}50${yellow} - откат на бэкап от $backup_ts"
+  fi
+}
+
+# Восстанавливает /opt/zapret/config из последнего сохраненного бэкапа и перезапускает zapret.
+menu_action_restore_config_backup() {
+  if [ ! -s "$CONFIG_ROLLBACK_FILE" ]; then
+    echo -e "${yellow}Бэкап для отката не найден.${plain}"
+    return 0
+  fi
+
+  cp -f "$CONFIG_ROLLBACK_FILE" /opt/zapret/config
+  /opt/zapret/init.d/sysv/zapret restart
+  echo -e "${green}Откат выполнен. Восстановлен /opt/zapret/config из бэкапа.${plain}"
+  return 0
+}
+
 backup_strats() {
   # Бэкап папки стратегий
   if [ -d /opt/zapret/extra_strats ]; then
@@ -34,6 +63,12 @@ backup_strats() {
 
 menu_action_update_config_reset() {
   echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+
+  mkdir -p "$CONFIG_ROLLBACK_CACHE_DIR" 2>/dev/null || true
+  if [ -f /opt/zapret/config ]; then
+    cp -f /opt/zapret/config "$CONFIG_ROLLBACK_FILE"
+    echo -e "${green}Создан бэкап текущего config для отката.${plain}"
+  fi
 
   backup_strats
 
