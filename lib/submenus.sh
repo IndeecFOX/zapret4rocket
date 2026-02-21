@@ -24,7 +24,7 @@ strategies_submenu() {
     submenu_item "	4" "RKN (Популярные блокированные сайты. Дискорд в т.ч.)." "17 вариантов"
     submenu_item "	5" "Отдельный домен." "17 вариантов (Приоритетнее безразборного режима)"
     if [ -n "$CONFIG_UPDATE_NOTICE" ]; then
-      submenu_item " 55" "Обновить config (пункт 5 главного меню)"
+      submenu_item "	55" "Обновить config (пункт 5 главного меню)"
     fi
 	submenu_item "	9" "$(grep -q "fooling=ts,badsum" "/opt/zapret/config" && echo "Переключить фулинг с ${yellow}ts+badsum на ts" || echo "Переключить фулинг с ${yellow}ts на ts+badsum")" "Может помочь с Discord или иными ресурсами"
     submenu_item "	0" "Назад"
