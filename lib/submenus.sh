@@ -179,3 +179,37 @@ provider_submenu() {
     esac
   done
 }
+
+keenetic_policy_submenu() {
+  while true; do
+    clear
+    echo -e "${cyan}--- Keenetic Policy ---${plain}"
+    echo -e "Текущее состояние: ${green}$(get_keenetic_policy_status)${plain}"
+    echo ""
+
+    submenu_item "1" "Задать или очистить имя политики"
+    submenu_item "2" "$( [ "$(get_keenetic_policy_mode_label)" = "Все, кроме устройств из политики" ] && echo "Переключить режим применения на \"Только устройства из политики\"" || echo "Переключить режим применения на \"Все, кроме устройств из политики\"" )"
+    submenu_item "0" "Назад"
+    echo ""
+
+    read -re -p "Ваш выбор: " ans
+
+    case "$ans" in
+      "1")
+        menu_action_set_keenetic_policy_name
+        pause_enter
+        ;;
+      "2")
+        menu_action_toggle_keenetic_policy_mode
+        pause_enter
+        ;;
+      "0"|"")
+        return
+        ;;
+      *)
+        echo -e "${yellow}Неверный ввод.${plain}"
+        sleep 1
+        ;;
+    esac
+  done
+}

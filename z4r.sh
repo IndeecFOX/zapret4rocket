@@ -86,13 +86,14 @@ source "$SCRIPT_DIR/zapret/z4r_lib/premium.sh"
 # Функции: get_active_strat_num, get_current_strategies_info, try_strategies, Strats_Tryer
 source "$SCRIPT_DIR/zapret/z4r_lib/strategies.sh" 
 
-# Подменю (UI-обвязка над Strats_Tryer + доп. меню управления: FLOWOFFLOAD, TCP443, провайдер)
-# Функции: strategies_submenu, flowoffload_submenu, tcp443_submenu, provider_submenu
+# Подменю (UI-обвязка над Strats_Tryer + доп. меню управления: FLOWOFFLOAD, TCP443, провайдер, Keenetic policy)
+# Функции: strategies_submenu, flowoffload_submenu, tcp443_submenu, provider_submenu, keenetic_policy_submenu
 source "$SCRIPT_DIR/zapret/z4r_lib/submenus.sh" 
 
 # Действия меню (бэкапы/сбросы/переключатели)
 # Функции: backup_strats, menu_action_update_config_reset, menu_action_toggle_bolvan_ports,
-#          menu_action_toggle_fwtype, menu_action_toggle_udp_range
+#          menu_action_toggle_fwtype, menu_action_toggle_udp_range, menu_action_set_keenetic_policy_name,
+#          menu_action_toggle_keenetic_policy_mode
 source "$SCRIPT_DIR/zapret/z4r_lib/actions.sh" 
 
 change_user() {
@@ -135,6 +136,10 @@ get_repo() {
  curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
  cp -f /opt/zapret/init.d/sysv/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all
  cp -f /opt/zapret/init.d/sysv/custom.d/50-discord-media /opt/zapret/init.d/openwrt/custom.d/50-discord-media
+ if [ "$hardware" = "keenetic" ]; then
+  ensure_keenetic_policy_config_defaults /opt/zapret/config.default
+  ensure_keenetic_policy_hooks /opt/zapret/config.default
+ fi
 
 # cache
 mkdir -p /opt/zapret/extra_strats/cache
@@ -160,7 +165,7 @@ remove_zapret() {
      echo "Папка zapret не существует."
  fi
  if [[ "$OSystem" == "entware" ]]; then
-	rm -fv /opt/etc/init.d/S90-zapret /opt/etc/ndm/netfilter.d/000-zapret.sh /opt/etc/init.d/S00fix
+	rm -fv /opt/etc/init.d/S90-zapret /opt/etc/ndm/netfilter.d/000-zapret.sh /opt/etc/init.d/S00fix /opt/zapret/init.d/sysv/keenetic-policy.sh
  fi
  read -re -p $'\033[33mУдалить функционал доступа в меню через браузер (web-ssh)? Enter - Да, 1 - нет\033[0m\n' ttyd_answer_del
  case "$ttyd_answer_del" in
@@ -260,6 +265,9 @@ entware_fixes() {
   curl -L -o /opt/zapret/init.d/sysv/zapret https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/zapret
   chmod +x /opt/zapret/init.d/sysv/zapret
   echo "Права выданы /opt/zapret/init.d/sysv/zapret"
+  curl -L -o /opt/zapret/init.d/sysv/keenetic-policy.sh https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/keenetic-policy.sh
+  chmod +x /opt/zapret/init.d/sysv/keenetic-policy.sh
+  echo "Права выданы /opt/zapret/init.d/sysv/keenetic-policy.sh"
   curl -L -o /opt/etc/ndm/netfilter.d/000-zapret.sh https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/000-zapret.sh
   chmod +x /opt/etc/ndm/netfilter.d/000-zapret.sh
   echo "Права выданы /opt/etc/ndm/netfilter.d/000-zapret.sh"
@@ -743,6 +751,7 @@ get_menu() {
 '"${cyan}"'13'"${yellow}"'. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
 '"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
 '"${cyan}"'15'"${yellow}"'. Провайдер (Поверхностные рекомендации стратетий)
+'"$( [ "$hardware" = "keenetic" ] && echo ${cyan}16${yellow}. Настройка Keenetic-политики для nfqws. Сейчас: ${plain}[$(get_keenetic_policy_status)]${yellow} )"'
 '"${cyan}"'777'"${yellow}"'. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
     if [[ -f "$PREMIUM_FLAG" ]]; then
       echo -e "${red}999. Секретный пункт. Нажимать на свой страх и риск${plain}"
@@ -903,6 +912,11 @@ get_menu() {
     provider_submenu      # сабменю само в цикле и выходит через return
     ;;
 
+  "16")
+    if [ "$hardware" = "keenetic" ]; then
+      keenetic_policy_submenu
+    fi
+    ;;
   "22")
     /opt/zapret/init.d/sysv/zapret restart
     echo -e "${green}Выполнена команда перезапуска zapret${plain}"

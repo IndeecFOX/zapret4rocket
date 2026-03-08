@@ -1,6 +1,110 @@
 CONFIG_ROLLBACK_CACHE_DIR="/opt/zapret/extra_strats/cache"
 CONFIG_ROLLBACK_FILE="$CONFIG_ROLLBACK_CACHE_DIR/config.rollback.bak"
 
+ensure_keenetic_policy_config_defaults() {
+  local config_file="${1:-/opt/zapret/config}"
+
+  [ -f "$config_file" ] || return 0
+
+  grep -q '^POLICY_NAME=' "$config_file" || echo 'POLICY_NAME=' >> "$config_file"
+  grep -q '^POLICY_EXCLUDE=' "$config_file" || echo 'POLICY_EXCLUDE=0' >> "$config_file"
+}
+
+ensure_keenetic_policy_hooks() {
+  local config_file="${1:-/opt/zapret/config}"
+
+  [ -f "$config_file" ] || return 0
+
+  grep -q '^INIT_FW_POST_UP_HOOK=' "$config_file" || echo 'INIT_FW_POST_UP_HOOK=' >> "$config_file"
+  grep -q '^INIT_FW_PRE_DOWN_HOOK=' "$config_file" || echo 'INIT_FW_PRE_DOWN_HOOK=' >> "$config_file"
+
+  sed -i 's|^INIT_FW_POST_UP_HOOK=.*|INIT_FW_POST_UP_HOOK="/opt/zapret/init.d/sysv/keenetic-policy.sh up"|' "$config_file"
+  sed -i 's|^INIT_FW_PRE_DOWN_HOOK=.*|INIT_FW_PRE_DOWN_HOOK="/opt/zapret/init.d/sysv/keenetic-policy.sh down"|' "$config_file"
+}
+
+get_keenetic_policy_name() {
+  if [ ! -f /opt/zapret/config ]; then
+    echo ""
+    return 0
+  fi
+
+  sed -n 's/^POLICY_NAME=//p' /opt/zapret/config | tail -n1
+}
+
+get_keenetic_policy_mode_label() {
+  local exclude_value
+
+  if [ ! -f /opt/zapret/config ]; then
+    echo "Только устройства из политики"
+    return 0
+  fi
+
+  exclude_value="$(sed -n 's/^POLICY_EXCLUDE=//p' /opt/zapret/config | tail -n1)"
+  if [ "$exclude_value" = "1" ]; then
+    echo "Все, кроме устройств из политики"
+  else
+    echo "Только устройства из политики"
+  fi
+}
+
+get_keenetic_policy_status() {
+  local policy_name
+
+  policy_name="$(get_keenetic_policy_name)"
+  if [ -z "$policy_name" ]; then
+    echo "Не задана"
+  else
+    echo "$policy_name | $(get_keenetic_policy_mode_label)"
+  fi
+}
+
+menu_action_set_keenetic_policy_name() {
+  local policy_name=""
+
+  ensure_keenetic_policy_config_defaults
+  ensure_keenetic_policy_hooks /opt/zapret/config
+  read -re -p "Введите имя Keenetic-политики. Enter очистит настройку, 0 - отмена: " policy_name
+
+  if [ "$policy_name" = "0" ]; then
+    echo "Изменение отменено."
+    return 0
+  fi
+
+  sed -i "s|^POLICY_NAME=.*|POLICY_NAME=$policy_name|" /opt/zapret/config
+
+  if [ -n "$policy_name" ]; then
+    echo -e "${green}Установлена Keenetic-политика:${plain} $policy_name"
+  else
+    echo -e "${yellow}Ограничение по Keenetic-политике отключено.${plain}"
+  fi
+
+  /opt/zapret/init.d/sysv/zapret restart
+  echo -e "${green}zapret перезапущен.${plain}"
+  return 0
+}
+
+menu_action_toggle_keenetic_policy_mode() {
+  local current_value next_value next_label
+
+  ensure_keenetic_policy_config_defaults
+  ensure_keenetic_policy_hooks /opt/zapret/config
+  current_value="$(sed -n 's/^POLICY_EXCLUDE=//p' /opt/zapret/config | tail -n1)"
+  [ -n "$current_value" ] || current_value="0"
+
+  if [ "$current_value" = "1" ]; then
+    next_value="0"
+    next_label="Только из политики"
+  else
+    next_value="1"
+    next_label="Все кроме политики"
+  fi
+
+  sed -i "s/^POLICY_EXCLUDE=.*/POLICY_EXCLUDE=$next_value/" /opt/zapret/config
+  /opt/zapret/init.d/sysv/zapret restart
+  echo -e "${green}Режим Keenetic-политики изменён:${plain} $next_label"
+  return 0
+}
+
 # Возвращает строку-подсказку для пункта 5 главного меню, если есть бэкап конфига для отката.
 get_config_rollback_menu_hint() {
   if [ -s "$CONFIG_ROLLBACK_FILE" ]; then
@@ -90,6 +194,8 @@ menu_action_update_config_reset() {
   change_user
 
   cp -f /opt/zapret/config.default /opt/zapret/config
+  ensure_keenetic_policy_config_defaults /opt/zapret/config
+  ensure_keenetic_policy_hooks /opt/zapret/config
 
   /opt/zapret/init.d/sysv/zapret start
 

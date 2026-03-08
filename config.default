@@ -49,6 +49,13 @@ GZIP_LISTS=1
 DESYNC_MARK=0x40000000
 DESYNC_MARK_POSTNAT=0x20000000
 
+# Keenetic only: limit nfqws to devices from a specific access policy.
+# Empty POLICY_NAME keeps the default behaviour (all matching traffic).
+# POLICY_EXCLUDE=0 : only devices in the policy go through nfqws
+# POLICY_EXCLUDE=1 : all devices except devices in the policy go through nfqws
+POLICY_NAME=
+POLICY_EXCLUDE=0
+
 TPWS_SOCKS_ENABLE=0
 # tpws socks listens on this port on localhost and LAN interfaces
 TPPORT_SOCKS=987
