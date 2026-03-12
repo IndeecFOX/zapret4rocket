@@ -96,6 +96,44 @@ source "$SCRIPT_DIR/zapret/z4r_lib/submenus.sh"
 #          menu_action_toggle_keenetic_policy_mode
 source "$SCRIPT_DIR/zapret/z4r_lib/actions.sh" 
 
+KEENETIC_POLICY_SUPPORTED=0
+
+# Упрощённая копия runtime-проверки из Entware/keenetic-policy.sh.
+# Нужна только для UI/launcher-логики z4r, чтобы заранее скрыть policy-меню, если ndmc недоступен в текущем shell-контексте.
+keenetic_policy_ndmc_is_supported() {
+ if [ "$hardware" != "keenetic" ]; then
+  return 1
+ fi
+
+ if ! command -v ndmc >/dev/null 2>&1; then
+  return 1
+ fi
+
+ local ndmc_output ndmc_rc
+ ndmc_output="$(ndmc -c "show ip policy" 2>/dev/null)"
+ ndmc_rc=$?
+
+ if [ "$ndmc_rc" -ne 0 ] || [ -z "$ndmc_output" ]; then
+  return 1
+ fi
+
+ case "$ndmc_output" in
+  *"ndmc: system failed ["*|*"Cli::Main: failed to initialize."*)
+   return 1
+   ;;
+ esac
+
+ return 0
+}
+
+detect_keenetic_policy_support() {
+ if keenetic_policy_ndmc_is_supported; then
+  KEENETIC_POLICY_SUPPORTED=1
+ else
+  KEENETIC_POLICY_SUPPORTED=0
+ fi
+}
+
 change_user() {
    if /opt/zapret/nfq/nfqws --dry-run --user="nobody" 2>&1 | grep -q "queue"; then
     echo "WS_USER=nobody"
@@ -751,7 +789,7 @@ get_menu() {
 '"${cyan}"'13'"${yellow}"'. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
 '"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
 '"${cyan}"'15'"${yellow}"'. Провайдер (Поверхностные рекомендации стратетий)
-'"$( [ "$hardware" = "keenetic" ] && echo ${cyan}16${yellow}. Настройка Keenetic-политики для nfqws. Сейчас: ${plain}[$(get_keenetic_policy_status)]${yellow} )"'
+'"$( [ "$KEENETIC_POLICY_SUPPORTED" = "1" ] && echo ${cyan}16${yellow}. Настройка Keenetic-политики для nfqws. Сейчас: ${plain}[$(get_keenetic_policy_status)]${yellow} )"'
 '"${cyan}"'777'"${yellow}"'. Активировать zeefeer premium (Нажимать только Valery ProD, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Nomand, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya и subzeero452 и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
     if [[ -f "$PREMIUM_FLAG" ]]; then
       echo -e "${red}999. Секретный пункт. Нажимать на свой страх и риск${plain}"
@@ -913,7 +951,7 @@ get_menu() {
     ;;
 
   "16")
-    if [ "$hardware" = "keenetic" ]; then
+    if [ "$KEENETIC_POLICY_SUPPORTED" = "1" ]; then
       keenetic_policy_submenu
     fi
     ;;
@@ -972,6 +1010,8 @@ if [[ "$release" == "entware" ]]; then
   hardware="keenetic"
  fi
 fi
+
+detect_keenetic_policy_support >/dev/null 2>&1 || true
 
 #По просьбе наших слушателей) Теперь netcraze официально детектится скриптом не как keenetic, а отдельно)
 if grep -q "netcraze" "/bin/ndmc" 2>/dev/null; then
