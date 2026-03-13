@@ -19,12 +19,32 @@ keenetic_policy_is_enabled() {
     [ -n "$POLICY_NAME" ]
 }
 
+keenetic_policy_ndmc_is_supported() {
+    local ndmc_output ndmc_rc
+
+    command -v ndmc >/dev/null 2>&1 || return 1
+
+    ndmc_output="$(ndmc -c "$KEENETIC_POLICY_SHOW_CMD" 2>/dev/null)"
+    ndmc_rc=$?
+    if [ "$ndmc_rc" -ne 0 ] || [ -z "$ndmc_output" ]; then
+        return 1
+    fi
+
+    case "$ndmc_output" in
+        *"ndmc: system failed ["*|*"Cli::Main: failed to initialize."*)
+            return 1
+            ;;
+    esac
+
+    KEENETIC_POLICY_NDMC_OUTPUT="$ndmc_output"
+    return 0
+}
+
 keenetic_policy_get_mark() {
     keenetic_policy_load_config
     [ -n "$POLICY_NAME" ] || return 1
-    command -v ndmc >/dev/null 2>&1 || return 1
 
-    ndmc -c "$KEENETIC_POLICY_SHOW_CMD" 2>/dev/null | awk -v policy="$POLICY_NAME" '
+    printf '%s\n' "$KEENETIC_POLICY_NDMC_OUTPUT" | awk -v policy="$POLICY_NAME" '
         index($0, "description = " policy ":") { found=1; next }
         found && /mark[[:space:]]*[:=][[:space:]]*/ {
             sub(/^.*mark[[:space:]]*[:=][[:space:]]*/, "", $0)
@@ -109,6 +129,11 @@ keenetic_policy_apply_rules() {
 
     keenetic_policy_cleanup_rules
     keenetic_policy_is_enabled || return 0
+
+    if ! keenetic_policy_ndmc_is_supported; then
+        keenetic_policy_log "ndmc is unavailable in the current shell context, policy integration disabled"
+        return 0
+    fi
 
     policy_mark="$(keenetic_policy_get_mark)"
     if [ -z "$policy_mark" ]; then
