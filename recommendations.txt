@@ -3,6 +3,7 @@
   a|UDP:0|TCP:1|GV:0|RKN:0
  - |UDP:1, 2|TCP:0|GV:0|RKN:0
  - Cheboksary|UDP:0|TCP:1|GV:1|RKN:1
+ - Chernushka|UDP:1|TCP:1|GV:0|RKN:0
  - Engels|UDP:1|TCP:4|GV:0|RKN:0
  - Kaluga|UDP:4|TCP:1|GV:1|RKN:2
  - Kazan|UDP:0|TCP:1|GV:0|RKN:5
@@ -32,7 +33,7 @@
 Abakan - CSIT|UDP:0|TCP:3|GV:0|RKN:12
 Abakan - Orion Telecom LLC|UDP:0|TCP:3|GV:0|RKN:1
 Abinsk - JSC ER-Telecom Holding Krasnodar branch|UDP:1, 3|TCP:0|GV:0, 11|RKN:0
-Abu Dhabi - PENTECH BILISIM TEKNOLOJILERI SANAYI VE TICARET |UDP:2, 3, 0|TCP:0|GV:0, 2, 17|RKN:17
+Abu Dhabi - PENTECH BILISIM TEKNOLOJILERI SANAYI VE TICARET |UDP:3, 2, 0|TCP:0|GV:0, 2, 3|RKN:17
 Aksay - Prime-Service LLC|UDP:0, 1, 4|TCP:0|GV:0, 1, 2|RKN:0
 Aksay - RegionInfocom Ltd|UDP:0|TCP:0|GV:0|RKN:2
 Alapayevsk - INTERCOM|UDP:0|TCP:0|GV:6|RKN:0
@@ -74,6 +75,7 @@ Astrakhan - MTS PJSC|UDP:0|TCP:8|GV:0|RKN:0
 Astrakhan - Nizhnevolzhskie Telecommunication Networks Real |UDP:1, 0, 5|TCP:0|GV:1, 0|RKN:0
 Astrakhan - OJSC Rostelecom Macroregional Branch South|UDP:0|TCP:1|GV:1, 0|RKN:5
 Astrakhan - PJSC Vimpelcom|UDP:5|TCP:5|GV:0|RKN:8
+Atlanta - Sprint Communications|UDP:0|TCP:0|GV:0|RKN:6
 Azov - BRAS Huawei ME60 128kusers|UDP:1|TCP:0|GV:0|RKN:0
 Azov - DDS Service LLC|UDP:2|TCP:1|GV:0|RKN:16
 Balakhna - Albatros|UDP:0|TCP:4|GV:6|RKN:17
@@ -108,7 +110,7 @@ Belgorod - MTS PJSC|UDP:0, 1|TCP:0|GV:0|RKN:6
 Belgorod - Net By Net Holding LLC|UDP:0, 1|TCP:1|GV:1|RKN:0
 Belgorod - PJSC Rostelecom|UDP:1|TCP:7|GV:2|RKN:7
 Beloozyorsky - Proxima Ltd|UDP:1|TCP:11|GV:1|RKN:7
-Beloretsk - Ufa Zelenaya Tochka|UDP:1, 2, 0|TCP:1|GV:1, 0|RKN:1
+Beloretsk - Ufa Zelenaya Tochka|UDP:1, 2, 0|TCP:1|GV:1, 0, 3|RKN:1
 Belyashi - Andrey Chuenkov PE|UDP:1|TCP:0|GV:0|RKN:2
 Berdsk - Media Holding TVK Ltd.|UDP:2|TCP:2|GV:2|RKN:1
 Beslan - Limited Liability Company Irtelcom|UDP:1|TCP:2|GV:0|RKN:0
@@ -134,7 +136,7 @@ Bronnitsy - Proxima Ltd|UDP:1|TCP:11|GV:1|RKN:7
 Bryansk - CORBINA-BROADBAND|UDP:1, 0|TCP:0|GV:0, 1|RKN:3
 Bryansk - JSC ER-Telecom Holding|UDP:0|TCP:0|GV:0|RKN:1
 Bryansk - OJSC Rostelecom|UDP:0|TCP:0|GV:0, 1|RKN:0
-Bryansk - PJSC Rostelecom|UDP:0, 4, 3|TCP:0|GV:0, 1, 13|RKN:3
+Bryansk - PJSC Rostelecom|UDP:0, 4, 3|TCP:0|GV:0, 13, 1|RKN:3
 Bryansk - Rostelecom networks|UDP:0, 3|TCP:0|GV:13, 0|RKN:0
 Bryansk temporary|UDP:0|TCP:0|GV:1|RKN:5
 Buguruslan - Orenburg branch of OJSC VolgaTelecom|UDP:1, 4|TCP:1|GV:0, 1|RKN:4
@@ -157,6 +159,7 @@ Chelyabinsk - MTS PJSC|UDP:0|TCP:2|GV:1|RKN:12
 Chelyabinsk - OJSC Uralsvyazinform|UDP:0, 3|TCP:1|GV:1, 3|RKN:0
 Chelyabinsk - OJSC uralsvyazinform|UDP:0, 1|TCP:0|GV:0|RKN:0
 Chelyabinsk - PJSC MegaFon|UDP:0|TCP:0|GV:0|RKN:8
+Chelyabinsk - Rostelecom networks|UDP:1|TCP:0|GV:0|RKN:0
 Chelyabinsk - South Ural State University|UDP:0|TCP:0|GV:1|RKN:0
 Chelyabinsk - T2 Russia Groups|UDP:2|TCP:0|GV:0|RKN:2
 Chelyabinsk - Tele2 Russia Groups|UDP:1|TCP:16|GV:0|RKN:2
@@ -303,7 +306,7 @@ Kazan - JSC ER-Telecom Holding|UDP:0|TCP:0|GV:0|RKN:0
 Kazan - JSC Ufanet|UDP:0, 2, 1|TCP:1|GV:1, 0|RKN:5
 Kazan - MTS OJSC|UDP:0, 2|TCP:0|GV:0|RKN:0
 Kazan - MTS PJSC|UDP:0, 1|TCP:0|GV:2, 0, 1|RKN:0
-Kazan - PJSC TATTELECOM|UDP:1|TCP:1|GV:1|RKN:5
+Kazan - PJSC TATTELECOM|UDP:1, 6|TCP:1|GV:1, 0|RKN:5
 Kazan - PJSC Tattelecom|UDP:0, 1|TCP:0|GV:0, 1|RKN:5
 Kazan - PJSC Vimpelcom|UDP:0|TCP:0|GV:0, 1|RKN:1
 Kazan - Rostelecom|UDP:0, 1|TCP:0|GV:0, 1|RKN:5
@@ -317,7 +320,7 @@ Kemerovo - Goodline.info|UDP:0, 1, 2|TCP:0|GV:0, 1|RKN:0
 Kemerovo - Limited Liability Company TTK-Svyaz|UDP:0|TCP:0|GV:1|RKN:0
 Kemerovo - VympelKom broadband internet|UDP:2, 3|TCP:5|GV:1, 2, 0|RKN:5
 Khabarovsk - JSC Redcom-lnternet|UDP:0, 7, 2|TCP:1|GV:0, 1, 6|RKN:0
-Khabarovsk - PJSC Rostelecom|UDP:0|TCP:0|GV:0|RKN:5
+Khabarovsk - PJSC Rostelecom|UDP:0, 1|TCP:0|GV:0|RKN:0
 Khabarovsk - Redcom LIR|UDP:2, 0|TCP:0|GV:0|RKN:4
 Khabarovsk - Redcom LIR 5|UDP:3|TCP:2|GV:7|RKN:8
 Khabarovsk - Rostelecom networks|UDP:0|TCP:0|GV:0|RKN:0
@@ -329,7 +332,7 @@ Khimki - Net By Net Holding LLC|UDP:1|TCP:1|GV:1|RKN:3
 Khimki - Technology  Networks Co.|UDP:2|TCP:0|GV:0, 1|RKN:0
 Kholmsk - RU.SAKHALIN distributed|UDP:0|TCP:0|GV:0|RKN:4
 Kimry - LAN-Optic Ltd|UDP:1, 3|TCP:0|GV:2, 16|RKN:5
-Kirishi - TK TOR Network|UDP:1|TCP:1|GV:1, 0|RKN:4
+Kirishi - TK TOR Network|UDP:1|TCP:1|GV:1, 0, 2|RKN:4
 Kirov - CJSC ER-Telecom Holding Kirov branch|UDP:1, 0, 2|TCP:1|GV:0, 10, 2|RKN:5
 Kirov - JSC ER-Telecom Holding|UDP:1, 2|TCP:1|GV:1, 0, 2|RKN:5
 Kirov - JSC Relax|UDP:2|TCP:2|GV:1|RKN:11
@@ -386,14 +389,14 @@ Krasnodar - MTS PJSC Krasnodar region|UDP:1|TCP:1|GV:1|RKN:15
 Krasnodar - OJSC Rostelecom Macroregional Branch South|UDP:1, 0, 3|TCP:1|GV:1, 0, 3|RKN:0
 Krasnodar - PAO Rostelecom|UDP:0, 1, 2|TCP:1|GV:1, 0, 6|RKN:0
 Krasnodar - PJSC Rostelecom Macroregional Branch South|UDP:1|TCP:1|GV:1|RKN:5
-Krasnodar - PJSC Vimpelcom|UDP:0, 1, 3|TCP:1|GV:0, 1, 2|RKN:0
+Krasnodar - PJSC Vimpelcom|UDP:0, 1, 3|TCP:1|GV:0, 1, 2|RKN:5
 Krasnodar - Rostelecom|UDP:0, 3|TCP:1|GV:0, 9, 1|RKN:0
 Krasnodar - SM Ltd.|UDP:0, 5|TCP:0|GV:0, 1, 7|RKN:0
 Krasnodar - Sochi SCARTEL Network|UDP:1|TCP:0|GV:0|RKN:2
 Krasnodar - Southen Telecommunication Maintainer|UDP:2|TCP:0|GV:0, 2, 3|RKN:0
 Krasnodar - TeleMaks Ltd|UDP:0, 1|TCP:1|GV:16, 0|RKN:5
 Krasnodar - TeleMaks Ltd .|UDP:7|TCP:0|GV:0|RKN:0
-Krasnodar - Trinet Ltd.|UDP:2, 1|TCP:3|GV:2, 1, 6|RKN:4
+Krasnodar - Trinet Ltd.|UDP:2, 1|TCP:4|GV:2, 1, 6|RKN:4
 Krasnodar - Umniy Dom LLC|UDP:8|TCP:1|GV:13|RKN:0
 Krasnoturinsk - CITT|UDP:0|TCP:17|GV:3|RKN:1
 Krasnoyarsk - CJSC ER-Telecom Holding Krasnoyarsk branch|UDP:0|TCP:0|GV:0|RKN:0
@@ -402,7 +405,7 @@ Krasnoyarsk - Igra-Service LLC|UDP:0|TCP:0|GV:0|RKN:2
 Krasnoyarsk - Joint Stock Company|UDP:0|TCP:3|GV:0|RKN:0
 Krasnoyarsk - KrasPromStroy LLC|UDP:1, 0, 4|TCP:0|GV:0|RKN:0
 Krasnoyarsk - Orion Telecom|UDP:0, 1|TCP:1|GV:0, 1|RKN:0
-Krasnoyarsk - Rostelecom networks|UDP:2, 0|TCP:0|GV:1, 0|RKN:5
+Krasnoyarsk - Rostelecom networks|UDP:2, 0|TCP:0|GV:1, 0, 6|RKN:0
 Krasnoyarsk - RS-KRSK|UDP:0|TCP:4|GV:1|RKN:2
 Krasnoyarsk - SIBTTK|UDP:0|TCP:0|GV:0, 1|RKN:0
 Krasnoyarsk - Tele2 Russia Groups|UDP:1|TCP:1|GV:1|RKN:1
@@ -440,9 +443,9 @@ Lebedyan - Address point-to-point Lipetsk Regional Public Ne|UDP:5|TCP:11|GV:13|
 Leninogorsk - PJSC TATTELECOM|UDP:0|TCP:0|GV:1|RKN:3
 Lensk - Kostroma-SVEN Networks|UDP:0|TCP:3|GV:2|RKN:2
 Lermontov - OJSC Rostelecom Macroregional Branch South|UDP:3|TCP:0|GV:0|RKN:0
-Line-r - SPb|UDP:0|TCP:0|GV:10|RKN:0
-Lipetsk - Address point-to-poiLipetsk Regional Public Networ|UDP:2|TCP:0|GV:0|RKN:0
-Lipetsk - Address point-to-point Lipetsk Regional Public Net|UDP:2, 0, 3|TCP:0|GV:0, 9, 16|RKN:0
+Line-r - SPb|UDP:0|TCP:0|RKN:0
+Lipetsk - Address point-to-poiLipetsk Regional Public Networ|UDP:2|TCP:0|RKN:0
+Lipetsk - Address point-to-point Lipetsk Regional Public Net|UDP:2, 0, 3|TCP:0|RKN:0
 Lipetsk - JSC ER-Telecom Holding|UDP:0, 2|TCP:1|RKN:5
 Lipetsk - JSC ER-Telecom Holding Lipetsk branch|UDP:0|TCP:1|RKN:0
 Lipetsk - Macroregional Center|UDP:0, 1|TCP:0|RKN:0
@@ -451,6 +454,7 @@ Lipetsk - TI Lipetsk|UDP:2|TCP:0|RKN:5
 LLC Flex|UDP:0, 2|TCP:0|RKN:6
 lm|UDP:0|TCP:0|RKN:5
 lm - amaa|UDP:2|TCP:11|RKN:11
+ln aan|UDP:0|TCP:0|RKN:2
 Lobnya - CNT-network|UDP:2|TCP:1|RKN:5
 Lobnya - LLC Telecom MPK|UDP:1, 0|TCP:1|RKN:2
 Lobnya - PJSC MegaFon|UDP:1|TCP:1|RKN:16
@@ -594,7 +598,7 @@ Moscow - Lovitel LLC|UDP:1, 0, 3|TCP:1|RKN:0
 Moscow - Lovitel msk|UDP:0, 1|TCP:0|RKN:2
 Moscow - Lovitel msk pool b2b|UDP:5|TCP:2|RKN:11
 Moscow - MARYNONET|UDP:1|TCP:3|RKN:5
-Moscow - MegaFon|UDP:3, 2, 0|TCP:0|RKN:0
+Moscow - MegaFon|UDP:3, 2, 1|TCP:0|RKN:0
 Moscow - MEGAFON|UDP:1|TCP:1|RKN:5
 Moscow - Mobile TeleSystems|UDP:1, 0|TCP:0|RKN:0
 Moscow - Modern Solutions LTD|UDP:0, 1|TCP:1|RKN:1
@@ -637,8 +641,9 @@ Moscow - SEVEN-SKY|UDP:0|TCP:1|RKN:0
 Moscow - SPACENET|UDP:1|TCP:0|RKN:0
 Moscow - SPRINTHOST.RU LLC|UDP:0|TCP:1|RKN:0
 Moscow - Sputnik LLC|UDP:1, 2|TCP:0|RKN:5
+Moscow - Sputniktv LLC|UDP:0|TCP:0|RKN:0
 Moscow - STIS Engineering LLC|UDP:1|TCP:0|RKN:0
-Moscow - SU29|UDP:0|TCP:11|RKN:0
+Moscow - SU29|UDP:0, 1|TCP:0|RKN:0
 Moscow - Svyaz-Energo Ltd.|UDP:5|TCP:11|RKN:5
 Moscow - T2 Russia Groups|UDP:1|TCP:0|RKN:0
 Moscow - Technology  Networks Co|UDP:4|TCP:1|RKN:2
@@ -647,7 +652,7 @@ Moscow - TELEDOM|UDP:1, 2, 3|TCP:1|RKN:2
 Moscow - Trinet Ltd.|UDP:5, 0, 2|TCP:2|RKN:0
 Moscow - UUT|UDP:7|TCP:0|RKN:0
 Moscow - VDSINA|UDP:8, 1|TCP:0|RKN:0
-Moscow - Vlasiha|UDP:0|TCP:1|RKN:12
+Moscow - Vlasiha|UDP:0|TCP:1|RKN:0
 Moscow - WAIcore Ltd|UDP:0, 6, 4|TCP:1|RKN:4
 Moscow - Yacolo|UDP:0|TCP:0|RKN:3
 Moscow - Yakovlev Denis Alexandrovich|UDP:0|TCP:0|RKN:8
@@ -706,6 +711,7 @@ Nizhniy Novgorod - PJSC Rostelecom|UDP:3, 0|TCP:1|RKN:0
 Nizhniy Novgorod - PJSC Vimpelcom|UDP:0, 2|TCP:0|RKN:0
 Nizhniy Novgorod - Rostelecom networks|UDP:0, 1, 2|TCP:0|RKN:0
 Nizhniy Novgorod - ru.sandy|UDP:0, 2|TCP:2|RKN:12
+Nizhny Tagil - LLC Cifrovie Seti Urala|UDP:2|TCP:3|RKN:1
 Nizhny Tagil - MiraLogic Telecommunication Systems|UDP:0|TCP:2|RKN:12
 Noginsk - CTC-JNPR|UDP:1, 2|TCP:11|RKN:0
 Noginsk - Flex Ltd.|UDP:4|TCP:4|RKN:5
@@ -726,7 +732,7 @@ Novokuznetsk - Regional Digital Telecommunication Company|UDP:0, 3|TCP:0|RKN:0
 Novokuznetsk - SIBNETWORKS NKZ nats|UDP:0, 1|TCP:1|RKN:0
 Novomoskovsk - CORBINA-BROADBAND|UDP:1|TCP:1|RKN:5
 Novomoskovsk - JSC Rosintel|UDP:1|TCP:1|RKN:0
-Novopodrezkovo - Moscow Local Telephone Network OAO MGTS|UDP:0|TCP:4|RKN:12
+Novopodrezkovo - Moscow Local Telephone Network OAO MGTS|UDP:0|TCP:0|RKN:12
 Novorossiysk - PJSC Rostelecom Macroregional Branch South|UDP:1|TCP:1|RKN:2
 Novorossiysk - Sprint Inet LLC|UDP:2, 1, 0|TCP:0|RKN:0
 Novosibirsk - CJSC Set|UDP:0, 1|TCP:0|RKN:0
@@ -747,7 +753,7 @@ Novosibirsk - Rostelecom networks|UDP:0, 2|TCP:0|RKN:0
 Novosibirsk - Siberian Networks|UDP:0|TCP:0|RKN:4
 Novosibirsk - Siberian Networks Novokuznetsk|UDP:0|TCP:1|RKN:5
 Novosibirsk - Sibirskie Seti Ltd.|UDP:0|TCP:1|RKN:5
-Novosibirsk - SIBNET-NETWORKS|UDP:0, 2|TCP:0|RKN:0
+Novosibirsk - SIBNET-NETWORKS|UDP:0, 2|TCP:1|RKN:3
 Novosibirsk - SIBNETWORKS NSK nats|UDP:0, 1, 3|TCP:0|RKN:0
 Novosibirsk - SM Ltd.|UDP:0|TCP:0|RKN:0
 Novosibirsk - ZAO MTU-Intels Moscow Region Network|UDP:1|TCP:0|RKN:12
@@ -756,7 +762,7 @@ Novotelecom ltd.|UDP:3, 8|TCP:2|RKN:12
 Novy Oskol - PJSC Rostelecom|UDP:0|TCP:1|RKN:4
 Novy Urengoy - JSC Sigma-KTV|UDP:5|TCP:6|RKN:0
 Novy Urengoy - PJSC Rostelecom|UDP:1, 6|TCP:1|RKN:0
-Novy Urengoy - Rostelecom networks|UDP:2, 1|TCP:0|RKN:0
+Novy Urengoy - Rostelecom networks|UDP:2, 1, 3|TCP:1|RKN:3
 Novy Urengoy - SGAICE|UDP:2|TCP:8|RKN:15
 OAO Mgts|UDP:0, 3, 1|TCP:0|RKN:12
 Ob - Rostelecom networks|UDP:0|TCP:0|RKN:5
@@ -794,7 +800,7 @@ Orgtrud - Rostelecom networks|UDP:2|TCP:0|RKN:0
 Orichi - JSC VolgaTelecom|UDP:1|TCP:1|RKN:0
 Orsk - JSC Ufanet|UDP:3|TCP:3|RKN:11
 Oryol - JSC Resource-Sviaz Regional Network|UDP:1|TCP:1|RKN:2
-Oryol - Mobile TeleSystems|UDP:0, 1, 3|TCP:0|RKN:0
+Oryol - Mobile TeleSystems|UDP:0, 1, 3|TCP:0|RKN:12
 Oryol - MTS OJSC|UDP:0|TCP:1|RKN:0
 Oryol - Net By Net Holding LLC|UDP:2|TCP:0|RKN:0
 Oryol - PJSC Rostelecom|UDP:0|TCP:1|RKN:0
@@ -807,6 +813,7 @@ Ozersk - UKS|UDP:1|TCP:0|RKN:0
 PAO Rostelecom - Krasnodar|UDP:0|TCP:1|RKN:0
 Paranga - Volgatelecom Mari El branch|UDP:0|TCP:0|RKN:5
 Pargolovo - Smart Home Limited Liability Company|UDP:4, 2, 6|TCP:16|RKN:15
+Pargolovo - telix 233|UDP:1|TCP:0|RKN:7
 Paris - CGI GLOBAL LIMITED|UDP:3|TCP:0|RKN:17
 Paris - IPHOSTER OU|UDP:1|TCP:1|RKN:0
 Paris - IT Outsourcing LLC|UDP:0|TCP:0|RKN:15
@@ -948,7 +955,7 @@ Samara - PJSC Rostelecom|UDP:1, 0|TCP:11|RKN:0
 Samara - Region Svyaz Konsalt LLC|UDP:1, 2|TCP:0|RKN:0
 Samara - Rostelecom networks|UDP:1, 3, 0|TCP:11|RKN:5
 Samara - SamaraLan|UDP:1|TCP:0|RKN:0
-Samara - Telecommunication networks JSC|UDP:1, 5, 6|TCP:0|RKN:0
+Samara - Telecommunication networks JSC|UDP:1, 3, 5|TCP:0|RKN:0
 Sanarposi - Net By Net Holding LLC|UDP:8, 6|TCP:1|RKN:15
 Saransk - CityLink Ltd|UDP:0, 1|TCP:1|RKN:1
 Saransk - CONTACTTV|UDP:0|TCP:1|RKN:0
@@ -988,7 +995,7 @@ Shcherbinka - GORCOM|UDP:0|TCP:2|RKN:4
 Shchyolkino - Comfort XXI Century Ltd.|UDP:1|TCP:0|RKN:0
 Shchyolkovo - Information and Communication Technologies LLC|UDP:0, 1, 5|TCP:1|RKN:2
 Shchyolkovo - Kazakov Viktor Aleksandrovich|UDP:2|TCP:0|RKN:12
-Shchyolkovo - Korporatvniy partner Ltd|UDP:0|TCP:0|RKN:3
+Shchyolkovo - Korporatvniy partner Ltd|UDP:0, 2|TCP:0|RKN:3
 Shchyolkovo - Limited Liability Company Incomsvyaz|UDP:0, 3, 5|TCP:1|RKN:0
 Shelekhov - CJSC ER-Telecom Holding Irkutsk branch|UDP:0, 3, 5|TCP:1|RKN:0
 Shelekhov - KomTelecom LLC|UDP:0, 1|TCP:0|RKN:5
@@ -1095,7 +1102,7 @@ St Petersburg - Veesp datacenter|UDP:1|TCP:0|RKN:4
 St Petersburg - VilTel Ltd|UDP:1, 0|TCP:0|RKN:1
 St Petersburg - Your|UDP:0, 5|TCP:1|RKN:2
 St Petersburg - Z-Telecom|UDP:0, 1, 2|TCP:0|RKN:0
-St Petersburg - ZAO MTU-Intels Moscow Region Network|UDP:0, 2, 4|TCP:0|RKN:0
+St Petersburg - ZAO MTU-Intels Moscow Region Network|UDP:2, 4, 0|TCP:0|RKN:0
 Stary Oskol - Gorokhov Kirill|UDP:0, 1, 2|TCP:0|RKN:0
 Stary Oskol - GorPTUs OOO|UDP:0, 1|TCP:1|RKN:0
 Stary Oskol - Net By Net Holding LLC|UDP:0, 1, 6|TCP:0|RKN:0
@@ -1129,13 +1136,13 @@ Surgut - OJSC Rostelecom|UDP:1|TCP:11|RKN:1
 Surgut - OJSC uralsvyazinform|UDP:1, 0, 2|TCP:1|RKN:0
 Surgut - PJSC MegaFon|UDP:1|TCP:0|RKN:0
 Surgut - PJSC Rostelecom|UDP:0, 1|TCP:1|RKN:16
-Surgut - Rostelecom networks|UDP:1|TCP:1|RKN:0
-Surgut - Tele-plus LLC|UDP:0|TCP:0|RKN:2
-Svyazstroi LLC|UDP:1|TCP:1|RKN:0
-Syamzha - Rostelecom networks|UDP:0|TCP:2|RKN:0
-Syasstroy - Net By Net Holding LLC|UDP:1|TCP:1|RKN:0
-Syktyvkar - CJSC TransTeleCom|UDP:0|TCP:2|RKN:7
-Syktyvkar - PJSC Rostelecom|UDP:1, 4|TCP:1|RKN:5
+Surgut - Rostelecom networks|UDP:|TCP:|RKN:
+Surgut - Tele-plus LLC|UDP:|TCP:|RKN:
+Svyazstroi LLC|UDP:|TCP:|RKN:
+Syamzha - Rostelecom networks|UDP:|TCP:|RKN:
+Syasstroy - Net By Net Holding LLC|UDP:|TCP:|RKN:
+Syktyvkar - CJSC TransTeleCom|UDP:|TCP:|RKN:
+Syktyvkar - PJSC Rostelecom|UDP:|TCP:|RKN:
 Syktyvkar - Rostelecom networks|UDP:|TCP:|RKN:
 Syktyvkar - Saint Petersburg T-Mobile|UDP:|TCP:|RKN:
 Taganrog - MTS PJSC|UDP:|TCP:|RKN:
@@ -1186,10 +1193,3 @@ TTK AS50771|UDP:|TCP:|RKN:
 Tuapse - LLC Multiservice|UDP:|TCP:|RKN:
 Tula - CJSC ER-Telecom Holding Tula branch|UDP:|TCP:|RKN:
 Tula - CORBINA-BROADBAND|UDP:|TCP:|RKN:
-Tula - Full|UDP:|TCP:|RKN:
-Tula - IT Ltd.|UDP:|TCP:|RKN:
-Tula - JSC ER-Telecom Holding|UDP:|TCP:|RKN:
-Tula - NKOORT|UDP:|TCP:|RKN:
-Tula - PJSC Rostelecom|UDP:|TCP:|RKN:
-Tula - PJSC Vimpelcom|UDP:|TCP:|RKN:
-Tula - Top half|UDP:|TCP:|RKN:
