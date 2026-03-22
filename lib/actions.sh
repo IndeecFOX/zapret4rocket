@@ -209,7 +209,7 @@ menu_action_update_config_reset() {
 
 menu_action_toggle_bolvan_ports() {
   if grep -Eq '^NFQWS_PORTS_UDP=.*443$' "/opt/zapret/config"; then
-    sed -i '76s/443$/443,1400,3478-3481,5349,50000-50099,19294-19344/' /opt/zapret/config
+    sed -i '83s/443$/443,1400,3478-3481,5349,50000-50099,19294-19344/' /opt/zapret/config
     sed -i 's/^--skip --filter-udp=50000/--filter-udp=50000/' "/opt/zapret/config"
 
     rm -f /opt/zapret/init.d/sysv/custom.d/50-discord-media \
@@ -217,7 +217,7 @@ menu_action_toggle_bolvan_ports() {
           /opt/zapret/init.d/openwrt/custom.d/50-stun4all \
           /opt/zapret/init.d/openwrt/custom.d/50-discord-media
 
-    echo -e "${green}Уход от скриптов bol-van. Выделены порты 50000-50099,1400,3478-3481,5349 и раскомментированы стратегии DS, WA, TG${plain}"
+    echo -e "${green}Уход от скриптов bol-van. Выделены порты 50000-50099,1400,3478-3481,5349${plain}"
 
   elif grep -q '443,1400,3478-3481,5349,50000-50099,19294-19344$' "/opt/zapret/config"; then
     sed -i 's/443,1400,3478-3481,5349,50000-50099,19294-19344$/443/' /opt/zapret/config
