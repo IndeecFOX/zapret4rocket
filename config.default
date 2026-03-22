@@ -104,8 +104,9 @@ NFQWS_OPT_DESYNC_DISCORD_MEDIA="--dpi-desync=fake --dpi-desync-fake-discord=/opt
 #Стратегия войсов ТГ, ВА и т.п. вместо просто fake. Если закомментировать - будет использоваться просто fake
 NFQWS_OPT_DESYNC_STUN="--dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-repeats=6"
 NFQWS_OPT="
-'Лист для исключения из фильтрации доменов по TCP.'
+'Лист для исключения из zapret доменов'
 --filter-tcp=80,443,8443 --hostlist-domains=none.com --hostlist=/opt/zapret/lists/netrogat.txt --new
+--filter-udp=1026-65531 --hostlist-domains=none.com --hostlist=/opt/zapret/lists/netrogat.txt --new
 'Запасные стратегии UDP QUIC YouTube'
 --filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/1.txt --dpi-desync=fake,ipfrag2 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_5.bin --dpi-desync-cutoff=n3 --dpi-desync-repeats=3 --new
 --filter-udp=443 --hostlist-domains=none.dom --hostlist=/opt/zapret/extra_strats/UDP/YT/2.txt --dpi-desync=fake,udplen --dpi-desync-udplen-increment=4 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_4.bin --dpi-desync-cutoff=n3 --dpi-desync-repeats=2 --new
