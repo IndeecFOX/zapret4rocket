@@ -186,6 +186,20 @@ mkdir -p /opt/zapret/extra_strats/cache
 
 #Удаление старого запрета, если есть
 remove_zapret() {
+ local force=$1
+
+ # Если не передан флаг -y, задаем первый вопрос
+ if [ "$force" != "-y" ]; then
+    echo -e "\033[31mВнимание! Вы собираетесь полностью удалить zapret и сопутствующие компоненты.\033[0m"
+    read -p "Вы уверены? Введите 'yes' для продолжения: " confirm
+ else
+    confirm="yes" # В автоматическом режиме сразу ставим yes
+ fi
+
+ if [ "$confirm" != "yes" ]; then
+    echo "Удаление отменено пользователем."
+    return 1
+ fi
  if [ -f "/opt/zapret/init.d/sysv/zapret" ] && [ -f "/opt/zapret/config" ]; then
     /opt/zapret/init.d/sysv/zapret stop
  fi
@@ -216,7 +230,8 @@ remove_zapret() {
 		rm -f /usr/bin/ttyd
 		echo "Процесс удаления завершён"
     ;;
- esac 
+ esac
+ return 0
 }
 
 #Запрос желаемой версии zapret
@@ -729,7 +744,7 @@ bezrazbor_selector() {
 	#Применение изменений в файле. Используем модифицированную строку sed
 	sed -i "s|\(2096,8443 --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt \).*\( --new\)|\1$NEW_PARAMS_BEZR\2|" "/opt/zapret/config"
 	if [ $? -eq 0 ]; then
-		echo -e "${yelow}Выполняем перезапуск zapret${plain}"
+		echo -e "${yellow}Выполняем перезапуск zapret${plain}"
 		/opt/zapret/init.d/sysv/zapret restart
 		echo "Добавить ru домены в исключения? (Обычно не заблокированы и могут ломаться режимом)"
         read -re -p "Enter - да, 1 - нет: " add_ru
@@ -847,8 +862,9 @@ get_menu() {
     ;;
 
   "4")
-    remove_zapret
-    echo -e "${yellow}zapret удалён${plain}"
+    if remove_zapret; then
+      echo -e "${yellow}zapret удалён${plain}"
+    fi
     pause_enter
     ;;
 
@@ -1140,7 +1156,7 @@ cd /tmp
 backup_strats
 
 #Удаление старого запрета, если есть
-remove_zapret
+remove_zapret -y
 
 #Запрос желаемой версии zapret
 echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
