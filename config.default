@@ -100,9 +100,9 @@ NFQWS_UDP_PKT_IN=0
 
 # just notes: --debug=@/opt/zapret/debug.log
 #Стратегия DISCORD вместо просто fake. Если закомментировать - будет использоваться просто fake
-NFQWS_OPT_DESYNC_DISCORD_MEDIA="--dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-repeats=6"
+NFQWS_OPT_DESYNC_DISCORD_MEDIA="--dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_dbankcloud_ru.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_dbankcloud_ru.bin --dpi-desync-repeats=6"
 #Стратегия войсов ТГ, ВА и т.п. вместо просто fake. Если закомментировать - будет использоваться просто fake
-NFQWS_OPT_DESYNC_STUN="--dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-repeats=6"
+NFQWS_OPT_DESYNC_STUN="--dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_dbankcloud_ru.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_dbankcloud_ru.bin --dpi-desync-repeats=6"
 NFQWS_OPT="
 'Лист для исключения из zapret доменов'
 --filter-tcp=80,443,8443 --hostlist-domains=none.com --hostlist=/opt/zapret/lists/netrogat.txt --new
@@ -187,7 +187,7 @@ NFQWS_OPT="
 'Обход сайтов по httpS'
 --filter-tcp=443,2053,2083,2087,2096,8443 --hostlist=/opt/zapret/extra_strats/TCP/RKN/List.txt --dpi-desync=fake --dpi-desync-fooling=ts,badsum --dpi-desync-fake-tls=/opt/zapret/files/fake/stun.bin --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --dpi-desync-fake-tls-mod=sni=msn.com --new
 'Обход войса Discord. Отключено в дефолте, если обход скриптом bol-van'
---skip --filter-udp=50000-50099,1400,3478-3481,5349,19294-19344 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-repeats=6 --new
+--filter-udp=50000-50099,1400,3478-3481,5349,19294-19344 --filter-l7=discord,stun --dpi-desync=fake --dpi-desync-fake-discord=/opt/zapret/files/fake/quic_initial_dbankcloud_ru.bin --dpi-desync-fake-stun=/opt/zapret/files/fake/quic_initial_dbankcloud_ru.bin --dpi-desync-repeats=6 --new
 'Стратегия обхода UDP игр и т.п.'
 --skip --filter-udp=1026-65531 --dpi-desync=fake --dpi-desync-repeats=10 --dpi-desync-any-protocol=1 --dpi-desync-fake-unknown-udp=/opt/zapret/files/fake/quic_initial_www_google_com.bin --dpi-desync-cutoff=n2 --new
 'Логгирование недоступных доменов'
