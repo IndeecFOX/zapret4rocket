@@ -829,15 +829,15 @@ menu_action_set_bezrazbor_strategy() {
 	apply_bezr_params "$new_params"
 	/opt/zapret/init.d/sysv/zapret restart
 	if grep -qxF "ru" /opt/zapret/lists/netrogat.txt 2>/dev/null; then
-		echo "ru домены уже есть в исключениях (netrogat.txt)."
+		echo "RU домены уже есть в исключениях (netrogat.txt)."
 	else
-		echo "Добавить ru домены в исключения? (Обычно не заблокированы и могут ломаться режимом)"
+		echo "Добавить RU домены в исключения? (Обычно не заблокированы и могут ломаться режимом)"
 		read -re -p "Enter - да, 1 - нет: " add_ru
 		if [ -n "$add_ru" ]; then
-			echo "Пропуск добавления ru доменов."
+			echo "Пропуск добавления RU доменов."
 		else
 			echo "ru" >> /opt/zapret/lists/netrogat.txt
-			echo -e "Домены ru добавлены в исключения (netrogat.txt)."
+			echo -e "Домены RU добавлены в исключения (netrogat.txt)."
 		fi
 	fi
 	echo -e "${green}Безразборный режим активирован на стратегии $strat_num. Zapret перезапущен.${plain}"
@@ -906,7 +906,6 @@ bezrazbor_submenu() {
 		submenu_item "3" "Задать список портов (дефолтные: $DEFAULT_BEZR_PORTS)"
 		submenu_item "0" "Назад"
 		echo ""
-
 		read -re -p "Ваш выбор: " ans
 		case "$ans" in
 			"1")
