@@ -20,9 +20,9 @@ get_active_strat_num() {
 # Функция для генерации строки статуса стратегий
 get_current_strategies_info() {
     local s_udp=$(get_active_strat_num "/opt/zapret/extra_strats/UDP/YT" 8)
-    local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
-    local s_gv=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/GV" 17)
-    local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
+    local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 22)
+    local s_gv=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/GV" 22)
+    local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 22)
     
     # Формируем красивую строку. Цвета можно менять.
     # Функция для окраски: 0 - серый, >0 - зеленый
@@ -164,7 +164,7 @@ try_strategies() {
         
         # Блок проверки доступности (curl)
         # Работает только для TCP стратегий
-        if [[ "$count" == "17" ]]; then
+        if [[ "$count" == "22" ]]; then
              local TestURL=""
              
              # ЛОГИКА ВЫБОРА ДОМЕНА ДЛЯ ПРОВЕРКИ
@@ -249,7 +249,7 @@ Strats_Tryer() {
       echo "Подбор для хост-листа YouTube (TCP - сам интерфейс. Без видео-домена). Ранее заданная стратегия этого листа сброшена в дефолт."
       #вывод подсказки
       show_hint "TCP"
-      try_strategies 17 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
+      try_strategies 22 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
       ;;
     "3")
       echo "Подбор для googlevideo.com (Видеопоток YouTube). Ранее заданная стратегия этого листа сброшена в дефолт."
@@ -259,17 +259,17 @@ Strats_Tryer() {
       user_domain="googlevideo.com"
       #вывод подсказки
       show_hint "GV"
-      try_strategies 17 "/opt/zapret/extra_strats/TCP/GV" "/dev/null" ""
+      try_strategies 22 "/opt/zapret/extra_strats/TCP/GV" "/dev/null" ""
       ;;
     "4")
       echo "Подбор для хост-листа основных доменов блока RKN. Проверка доступности задана на домен meduza.io. Ранее заданная стратегия этого листа сброшена в дефолт."
-      for numRKN in {1..17}; do
+      for numRKN in {1..22}; do
         echo -n > "/opt/zapret/extra_strats/TCP/RKN/${numRKN}.txt"
       done
       user_domain="meduza.io"
       #вывод подсказки
       show_hint "RKN"
-      try_strategies 17 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
+      try_strategies 22 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
       ;;
     "5")
       echo "Режим ручного указания домена"
@@ -280,7 +280,7 @@ Strats_Tryer() {
       fi
       echo "Введён домен: $user_domain"
 
-      try_strategies 17 "/opt/zapret/extra_strats/TCP/temp" "/dev/null" \
+      try_strategies 22 "/opt/zapret/extra_strats/TCP/temp" "/dev/null" \
         "echo -n > \"/opt/zapret/extra_strats/TCP/temp/\${strat_num}.txt\"; \
          echo \"$user_domain\" >> \"/opt/zapret/extra_strats/TCP/User/\${strat_num}.txt\""
       ;;
