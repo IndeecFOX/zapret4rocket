@@ -154,7 +154,7 @@ get_repo() {
  curl -L -o /opt/zapret/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt
- touch /opt/zapret/lists/autohostlist.txt /opt/zapret/extra_strats/UDP/YT/{1..8}.txt /opt/zapret/extra_strats/TCP/RKN/{1..17}.txt /opt/zapret/extra_strats/TCP/User/{1..17}.txt /opt/zapret/extra_strats/TCP/YT/{1..17}.txt /opt/zapret/extra_strats/TCP/GV/{1..17}.txt /opt/zapret/extra_strats/TCP/temp/{1..17}.txt
+ touch /opt/zapret/lists/autohostlist.txt /opt/zapret/extra_strats/UDP/YT/{1..8}.txt /opt/zapret/extra_strats/TCP/RKN/{1..22}.txt /opt/zapret/extra_strats/TCP/User/{1..22}.txt /opt/zapret/extra_strats/TCP/YT/{1..22}.txt /opt/zapret/extra_strats/TCP/GV/{1..22}.txt /opt/zapret/extra_strats/TCP/temp/{1..22}.txt
  if [ -d /opt/extra_strats ]; then
   rm -rf /opt/zapret/extra_strats
   mv /opt/extra_strats /opt/zapret/
@@ -972,7 +972,7 @@ get_menu() {
 '"${cyan}"'11'"${yellow}"'. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret/config)"']'"${yellow}"'
 '"${cyan}"'12'"${yellow}"'. Меню (Де)Активации работы по всем доменам TCP без хост-листов, не затрагивает youtube стратегии и кастомные домены (безразборный режим) Сейчас: '"${plain}"'['"$(get_bezr_status)"']'"${yellow}"' | Порты: '"${plain}"'['"$(get_bezr_ports)"']'"${yellow}"'
 '"${cyan}"'13'"${yellow}"'. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
-'"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
+'"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12,20,22 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
 '"${cyan}"'15'"${yellow}"'. Провайдер (Поверхностные рекомендации стратетий)
 '"$( [ "$KEENETIC_POLICY_SUPPORTED" = "1" ] && echo ${cyan}16${yellow}. Настройка Keenetic-политики для nfqws. Сейчас: ${plain}[$(get_keenetic_policy_status)]${yellow} )"'
 '"${cyan}"'777'"${yellow}"'. Активировать zeefeer premium (Нажимать только Valery ProD, Nomand, JorjeousJorje, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya, subzeero452, SadFrozz, Avatar-Lion и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
