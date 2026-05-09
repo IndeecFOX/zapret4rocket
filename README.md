@@ -18,7 +18,7 @@ YouTube без ограничений, работа войсов Telegram, Whats
 
 **Установка/обновление/подбор стратегий** (копируйте и вставляйте в SSH):
 ```bash
-curl -O https://raw.githubusercontent.com/serogaq/z4r/4/z4r && sh z4r
+curl -O https://raw.githubusercontent.com/serogaq/z4r/main/z4r && sh z4r
 ```
 
 **После запуска:**
