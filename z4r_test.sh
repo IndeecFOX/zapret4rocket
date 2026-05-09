@@ -92,7 +92,7 @@ get_repo() {
  curl -L -o /opt/zapret/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt
- touch /opt/zapret/lists/autohostlist.txt /opt/zapret/extra_strats/UDP/YT/{1..8}.txt /opt/zapret/extra_strats/TCP/RKN/{1..17}.txt /opt/zapret/extra_strats/TCP/User/{1..17}.txt /opt/zapret/extra_strats/TCP/YT/{1..17}.txt /opt/zapret/extra_strats/TCP/temp/{1..17}.txt
+ touch /opt/zapret/lists/autohostlist.txt /opt/zapret/extra_strats/UDP/YT/{1..8}.txt /opt/zapret/extra_strats/TCP/RKN/{1..22}.txt /opt/zapret/extra_strats/TCP/User/{1..22}.txt /opt/zapret/extra_strats/TCP/YT/{1..22}.txt /opt/zapret/extra_strats/TCP/temp/{1..22}.txt
  if [ -d /opt/extra_strats ]; then
   rm -rf /opt/zapret/extra_strats
   mv /opt/extra_strats /opt/zapret/
@@ -133,7 +133,7 @@ try_strategies() {
         fi
         echo "Стратегия номер $i активирована"
 		
-		if [[ "$count" == "17" ]]; then
+		if [[ "$count" == "22" ]]; then
 		 if [[ -n "$user_domain" ]]; then
 			local TestURL="https://$user_domain"
 		 else
@@ -182,15 +182,15 @@ Strats_Tryer() {
             ;;
         "2")
             echo "Режим YT (TCP)"
-            try_strategies 17 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
+            try_strategies 22 "/opt/zapret/extra_strats/TCP/YT" "/opt/zapret/extra_strats/TCP/YT/List.txt" ""
             ;;
         "3")
             echo "Режим RKN. Проверка доступности задана на домен meduza.io. Ранее заданная стратегия RKN сброшена в дефолт."
-			for numRKN in {1..17}; do
+			for numRKN in {1..22}; do
 				echo -n > "/opt/zapret/extra_strats/TCP/RKN/${numRKN}.txt"
 			done
 			user_domain="meduza.io"
-            try_strategies 17 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
+            try_strategies 22 "/opt/zapret/extra_strats/TCP/RKN" "/opt/zapret/extra_strats/TCP/RKN/List.txt" ""
             ;;
         "4")
             echo "Режим кастомного домена"
@@ -199,7 +199,7 @@ Strats_Tryer() {
 			fi
 			echo "Введён домен: $user_domain"
 
-            try_strategies 17 "/opt/zapret/extra_strats/TCP/temp" "/dev/null" \
+            try_strategies 22 "/opt/zapret/extra_strats/TCP/temp" "/dev/null" \
             "echo -n > \"/opt/zapret/extra_strats/TCP/temp/\${i}.txt\"; \
              echo \"$user_domain\" >> \"/opt/zapret/extra_strats/TCP/User/\${i}.txt\""
             ;;
@@ -543,19 +543,19 @@ Enter (без цифр) - переустановка/обновление zapret
    exit 0
    ;;
   "12")
-   num=$(sed -n '112,128p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); echo -e "${yellow}Безразборный режим по стратегии: ${plain}$((num ? num : 0))"
-   read -re -p $'\033[33mС каким номером применить стратегию? (1-17, 0 - отключение безразборного режима, Enter - выход) \033[31mПри активации кастомно подобранные домены будут очищены:\033[0m' answer_bezr
-   if echo "$answer_bezr" | grep -Eq '^[0-9]+$' && [ "$answer_bezr" -ge 0 ] && [ "$answer_bezr" -le 17 ]; then
+   num=$(sed -n '112,133p' /opt/zapret/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); echo -e "${yellow}Безразборный режим по стратегии: ${plain}$((num ? num : 0))"
+   read -re -p $'\033[33mС каким номером применить стратегию? (1-22, 0 - отключение безразборного режима, Enter - выход) \033[31mПри активации кастомно подобранные домены будут очищены:\033[0m' answer_bezr
+   if echo "$answer_bezr" | grep -Eq '^[0-9]+$' && [ "$answer_bezr" -ge 0 ] && [ "$answer_bezr" -le 22 ]; then
 	#Отключение
-    for i in $(seq 112 128); do
+    for i in $(seq 112 133); do
 	 if sed -n "${i}p" /opt/zapret/config | grep -Fq -- '--filter-tcp=443 --hostlist-domains= --h'; then
 		sed -i "${i}s#--filter-tcp=443 --hostlist-domains= --h#--filter-tcp=443 --hostlist-domains=none.dom --h#" /opt/zapret/config
 		break
 	fi
 	done
 	echo "Безразборный режим отключен"
-	if [ "$answer_bezr" -ge 1 ] && [ "$answer_bezr" -le 17 ]; then
-		for f_clear in $(seq 1 17); do
+	if [ "$answer_bezr" -ge 1 ] && [ "$answer_bezr" -le 22 ]; then
+		for f_clear in $(seq 1 22); do
 			echo -n > "/opt/zapret/extra_strats/TCP/User/$f_clear.txt"
 			echo -n > "/opt/zapret/extra_strats/TCP/temp/$f_clear.txt"
 		done
