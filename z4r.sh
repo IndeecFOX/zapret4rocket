@@ -789,7 +789,7 @@ get_menu() {
 '"${cyan}"'Enter'"${yellow}"' (без цифр) - переустановка/обновление zapret
 '"${cyan}"'0'"${yellow}"'. Выход
 '"${cyan}"'01'"${yellow}"'. Проверить доступность сервисов (Тест не всегда точен). '"${cyan}"'001'"${yellow}"' - проверка 16кб блока зарубежных хостеров (актуально для безразборного режима)
-'"${cyan}"'1'"${yellow}"'. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' ]'"${yellow}"'
+'"${cyan}"'1'"${yellow}"'. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' '$(grep -q "fooling=ts,badsum" "/opt/zapret/config" && echo "Фулинг:${green}ts+badsum" || echo "Фулинг:${green}ts")' '${plain}']'"${yellow}"'
 '"${cyan}"'2'"${yellow}"'. '"$(pidof nfqws >/dev/null && echo "Остановить ${green}запущенный ${yellow}zapret" || echo "Запустить ${red}остановленный ${yellow}zapret")"'. Для restart введите '"${cyan}"'22'"${yellow}"'
 '"${cyan}"'3'"${yellow}"'. Показать домены которые zapret посчитал недоступными
 '"${cyan}"'4'"${yellow}"'. Удалить zapret
