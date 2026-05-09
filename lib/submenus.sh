@@ -18,15 +18,16 @@ strategies_submenu() {
     echo -e "  Текущие стратегии [${strategies_status}]"
     echo -e 
 
-    submenu_item "	1" "YouTube с видеопотоком (UDP QUIC)." "8 вариантов"
-    submenu_item "	2" "YouTube (TCP. Интерфейс)." "17 варианта (Приоритетнее безразборного режима)"
-    submenu_item "	3" "YouTube (TCP. Видеопоток/GV домен)." "17 варианта (Приоритетнее безразборного режима)"
-    submenu_item "	4" "RKN (Популярные блокированные сайты. Дискорд в т.ч.)." "17 варианта"
-    submenu_item "	5" "Отдельный домен." "17 варианта (Приоритетнее безразборного режима)"
+    submenu_item "	1" "YouTube с видеопотоком (UDP QUIC)." "$(strategy_variants_label UDP)"
+    submenu_item "	2" "YouTube (TCP. Интерфейс)." "$(strategy_variants_label TCP) (Приоритетнее безразборного режима)"
+    submenu_item "	3" "YouTube (TCP. Видеопоток/GV домен)." "$(strategy_variants_label TCP) (Приоритетнее безразборного режима)"
+    submenu_item "	4" "RKN (Популярные блокированные сайты. Дискорд в т.ч.)." "$(strategy_variants_label TCP)"
+    submenu_item "	5" "Отдельный домен." "$(strategy_variants_label TCP) (Приоритетнее безразборного режима)"
+    submenu_item "	6" "Включить/отключить или добавить стратегию"
     if [ -n "$CONFIG_UPDATE_NOTICE" ]; then
       submenu_item "	55" "Обновить config (пункт 5 главного меню)"
     fi
-	submenu_item "	9" "$(grep -q "fooling=ts,badsum" "/opt/zapret/config" && echo "Переключить фулинг с ${yellow}ts+badsum на ts" || echo "Переключить фулинг с ${yellow}ts на ts+badsum")" "Может помочь с Discord или иными ресурсами"
+	submenu_item "	9" "$([ "$(get_fooling_mode)" = "ts,badsum" ] && echo "Переключить фулинг с ${yellow}ts+badsum на ts" || echo "Переключить фулинг с ${yellow}ts на ts+badsum")" "Может помочь с Discord или иными ресурсами"
     submenu_item "	0" "Назад"
     echo ""
 
@@ -55,13 +56,72 @@ strategies_submenu() {
           sleep 1
         fi
         ;;
+      "6")
+        strategy_files_submenu
+        ;;
 	  "9")
 		echo "Выполняем переключение и перезапуск zapret"
-		sed -i '/fooling=ts,badsum/s/ts,badsum/ts/; t; s/fooling=ts/fooling=ts,badsum/' /opt/zapret/config
-		/opt/zapret/init.d/sysv/zapret restart
+		toggle_fooling_mode_state
+		rebuild_config_and_restart
 		echo -e "${green}Выполнено переключение фулинга. Запрет перезапущен ${plain}"
 		pause_enter
 		;;
+      "0"|"")
+        return
+        ;;
+      *)
+        echo -e "${yellow}Неверный ввод.${plain}"
+        sleep 1
+        ;;
+    esac
+  done
+}
+
+strategy_files_submenu() {
+  while true; do
+    clear
+    echo -e "${cyan}--- Файлы стратегий ---${plain}"
+    print_strategy_files_status TCP
+    echo ""
+    print_strategy_files_status UDP
+    echo ""
+    submenu_item "1" "Включить/отключить TCP стратегию"
+    submenu_item "2" "Включить/отключить UDP стратегию"
+    submenu_item "3" "Добавить пользовательскую TCP стратегию"
+    submenu_item "4" "Добавить пользовательскую UDP стратегию"
+    submenu_item "0" "Назад"
+    echo ""
+
+    read -re -p "Ваш выбор: " ans
+    case "$ans" in
+      "1")
+        read -re -p "Введите номер TCP стратегии: " num
+        if toggle_strategy_file TCP "$num"; then
+          rebuild_config_and_restart
+        fi
+        pause_enter
+        ;;
+      "2")
+        read -re -p "Введите номер UDP стратегии: " num
+        if toggle_strategy_file UDP "$num"; then
+          rebuild_config_and_restart
+        fi
+        pause_enter
+        ;;
+      "3")
+        read -re -p "Введите строку TCP стратегии: " strategy_line
+        if add_custom_strategy_file TCP "$strategy_line"; then
+          rebuild_config_and_restart
+        fi
+        pause_enter
+        ;;
+      "4")
+        read -re -p "Введите строку UDP стратегии: " strategy_line
+        if add_custom_strategy_file UDP "$strategy_line"; then
+          rebuild_config_and_restart
+        fi
+        pause_enter
+        ;;
       "0"|"")
         return
         ;;

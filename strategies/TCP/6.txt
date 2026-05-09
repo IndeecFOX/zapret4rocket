@@ -1,0 +1,1 @@
+--ipcache-hostname --dpi-desync=syndata,multisplit --dpi-desync-split-seqovl=1 --dpi-desync-split-pos=1,sld+1,endsld-2 --dpi-desync-fake-syndata=/opt/zapret/files/fake/syn_packet.bin --dup=2 --dup-cutoff=n3

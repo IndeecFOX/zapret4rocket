@@ -1,0 +1,1 @@
+--dpi-desync=fake,udplen --dpi-desync-udplen-increment=8 --dpi-desync-udplen-pattern=0xFEA82025 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_4.bin --dpi-desync-cutoff=n4 --dpi-desync-repeats=2

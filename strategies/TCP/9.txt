@@ -1,0 +1,1 @@
+--dpi-desync=hostfakesplit --dpi-desync-repeats=4 --dpi-desync-fooling=ts,badsum --dpi-desync-hostfakesplit-mod=host=ozon.ru
