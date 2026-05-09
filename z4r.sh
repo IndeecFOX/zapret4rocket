@@ -148,17 +148,97 @@ change_user() {
 
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
- mkdir -p /opt/zapret/lists /opt/zapret/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret/extra_strats/UDP/YT
+ mkdir -p /opt/zapret/lists /opt/zapret/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret/extra_strats/UDP/YT /opt/zapret/z4r_strategies/TCP /opt/zapret/z4r_strategies/UDP
  for listfile in netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do curl -L -o /opt/zapret/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/lists/$listfile; done
  curl -L "https://github.com/IndeecFOX/zapret4rocket/raw/master/fake_files.tar.gz" | tar -xz -C /opt/zapret/files/fake
  curl -L -o /opt/zapret/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt
- touch /opt/zapret/lists/autohostlist.txt /opt/zapret/extra_strats/UDP/YT/{1..8}.txt /opt/zapret/extra_strats/TCP/RKN/{1..22}.txt /opt/zapret/extra_strats/TCP/User/{1..22}.txt /opt/zapret/extra_strats/TCP/YT/{1..22}.txt /opt/zapret/extra_strats/TCP/GV/{1..22}.txt /opt/zapret/extra_strats/TCP/temp/{1..22}.txt
+ local i target
+ i=1
+ while [ "$i" -le 17 ]; do
+  target="/opt/zapret/z4r_strategies/TCP/${i}.txt"
+  if [ -f "/opt/zapret/z4r_strategies/TCP/${i}.disabled.txt" ] && [ ! -f "$target" ]; then
+   target="/opt/zapret/z4r_strategies/TCP/${i}.disabled.txt"
+  fi
+  curl -L -o "$target" https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/strategies/TCP/${i}.txt
+  i=$((i + 1))
+ done
+ i=18
+ while [ "$i" -le 20 ]; do
+  target="/opt/zapret/z4r_strategies/TCP/${i}.disabled.txt"
+  if [ -f "/opt/zapret/z4r_strategies/TCP/${i}.txt" ]; then
+   target="/opt/zapret/z4r_strategies/TCP/${i}.txt"
+  fi
+  curl -L -o "$target" https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/strategies/TCP/${i}.disabled.txt
+  i=$((i + 1))
+ done
+ i=1
+ while [ "$i" -le 8 ]; do
+  target="/opt/zapret/z4r_strategies/UDP/${i}.txt"
+  if [ -f "/opt/zapret/z4r_strategies/UDP/${i}.disabled.txt" ] && [ ! -f "$target" ]; then
+   target="/opt/zapret/z4r_strategies/UDP/${i}.disabled.txt"
+  fi
+  curl -L -o "$target" https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/strategies/UDP/${i}.txt
+  i=$((i + 1))
+ done
+ touch /opt/zapret/lists/autohostlist.txt
  if [ -d /opt/extra_strats ]; then
   rm -rf /opt/zapret/extra_strats
   mv /opt/extra_strats /opt/zapret/
   echo "Восстановление настроек подбора из резерва выполнено."
+ fi
+ if [ -d /opt/z4r_strategies ]; then
+  local saved file base num enabled_file disabled_file
+  for saved in /opt/z4r_strategies/TCP/[0-9]*.txt /opt/z4r_strategies/TCP/[0-9]*.disabled.txt; do
+   [ -e "$saved" ] || continue
+   base="${saved##*/}"
+   num="$(strategy_num_from_name "$base")"
+   case "$num" in
+    ''|*[!0-9]*) continue ;;
+   esac
+   if [ "$num" -ge "$CUSTOM_STRATEGY_START" ]; then
+    cp -f "$saved" "/opt/zapret/z4r_strategies/TCP/$base"
+   fi
+  done
+  for saved in /opt/z4r_strategies/UDP/[0-9]*.txt /opt/z4r_strategies/UDP/[0-9]*.disabled.txt; do
+   [ -e "$saved" ] || continue
+   base="${saved##*/}"
+   num="$(strategy_num_from_name "$base")"
+   case "$num" in
+    ''|*[!0-9]*) continue ;;
+   esac
+   if [ "$num" -ge "$CUSTOM_STRATEGY_START" ]; then
+    cp -f "$saved" "/opt/zapret/z4r_strategies/UDP/$base"
+   fi
+  done
+  for saved in /opt/z4r_strategies/TCP/*.disabled.txt /opt/z4r_strategies/UDP/*.disabled.txt; do
+   [ -e "$saved" ] || continue
+   base="${saved##*/}"
+   num="${base%%.disabled.txt}"
+   [ "$num" -ge "$CUSTOM_STRATEGY_START" ] && continue
+   case "$saved" in
+    */TCP/*) enabled_file="/opt/zapret/z4r_strategies/TCP/${num}.txt"; disabled_file="/opt/zapret/z4r_strategies/TCP/${num}.disabled.txt" ;;
+    */UDP/*) enabled_file="/opt/zapret/z4r_strategies/UDP/${num}.txt"; disabled_file="/opt/zapret/z4r_strategies/UDP/${num}.disabled.txt" ;;
+   esac
+   [ -f "$enabled_file" ] && mv -f "$enabled_file" "$disabled_file"
+  done
+  for saved in /opt/z4r_strategies/TCP/[0-9]*.txt /opt/z4r_strategies/UDP/[0-9]*.txt; do
+   [ -e "$saved" ] || continue
+   base="${saved##*/}"
+   case "$base" in
+    *.disabled.txt) continue ;;
+   esac
+   num="${base%%.txt}"
+   [ "$num" -ge "$CUSTOM_STRATEGY_START" ] && continue
+   case "$saved" in
+    */TCP/*) enabled_file="/opt/zapret/z4r_strategies/TCP/${num}.txt"; disabled_file="/opt/zapret/z4r_strategies/TCP/${num}.disabled.txt" ;;
+    */UDP/*) enabled_file="/opt/zapret/z4r_strategies/UDP/${num}.txt"; disabled_file="/opt/zapret/z4r_strategies/UDP/${num}.disabled.txt" ;;
+   esac
+   [ -f "$disabled_file" ] && mv -f "$disabled_file" "$enabled_file"
+  done
+  rm -rf /opt/z4r_strategies
+  echo "Восстановление стратегий и их состояний выполнено."
  fi
  if [ -f "/opt/netrogat.txt" ]; then
    mv -f /opt/netrogat.txt /opt/zapret/lists/netrogat.txt
@@ -178,6 +258,7 @@ get_repo() {
   ensure_keenetic_policy_config_defaults /opt/zapret/config.default
   ensure_keenetic_policy_hooks /opt/zapret/config.default
  fi
+ ensure_strategy_hostlist_files
 
 # cache
 mkdir -p /opt/zapret/extra_strats/cache
@@ -303,6 +384,7 @@ zapret_get() {
 #Запуск установочных скриптов и перезагрузка
 install_zapret_reboot() {
  sh -i /opt/zapret/install_easy.sh
+ build_config_from_strategies /opt/zapret/config.default /opt/zapret/config
  /opt/zapret/init.d/sysv/zapret restart
  if pidof nfqws >/dev/null; then
   check_access_list
@@ -337,7 +419,7 @@ entware_fixes() {
   if [ ! -f "$FW" ]; then
     echo "$FW не найден, пропускаю добавление правила"
   else
-    grep -qxF '/opt/zapret/init.d/sysv/zapret restart' "$FW" || echo '/opt/zapret/init.d/sysv/zapret restart' >> "$FW"
+    grep -q -x -F '/opt/zapret/init.d/sysv/zapret restart' "$FW" || echo '/opt/zapret/init.d/sysv/zapret restart' >> "$FW"
     chmod +x /jffs/scripts/firewall-start
   fi
  fi
@@ -668,270 +750,65 @@ EOF
  echo -e "${plain}Выполнение установки завершено. ${green}Доступ по ip вашего роутера/VPS в формате ip:17681, например 192.168.1.1:17681 или mydomain.com:17681 ${yellow}логин: ${ttyd_login} пароль - не используется.${plain} Был выполнен выход из скрипта для сохранения состояния."
 }
 
-DEFAULT_BEZR_PORTS="443,2053,2083,2087,2096,8443"
-BEZR_MAX_STRATEGY=22
-
-get_bezr_line() {
-	grep -- "--hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt" "/opt/zapret/config" | \
-		grep -v "/opt/zapret/extra_strats/TCP/temp/" | \
-		grep -v "/opt/zapret/extra_strats/TCP/User/" | \
-		head -n 1
-}
-
-get_bezr_ports() {
-	local line ports
-	line="$(get_bezr_line)"
-	ports="$(echo "$line" | sed -n 's/.*--filter-tcp=\([^[:space:]]*\).*/\1/p')"
-	if [ -n "$ports" ]; then
-		echo "$ports"
-	else
-		echo "$DEFAULT_BEZR_PORTS"
-	fi
-}
-
-get_bezr_state() {
-	local line
-	line="$(get_bezr_line)"
-	if [ -z "$line" ]; then
-		echo "Выключен"
-		return 0
-	fi
-	if echo "$line" | grep -q -- "--hostlist-domains=bezrazbor.disabled"; then
-		echo "Выключен"
-	else
-		echo "Включен"
-	fi
-}
-
 #Функция получения инфы о статусе безразборного режима для отображения в меню
 get_bezr_status() {
-	local core_bezr core_bezr_trimmed potential_lines_bezr strategy_id_bezr line_text_bezr
-
-	core_bezr="$(get_bezr_line | sed -n 's/.*\/TCP\/YT\/List\.txt \(.*\)--new.*/\1/p')"
-	[ -z "$core_bezr" ] && { echo "Ошибка: строка безразборного режима не найдена. Вероятно старый конфиг. Обновление через 5 пункт меню или переустановкой."; return 0; }
-	core_bezr_trimmed="$(echo "$core_bezr" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')"
-
-	if echo "$core_bezr_trimmed" | grep -q -- "--hostlist-domains=bezrazbor.disabled"; then
-		echo "Выключен"
-		return 0
-	fi
-
-	potential_lines_bezr="$(grep -n "/extra_strats/TCP/YT/[0-9]\+\.txt" "/opt/zapret/config" | grep "/extra_strats/TCP/RKN/[0-9]\+\.txt" || true)"
-	if [ -z "$potential_lines_bezr" ]; then
-		echo "Ошибка: строки с путями стратегий не найдены."
-		return 0
-	fi
-
-	strategy_id_bezr=""
-	while IFS= read -r line; do
-		line_text_bezr="$(echo "$line" | cut -d: -f2-)"
-		if [[ "$line_text_bezr" == *"$core_bezr_trimmed"* ]]; then
-			strategy_id_bezr="$(echo "$line_text_bezr" | sed -n 's|.*/extra_strats/TCP/RKN/\([0-9]\+\)\.txt.*|\1|p')"
-			break
-		fi
-	done <<< "$potential_lines_bezr"
-
-	if [ -n "$strategy_id_bezr" ]; then
-		echo "$strategy_id_bezr"
+	STRATEGY_ID_BEZR="$(get_bezrazbor_num_from_config /opt/zapret/config)"
+	if [ -n "$STRATEGY_ID_BEZR" ]; then
+		echo "$STRATEGY_ID_BEZR"
 	else
 		echo "Выключен"
 	fi
-}
-
-get_bezr_strategy_label() {
-	local status
-	status="$(get_bezr_status)"
-	if echo "$status" | grep -Eq '^[0-9]+$'; then
-		echo "$status"
-	else
-		echo "Выключен"
-	fi
-}
-
-normalize_bezr_ports() {
-	local raw clean result port seen
-	raw="$1"
-	clean="$(echo "$raw" | tr -d '[:space:]')"
-	[ -n "$clean" ] || return 1
-
-	IFS=',' read -ra ports_arr <<< "$clean"
-	result=""
-	seen=","
-	for port in "${ports_arr[@]}"; do
-		if ! echo "$port" | grep -Eq '^[0-9]+$'; then
-			return 1
-		fi
-		if ((10#$port < 1 || 10#$port > 65535)); then
-			return 1
-		fi
-		port="$((10#$port))"
-		if [[ "$seen" == *",$port,"* ]]; then
-			continue
-		fi
-		seen="${seen}${port},"
-		if [ -z "$result" ]; then
-			result="$port"
-		else
-			result="${result},${port}"
-		fi
-	done
-
-	[ -n "$result" ] || return 1
-	echo "$result"
-}
-
-build_nfqws_tcp_ports() {
-	local ports="$1"
-	if [[ ",$ports," == *,80,* ]]; then
-		echo "$ports"
-	else
-		echo "80,$ports"
-	fi
-}
-
-apply_bezr_params() {
-	local new_params="$1"
-	local ports
-	ports="$(get_bezr_ports)"
-	sed -i "s|\(--filter-tcp=${ports} --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt \).*\( --new\)|\1$new_params\2|" "/opt/zapret/config"
-}
-
-menu_action_disable_bezrazbor() {
-	apply_bezr_params "--hostlist-domains=bezrazbor.disabled"
-	/opt/zapret/init.d/sysv/zapret restart
-	echo -e "${green}Безразборный режим выключен. Zapret перезапущен.${plain}"
-}
-
-menu_action_set_bezrazbor_strategy() {
-	local strat_num="$1"
-	local donor_line new_params
-
-	if ! echo "$strat_num" | grep -Eq '^[0-9]+$' || [ "$strat_num" -lt 1 ] || [ "$strat_num" -gt "$BEZR_MAX_STRATEGY" ]; then
-		echo -e "${yellow}Номер стратегии должен быть в диапазоне 1-$BEZR_MAX_STRATEGY.${plain}"
-		return 0
-	fi
-
-	donor_line="$(grep "RKN/${strat_num}.txt" "/opt/zapret/config" | grep -- "--new" | head -n 1)"
-	if [ -z "$donor_line" ]; then
-		echo "Ошибка: стратегия с номером $strat_num не найдена в файле."
-		return 0
-	fi
-
-	new_params="$(echo "$donor_line" | sed -n "s/.*RKN\/${strat_num}\.txt \(.*\) --new/\1/p")"
-	if [ -z "$new_params" ]; then
-		new_params="$(echo "$donor_line" | sed -n 's/.*none.dom \(.*\) --new/\1/p')"
-	fi
-	if [ -z "$new_params" ]; then
-		echo "Ошибка: не удалось извлечь параметры стратегии $strat_num."
-		return 0
-	fi
-
-	apply_bezr_params "$new_params"
-	/opt/zapret/init.d/sysv/zapret restart
-	if grep -qxF "ru" /opt/zapret/lists/netrogat.txt 2>/dev/null; then
-		echo "RU домены уже есть в исключениях (netrogat.txt)."
-	else
-		echo "Добавить RU домены в исключения? (Обычно не заблокированы и могут ломаться режимом)"
-		read -re -p "Enter - да, 1 - нет: " add_ru
-		if [ -n "$add_ru" ]; then
-			echo "Пропуск добавления RU доменов."
-		else
-			echo "ru" >> /opt/zapret/lists/netrogat.txt
-			echo -e "Домены RU добавлены в исключения (netrogat.txt)."
-		fi
-	fi
-	echo -e "${green}Безразборный режим активирован на стратегии $strat_num. Zapret перезапущен.${plain}"
-}
-
-menu_action_toggle_bezrazbor() {
-	local state strat
-	state="$(get_bezr_state)"
-	if [ "$state" = "Включен" ]; then
-		menu_action_disable_bezrazbor
-	else
-		strat="$(get_bezr_status)"
-		echo "$strat" | grep -Eq '^[0-9]+$' || strat="1"
-		menu_action_set_bezrazbor_strategy "$strat"
-	fi
-}
-
-menu_action_set_bezrazbor_ports() {
-	local old_ports raw_ports new_ports nfqws_ports
-	old_ports="$(get_bezr_ports)"
-	read -re -p "Введите список портов через запятую или Enter для выхода без изменений: " raw_ports
-	if [ -z "$raw_ports" ]; then
-		echo "Пустой ввод. Изменений не будет."
-		return 0
-	fi
-
-	if ! new_ports="$(normalize_bezr_ports "$raw_ports")"; then
-		echo -e "${yellow}Некорректный список портов. Разрешены только числа 1-65535 через запятую.${plain}"
-		return 0
-	fi
-
-	nfqws_ports="$(build_nfqws_tcp_ports "$new_ports")"
-	sed -i "s/--filter-tcp=${old_ports} /--filter-tcp=${new_ports} /g" "/opt/zapret/config"
-	if grep -q '^NFQWS_PORTS_TCP=' "/opt/zapret/config"; then
-		sed -i "s/^NFQWS_PORTS_TCP=.*/NFQWS_PORTS_TCP=${nfqws_ports}/" "/opt/zapret/config"
-	else
-		echo "NFQWS_PORTS_TCP=${nfqws_ports}" >> "/opt/zapret/config"
-	fi
-
-	/opt/zapret/init.d/sysv/zapret restart
-	echo -e "${green}Порты безразборного режима изменены на:${plain} $new_ports"
-	echo -e "${green}NFQWS_PORTS_TCP=${nfqws_ports}. Zapret перезапущен.${plain}"
 }
 
 #Функция работы с безразборным режимом v2
-bezrazbor_submenu() {
-	local state strategy ports action_label ans strat_num
-	while true; do
-		clear
-		state="$(get_bezr_state)"
-		strategy="$(get_bezr_strategy_label)"
-		ports="$(get_bezr_ports)"
-		if [ "$state" = "Включен" ]; then
-			action_label="Выключить"
-		else
-			action_label="Включить"
-		fi
+bezrazbor_selector() {
+	clear
+	echo -e "Текущий статус: ${yellow}$(get_bezr_status)${plain}"
+	echo "Введите номер стратегии (1-$(strategy_max_num TCP)), '0' для отключения режима или нажмите Enter для возврата к меню: "
+	read -re -p "" STRAT_NUM_BEZR
 
-		echo -e "${cyan}--- Безразборный режим ---${plain}"
-		echo -e "Текущее состояние: ${green}${state}${plain}"
-		echo -e "Стратегия: ${green}${strategy}${plain}"
-		echo -e "Порты: ${green}${ports}${plain}"
-		echo ""
-		submenu_item "1" "$action_label"
-		submenu_item "2" "Сменить стратегию"
-		submenu_item "3" "Задать список портов (дефолтные: $DEFAULT_BEZR_PORTS)"
-		submenu_item "0" "Назад"
-		echo ""
-		read -re -p "Ваш выбор: " ans
-		case "$ans" in
-			"1")
-				menu_action_toggle_bezrazbor
-				pause_enter
-				;;
-			"2")
-				read -re -p "Введите номер стратегии (1-$BEZR_MAX_STRATEGY) или Enter для выхода: " strat_num
-				if [ -n "$strat_num" ]; then
-					menu_action_set_bezrazbor_strategy "$strat_num"
-					pause_enter
-				fi
-				;;
-			"3")
-				menu_action_set_bezrazbor_ports
-				pause_enter
-				;;
-			"0"|"")
-				return
-				;;
-			*)
-				echo -e "${yellow}Неверный ввод.${plain}"
-				sleep 1
-				;;
+	if [ -z "$STRAT_NUM_BEZR" ]; then
+		return
+	fi
+	mkdir -p "$HOSTLIST_STATE_DIR/cache" 2>/dev/null || true
+
+	if [ "$STRAT_NUM_BEZR" = "0" ]; then
+		echo "0" > "$BEZRAZBOR_STATE_FILE"
+		echo "Безразборный режим отключен."
+	else
+		case "$STRAT_NUM_BEZR" in
+			*[!0-9]*)
+			echo "Ошибка: нужно ввести номер стратегии."
+			pause_enter
+			return
+			;;
 		esac
-	done
+		if ! strategy_is_enabled TCP "$STRAT_NUM_BEZR"; then
+			echo "Ошибка: стратегия $STRAT_NUM_BEZR отключена или не найдена."
+			pause_enter
+			return
+		fi
+		echo "$STRAT_NUM_BEZR" > "$BEZRAZBOR_STATE_FILE"
+		echo "Безразборный режим активирован на стратегии $STRAT_NUM_BEZR."
+	fi
+
+	build_config_from_strategies /opt/zapret/config.default /opt/zapret/config
+	if [ $? -eq 0 ]; then
+		echo -e "${yellow}Выполняем перезапуск zapret${plain}"
+		/opt/zapret/init.d/sysv/zapret restart
+		echo "Добавить ru домены в исключения? (Обычно не заблокированы и могут ломаться режимом)"
+        read -re -p "Enter - да, 1 - нет: " add_ru
+        if [ -n "$add_ru" ]; then
+          echo "Пропуск добавления ru доменов."
+        else
+          echo "ru" >> /opt/zapret/lists/netrogat.txt
+          echo -e "Домены ru добавлены в исключения (netrogat.txt)."
+        fi
+		echo -e "${green}Успешно! Файл /opt/zapret/config обновлен. Zapret перезапущен${plain}"
+	else
+		echo -e "${red}Ошибка при записи в файл${plain}"
+	fi
+	pause_enter
 }
 
 #Меню, проверка состояний и вывод с чтением ответа
@@ -962,7 +839,7 @@ get_menu() {
 '"${cyan}"'Enter'"${yellow}"' (без цифр) - переустановка/обновление zapret
 '"${cyan}"'0'"${yellow}"'. Выход
 '"${cyan}"'01'"${yellow}"'. Проверить доступность сервисов (Тест не всегда точен). '"${cyan}"'001'"${yellow}"' - проверка 16кб блока зарубежных хостеров (актуально для безразборного режима)
-'"${cyan}"'1'"${yellow}"'. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' ]'"${yellow}"'
+'"${cyan}"'1'"${yellow}"'. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' Фулинг:'"${green}"'$(get_fooling_mode)'"${plain}"' ]'"${yellow}"'
 '"${cyan}"'2'"${yellow}"'. '"$(pidof nfqws >/dev/null && echo "Остановить ${green}запущенный ${yellow}zapret" || echo "Запустить ${red}остановленный ${yellow}zapret")"'. Для restart введите '"${cyan}"'22'"${yellow}"'
 '"${cyan}"'3'"${yellow}"'. Показать домены которые zapret посчитал недоступными
 '"${cyan}"'4'"${yellow}"'. Удалить zapret
@@ -973,9 +850,9 @@ get_menu() {
 '"${cyan}"'9'"${yellow}"'. Переключатель zapret на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '"${plain}"'['"$(grep -q '^FWTYPE=iptables$' /opt/zapret/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret/config && echo "nftables" || echo "Неизвестно"))"']'"${yellow}"'
 '"${cyan}"'10'"${yellow}"'. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '"${plain}"'['"$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=1026-65531,443' /opt/zapret/config && echo "Включен" || echo "Неизвестно"))"']'"${yellow}"'
 '"${cyan}"'11'"${yellow}"'. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret/config)"']'"${yellow}"'
-'"${cyan}"'12'"${yellow}"'. Меню (Де)Активации работы по всем доменам TCP без хост-листов, не затрагивает youtube стратегии и кастомные домены (безразборный режим) Сейчас: '"${plain}"'['"$(get_bezr_status)"']'"${yellow}"' | Порты: '"${plain}"'['"$(get_bezr_ports)"']'"${yellow}"'
+'"${cyan}"'12'"${yellow}"'. Меню (Де)Активации работы по всем доменам TCP-443,2053,2083,2087,2096,8443 без хост-листов (не затрагивает youtube стратегии и кастомные домены) (безразборный режим) Сейчас: '"${plain}"'['"$(get_bezr_status)"']'"${yellow}"'
 '"${cyan}"'13'"${yellow}"'. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
-'"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12,20,22 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
+'"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и '"$(strategy_sni_mod_nums_label)"' стратегий. Сейчас:'"${plain}[$(get_fake_tls_sni)]${yellow}"' (дефолтный sni: msn.com)
 '"${cyan}"'15'"${yellow}"'. Провайдер (Поверхностные рекомендации стратетий)
 '"$( [ "$KEENETIC_POLICY_SUPPORTED" = "1" ] && echo ${cyan}16${yellow}. Настройка Keenetic-политики для nfqws. Сейчас: ${plain}[$(get_keenetic_policy_status)]${yellow} )"'
 '"${cyan}"'777'"${yellow}"'. Активировать zeefeer premium (Нажимать только Valery ProD, Nomand, JorjeousJorje, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya, subzeero452, SadFrozz, Avatar-Lion и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
@@ -1114,7 +991,7 @@ get_menu() {
     ;;
 
   "12")
-    bezrazbor_submenu
+    bezrazbor_selector
     ;;
 
   "13")
@@ -1127,8 +1004,8 @@ get_menu() {
 	if [[ -z "$NEW_SNI" ]]; then
 		echo "Пустой ввод. Изменений не будет."
 	else
-		sed -i -E "s|(=sni=)[^[:space:]]+( --)|\1${NEW_SNI}\2|g" "/opt/zapret/config"
-		/opt/zapret/init.d/sysv/zapret restart
+		set_fake_tls_sni_state "$NEW_SNI"
+		rebuild_config_and_restart
 		echo -e "${green}Выполнен перезапуск zapret. SNI теперь фейкуется под:${plain} $NEW_SNI"
 		hosters_check
 	fi

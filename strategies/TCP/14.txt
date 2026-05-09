@@ -1,0 +1,1 @@
+--dpi-desync=fake --dpi-desync-fake-tls-mod=none --dpi-desync-repeats=6 --dpi-desync-fooling=ts,badsum --dpi-desync-badseq-increment=2

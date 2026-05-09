@@ -1,0 +1,1 @@
+--dpi-desync=fake,multisplit --dpi-desync-split-seqovl=654 --dpi-desync-split-pos=1 --dpi-desync-fooling=ts,badsum --dpi-desync-repeats=8 --dpi-desync-split-seqovl-pattern=/opt/zapret/files/fake/tls_clienthello_activated.bin --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_max_ru.bin --dpi-desync-fake-tls-mod=sni=msn.com

@@ -19,6 +19,27 @@ update_recommendations() {
   return 0
 }
 
+filter_builtin_recommendations() {
+  local value="$1"
+  local out="" item num
+
+  value="$(echo "$value" | sed 's/,/ /g')"
+  for item in $value; do
+    num="${item%%[^0-9]*}"
+    case "$num" in
+      ''|*[!0-9]*) continue ;;
+    esac
+    [ "$num" -ge 1000 ] && continue
+    if [ -n "$out" ]; then
+      out="$out,$num"
+    else
+      out="$num"
+    fi
+  done
+
+  echo "$out"
+}
+
 # 2. Функция показа подсказки (Logic + UI)
 show_hint() {
   local strat_type="$1" # UDP, TCP, GV или RKN
@@ -48,6 +69,7 @@ show_hint() {
     "RKN") part="$(echo "$line" | cut -d'|' -f5 | cut -d':' -f2)" ;;
     *) return 0 ;;
   esac
+  part="$(filter_builtin_recommendations "$part")"
 
   # Д. Выводим
   if [ -n "$part" ] && [ "$part" != "-" ]; then
