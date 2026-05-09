@@ -669,7 +669,7 @@ EOF
 }
 
 DEFAULT_BEZR_PORTS="443,2053,2083,2087,2096,8443"
-BEZR_MAX_STRATEGY=22
+BEZR_MAX_STRATEGY=17
 
 get_bezr_line() {
 	grep -- "--hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt" "/opt/zapret/config" | \
@@ -962,7 +962,7 @@ get_menu() {
 '"${cyan}"'Enter'"${yellow}"' (без цифр) - переустановка/обновление zapret
 '"${cyan}"'0'"${yellow}"'. Выход
 '"${cyan}"'01'"${yellow}"'. Проверить доступность сервисов (Тест не всегда точен). '"${cyan}"'001'"${yellow}"' - проверка 16кб блока зарубежных хостеров (актуально для безразборного режима)
-'"${cyan}"'1'"${yellow}"'. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' ]'"${yellow}"'
+'"${cyan}"'1'"${yellow}"'. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' '$(grep -q "fooling=ts,badsum" "/opt/zapret/config" && echo "Фулинг:${green}ts+badsum" || echo "Фулинг:${green}ts")' '${plain}']'"${yellow}"'
 '"${cyan}"'2'"${yellow}"'. '"$(pidof nfqws >/dev/null && echo "Остановить ${green}запущенный ${yellow}zapret" || echo "Запустить ${red}остановленный ${yellow}zapret")"'. Для restart введите '"${cyan}"'22'"${yellow}"'
 '"${cyan}"'3'"${yellow}"'. Показать домены которые zapret посчитал недоступными
 '"${cyan}"'4'"${yellow}"'. Удалить zapret
@@ -975,7 +975,7 @@ get_menu() {
 '"${cyan}"'11'"${yellow}"'. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret/config)"']'"${yellow}"'
 '"${cyan}"'12'"${yellow}"'. Меню (Де)Активации работы по всем доменам TCP без хост-листов, не затрагивает youtube стратегии и кастомные домены (безразборный режим) Сейчас: '"${plain}"'['"$(get_bezr_status)"']'"${yellow}"' | Порты: '"${plain}"'['"$(get_bezr_ports)"']'"${yellow}"'
 '"${cyan}"'13'"${yellow}"'. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
-'"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12,20,22 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
+'"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
 '"${cyan}"'15'"${yellow}"'. Провайдер (Поверхностные рекомендации стратетий)
 '"$( [ "$KEENETIC_POLICY_SUPPORTED" = "1" ] && echo ${cyan}16${yellow}. Настройка Keenetic-политики для nfqws. Сейчас: ${plain}[$(get_keenetic_policy_status)]${yellow} )"'
 '"${cyan}"'777'"${yellow}"'. Активировать zeefeer premium (Нажимать только Valery ProD, Nomand, JorjeousJorje, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya, subzeero452, SadFrozz, Avatar-Lion и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
