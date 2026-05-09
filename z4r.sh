@@ -709,7 +709,7 @@ get_bezr_status() {
 bezrazbor_selector() {
 	clear
 	echo -e "Текущий статус: ${yellow}$(get_bezr_status)${plain}"
-	echo "Введите номер стратегии (1-22), '0' для отключения режима или нажмите Enter для возврата к меню: "
+	echo "Введите номер стратегии (1-17), '0' для отключения режима или нажмите Enter для возврата к меню: "
 	read -re -p "" STRAT_NUM_BEZR
 
 	if [ -z "$STRAT_NUM_BEZR" ]; then
@@ -802,7 +802,7 @@ get_menu() {
 '"${cyan}"'11'"${yellow}"'. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret/config)"']'"${yellow}"'
 '"${cyan}"'12'"${yellow}"'. Меню (Де)Активации работы по всем доменам TCP-443,2053,2083,2087,2096,8443 без хост-листов (не затрагивает youtube стратегии и кастомные домены) (безразборный режим) Сейчас: '"${plain}"'['"$(get_bezr_status)"']'"${yellow}"'
 '"${cyan}"'13'"${yellow}"'. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
-'"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12,20,22 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
+'"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
 '"${cyan}"'15'"${yellow}"'. Провайдер (Поверхностные рекомендации стратетий)
 '"$( [ "$KEENETIC_POLICY_SUPPORTED" = "1" ] && echo ${cyan}16${yellow}. Настройка Keenetic-политики для nfqws. Сейчас: ${plain}[$(get_keenetic_policy_status)]${yellow} )"'
 '"${cyan}"'777'"${yellow}"'. Активировать zeefeer premium (Нажимать только Valery ProD, Nomand, JorjeousJorje, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya, subzeero452, SadFrozz, Avatar-Lion и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
