@@ -245,13 +245,16 @@ remove_domains_from_other_user_hostlists() {
 confirm_user_hostlist_duplicates() {
     local current_num="$1"
     local domains="$2"
-    local file domain duplicates="" answer
+    local file domain file_num duplicates="" duplicate_lines="" answer
+    local line new_duplicate_lines found
 
     for file in "$HOSTLIST_STATE_DIR/TCP/User/"*.txt; do
         [ -e "$file" ] || continue
         case "${file##*/}" in
             "${current_num}.txt") continue ;;
         esac
+        file_num="${file##*/}"
+        file_num="${file_num%%.txt}"
 
         while IFS= read -r domain; do
             [ -n "$domain" ] || continue
@@ -265,6 +268,27 @@ $domain
                     *) duplicates="${duplicates}${duplicates:+
 }$domain" ;;
                 esac
+                found=0
+                new_duplicate_lines=""
+                while IFS= read -r line; do
+                    [ -n "$line" ] || continue
+                    case "$line" in
+                        "$domain ["*"]")
+                            line="${line%]}"
+                            line="$line,$file_num]"
+                            found=1
+                            ;;
+                    esac
+                    new_duplicate_lines="${new_duplicate_lines}${new_duplicate_lines:+
+}$line"
+                done <<EOF
+$duplicate_lines
+EOF
+                duplicate_lines="$new_duplicate_lines"
+                if [ "$found" -eq 0 ]; then
+                    duplicate_lines="${duplicate_lines}${duplicate_lines:+
+}$domain [$file_num]"
+                fi
             fi
         done < "$file"
     done
@@ -272,7 +296,7 @@ $domain
     [ -z "$duplicates" ] && return 0
 
     echo -e "${yellow}Эти домены уже есть в других User hostlist:${plain}"
-    echo "$duplicates"
+    echo "$duplicate_lines"
     echo "1 - удалить их из других стратегий и добавить сюда"
     echo "2 - оставить дубли и добавить сюда"
     echo "0 или Enter - прервать добавление"
