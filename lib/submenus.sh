@@ -80,7 +80,7 @@ strategy_files_submenu() {
   local pending_tcp=""
   local pending_udp=""
   local has_changes=0
-  local ans num strategy_line type
+  local ans nums num strategy_line type
 
   toggle_pending_strategy_num() {
     local list="$1"
@@ -142,6 +142,34 @@ EOF
     has_changes=0
   }
 
+  toggle_pending_strategy_nums() {
+    local type="$1"
+    local nums="$2"
+    local item had_valid=0
+
+    nums="$(echo "$nums" | sed 's/[[:space:]]//g; s/,/ /g')"
+    for item in $nums; do
+      case "$item" in
+        ''|*[!0-9]*)
+          echo "Неверный номер стратегии: $item"
+          continue
+          ;;
+      esac
+
+      if strategy_file_exists "$type" "$item"; then
+        case "$type" in
+          TCP) pending_tcp="$(toggle_pending_strategy_num "$pending_tcp" "$item")" ;;
+          UDP) pending_udp="$(toggle_pending_strategy_num "$pending_udp" "$item")" ;;
+        esac
+        had_valid=1
+      else
+        echo "Стратегия $type/$item не найдена."
+      fi
+    done
+
+    [ "$had_valid" -eq 1 ] && has_changes=1
+  }
+
   resolve_custom_strategy_type() {
     local num="$1"
     local tcp_exists=0 udp_exists=0 choice
@@ -190,23 +218,13 @@ EOF
     read -re -p "Ваш выбор: " ans
     case "$ans" in
       "1")
-        read -re -p "Введите номер TCP стратегии: " num
-        if strategy_file_exists TCP "$num"; then
-          pending_tcp="$(toggle_pending_strategy_num "$pending_tcp" "$num")"
-          has_changes=1
-        else
-          echo "Стратегия TCP/$num не найдена."
-        fi
+        read -re -p "Введите номер(-а) TCP стратегии(-ий) (можно цифры через запятую): " nums
+        toggle_pending_strategy_nums TCP "$nums"
         pause_enter
         ;;
       "2")
-        read -re -p "Введите номер UDP стратегии: " num
-        if strategy_file_exists UDP "$num"; then
-          pending_udp="$(toggle_pending_strategy_num "$pending_udp" "$num")"
-          has_changes=1
-        else
-          echo "Стратегия UDP/$num не найдена."
-        fi
+        read -re -p "Введите номер(-а) UDP стратегии(-ий) (можно цифры через запятую): " nums
+        toggle_pending_strategy_nums UDP "$nums"
         pause_enter
         ;;
       "3")
