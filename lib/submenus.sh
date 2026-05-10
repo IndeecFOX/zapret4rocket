@@ -14,8 +14,7 @@ strategies_submenu() {
       echo -e "${green}${CONFIG_UPDATE_NOTICE}${plain}"
       echo -e "${green}При желании можете ввести 55 для обновления config (Обновление зифира как через пункт 5 в главном меню).${plain}"
     fi
-    echo -e "${yellow}Подобрать стратегию? (1-5 для подбора, 0 или Enter для отмены)${plain}"
-    echo -e "  Текущие стратегии [${strategies_status}]"
+    echo -e "Текущие стратегии [${strategies_status}]"
     echo -e 
 
     submenu_item "	1" "YouTube с видеопотоком (UDP QUIC)." "$(strategy_variants_label UDP)"
@@ -78,51 +77,190 @@ strategies_submenu() {
 }
 
 strategy_files_submenu() {
+  local pending_tcp=""
+  local pending_udp=""
+  local has_changes=0
+  local ans num strategy_line type
+
+  toggle_pending_strategy_num() {
+    local list="$1"
+    local item="$2"
+    local line out="" found=0
+
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      if [ "$line" = "$item" ]; then
+        found=1
+        continue
+      fi
+      out="${out}${out:+
+}$line"
+    done <<EOF
+$list
+EOF
+
+    if [ "$found" -eq 0 ]; then
+      out="${out}${out:+
+}$item"
+    fi
+    echo "$out"
+  }
+
+  remove_pending_strategy_num() {
+    local list="$1"
+    local item="$2"
+    local line out=""
+
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      [ "$line" = "$item" ] && continue
+      out="${out}${out:+
+}$line"
+    done <<EOF
+$list
+EOF
+    echo "$out"
+  }
+
+  apply_pending_strategy_toggles() {
+    local type="$1"
+    local list="$2"
+    local line
+
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      toggle_strategy_file "$type" "$line" || return 1
+    done <<EOF
+$list
+EOF
+    return 0
+  }
+
+  resolve_custom_strategy_type() {
+    local num="$1"
+    local tcp_exists=0 udp_exists=0 choice
+
+    strategy_file_exists TCP "$num" && tcp_exists=1
+    strategy_file_exists UDP "$num" && udp_exists=1
+
+    if [ "$tcp_exists" -eq 1 ] && [ "$udp_exists" -eq 0 ]; then
+      echo "TCP"
+      return 0
+    fi
+    if [ "$tcp_exists" -eq 0 ] && [ "$udp_exists" -eq 1 ]; then
+      echo "UDP"
+      return 0
+    fi
+    if [ "$tcp_exists" -eq 1 ] && [ "$udp_exists" -eq 1 ]; then
+      read -re -p "Найдены TCP и UDP стратегии с этим номером. Введите тип (TCP/UDP): " choice
+      case "$choice" in
+        TCP|tcp) echo "TCP"; return 0 ;;
+        UDP|udp) echo "UDP"; return 0 ;;
+      esac
+      echo "Неверный тип стратегии." >&2
+      return 1
+    fi
+
+    echo "Пользовательская стратегия $num не найдена." >&2
+    return 1
+  }
+
   while true; do
     clear
     echo -e "${cyan}--- Файлы стратегий ---${plain}"
-    print_strategy_files_status TCP
+    print_strategy_files_status TCP "$pending_tcp"
     echo ""
-    print_strategy_files_status UDP
+    print_strategy_files_status UDP "$pending_udp"
     echo ""
     submenu_item "1" "Включить/отключить TCP стратегию"
     submenu_item "2" "Включить/отключить UDP стратегию"
     submenu_item "3" "Добавить пользовательскую TCP стратегию"
     submenu_item "4" "Добавить пользовательскую UDP стратегию"
-    submenu_item "0" "Назад"
+    submenu_item "5" "Удалить пользовательскую стратегию (полностью)"
+    submenu_item "6" "Посмотреть пользовательскую стратегию"
+    submenu_item "0" "Назад / Сохранить"
     echo ""
 
     read -re -p "Ваш выбор: " ans
     case "$ans" in
       "1")
         read -re -p "Введите номер TCP стратегии: " num
-        if toggle_strategy_file TCP "$num"; then
-          rebuild_config_and_restart
+        if strategy_file_exists TCP "$num"; then
+          pending_tcp="$(toggle_pending_strategy_num "$pending_tcp" "$num")"
+          has_changes=1
+        else
+          echo "Стратегия TCP/$num не найдена."
         fi
         pause_enter
         ;;
       "2")
         read -re -p "Введите номер UDP стратегии: " num
-        if toggle_strategy_file UDP "$num"; then
-          rebuild_config_and_restart
+        if strategy_file_exists UDP "$num"; then
+          pending_udp="$(toggle_pending_strategy_num "$pending_udp" "$num")"
+          has_changes=1
+        else
+          echo "Стратегия UDP/$num не найдена."
         fi
         pause_enter
         ;;
       "3")
         read -re -p "Введите строку TCP стратегии: " strategy_line
         if add_custom_strategy_file TCP "$strategy_line"; then
-          rebuild_config_and_restart
+          has_changes=1
         fi
         pause_enter
         ;;
       "4")
         read -re -p "Введите строку UDP стратегии: " strategy_line
         if add_custom_strategy_file UDP "$strategy_line"; then
-          rebuild_config_and_restart
+          has_changes=1
         fi
         pause_enter
         ;;
+      "5")
+        read -re -p "Введите номер пользовательской стратегии для удаления: " num
+        case "$num" in
+          ''|*[!0-9]*) echo "Неверный номер стратегии." ;;
+          *)
+            if [ "$num" -lt "$CUSTOM_STRATEGY_START" ]; then
+              echo "Удалять можно только пользовательские стратегии с номером $CUSTOM_STRATEGY_START и выше."
+            else
+              type="$(resolve_custom_strategy_type "$num")"
+              if [ "$type" = "TCP" ] || [ "$type" = "UDP" ]; then
+                if delete_custom_strategy_file "$type" "$num"; then
+                  pending_tcp="$(remove_pending_strategy_num "$pending_tcp" "$num")"
+                  pending_udp="$(remove_pending_strategy_num "$pending_udp" "$num")"
+                  has_changes=1
+                fi
+              fi
+            fi
+            ;;
+        esac
+        pause_enter
+        ;;
+      "6")
+        read -re -p "Введите номер пользовательской стратегии для просмотра: " num
+        case "$num" in
+          ''|*[!0-9]*) echo "Неверный номер стратегии." ;;
+          *)
+            if [ "$num" -lt "$CUSTOM_STRATEGY_START" ]; then
+              echo "Просматривать здесь можно только пользовательские стратегии с номером $CUSTOM_STRATEGY_START и выше."
+            else
+              type="$(resolve_custom_strategy_type "$num")"
+              if [ "$type" = "TCP" ] || [ "$type" = "UDP" ]; then
+                show_custom_strategy_file "$type" "$num"
+              fi
+            fi
+            ;;
+        esac
+        pause_enter
+        ;;
       "0"|"")
+        if [ "$has_changes" -eq 1 ]; then
+          apply_pending_strategy_toggles TCP "$pending_tcp" || { pause_enter; continue; }
+          apply_pending_strategy_toggles UDP "$pending_udp" || { pause_enter; continue; }
+          rebuild_config_and_restart
+        fi
         return
         ;;
       *)

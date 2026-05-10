@@ -822,7 +822,9 @@ get_menu() {
     update_recommendations  
   while true; do
     local strategies_status
+    local fooling_mode
     strategies_status=$(get_current_strategies_info)
+    fooling_mode=$(get_fooling_mode)
     TITLE_MENU_LINE=""
     if [[ -s "$PREMIUM_TITLE_FILE" ]]; then
       TITLE_MENU_LINE="\n${pink}Титул:${plain} $(cat "$PREMIUM_TITLE_FILE")${yellow}\n"
@@ -839,7 +841,7 @@ get_menu() {
 '"${cyan}"'Enter'"${yellow}"' (без цифр) - переустановка/обновление zapret
 '"${cyan}"'0'"${yellow}"'. Выход
 '"${cyan}"'01'"${yellow}"'. Проверить доступность сервисов (Тест не всегда точен). '"${cyan}"'001'"${yellow}"' - проверка 16кб блока зарубежных хостеров (актуально для безразборного режима)
-'"${cyan}"'1'"${yellow}"'. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' Фулинг:'"${green}"'$(get_fooling_mode)'"${plain}"' ]'"${yellow}"'
+'"${cyan}"'1'"${yellow}"'. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' Фулинг:'"${green}${fooling_mode}${plain}"' ]'"${yellow}"'
 '"${cyan}"'2'"${yellow}"'. '"$(pidof nfqws >/dev/null && echo "Остановить ${green}запущенный ${yellow}zapret" || echo "Запустить ${red}остановленный ${yellow}zapret")"'. Для restart введите '"${cyan}"'22'"${yellow}"'
 '"${cyan}"'3'"${yellow}"'. Показать домены которые zapret посчитал недоступными
 '"${cyan}"'4'"${yellow}"'. Удалить zapret

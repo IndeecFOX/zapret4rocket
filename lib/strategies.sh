@@ -679,8 +679,10 @@ rebuild_config_and_restart() {
 
 print_strategy_files_status() {
     local type="$1"
-    local max num enabled_file disabled_file state
+    local pending="${2:-}"
+    local max builtin_max num enabled_file disabled_file state display_num
     max="$(strategy_max_num "$type")"
+    builtin_max="$(strategy_builtin_max_num "$type")"
 
     echo -e "${cyan}${type}:${plain} $(strategy_variants_label "$type") включено"
     num=1
@@ -689,14 +691,22 @@ print_strategy_files_status() {
         disabled_file="$(strategy_dir "$type")/${num}.disabled.txt"
         state=""
         if strategy_is_custom_num "$num"; then
-            [ -s "$enabled_file" ] && state="вкл user"
-            [ -s "$disabled_file" ] && state="выкл user"
+            [ -s "$enabled_file" ] && state="вкл"
+            [ -s "$disabled_file" ] && state="выкл"
+            display_num="${yellow}${num}${plain}"
         else
             [ -s "$enabled_file" ] && state="вкл"
             [ -s "$disabled_file" ] && state="выкл"
+            display_num="$num"
         fi
-        [ -n "$state" ] && echo "  $num: $state"
-        if [ "$num" -lt "$CUSTOM_STRATEGY_START" ] && [ "$num" -ge "$(strategy_builtin_max_num "$type")" ]; then
+        if [ -n "$state" ] && echo "$pending" | grep -q -x -F "$num"; then
+            case "$state" in
+                вкл) state="выкл" ;;
+                выкл) state="вкл" ;;
+            esac
+        fi
+        [ -n "$state" ] && echo -e "  $display_num: $state"
+        if [ "$num" -lt "$CUSTOM_STRATEGY_START" ] && [ "$num" -ge "$builtin_max" ]; then
             num="$CUSTOM_STRATEGY_START"
         else
             num=$((num + 1))
@@ -758,6 +768,76 @@ add_custom_strategy_file() {
     echo "$strategy_line" > "$file"
     ensure_strategy_hostlist_files_for_num "$type" "$num"
     echo "Добавлена пользовательская стратегия $type/$num."
+}
+
+strategy_file_exists() {
+    local type="$1"
+    local num="$2"
+    local dir
+    dir="$(strategy_dir "$type")"
+    [ -s "$dir/${num}.txt" ] || [ -s "$dir/${num}.disabled.txt" ]
+}
+
+delete_strategy_hostlists_full() {
+    local type="$1"
+    local num="$2"
+
+    if [ "$type" = "UDP" ]; then
+        rm -f "$HOSTLIST_STATE_DIR/UDP/YT/${num}.txt"
+        return 0
+    fi
+
+    rm -f "$HOSTLIST_STATE_DIR/TCP/RKN/${num}.txt" \
+          "$HOSTLIST_STATE_DIR/TCP/User/${num}.txt" \
+          "$HOSTLIST_STATE_DIR/TCP/YT/${num}.txt" \
+          "$HOSTLIST_STATE_DIR/TCP/temp/${num}.txt" \
+          "$HOSTLIST_STATE_DIR/TCP/GV/${num}.txt"
+}
+
+delete_custom_strategy_file() {
+    local type="$1"
+    local num="$2"
+    local dir
+
+    case "$num" in
+        ''|*[!0-9]*) echo "Неверный номер стратегии."; return 1 ;;
+    esac
+    if [ "$num" -lt "$CUSTOM_STRATEGY_START" ]; then
+        echo "Удалять можно только пользовательские стратегии с номером $CUSTOM_STRATEGY_START и выше."
+        return 1
+    fi
+
+    dir="$(strategy_dir "$type")"
+    if ! strategy_file_exists "$type" "$num"; then
+        echo "Пользовательская стратегия $type/$num не найдена."
+        return 1
+    fi
+
+    rm -f "$dir/${num}.txt" "$dir/${num}.disabled.txt"
+    delete_strategy_hostlists_full "$type" "$num"
+    echo "Пользовательская стратегия $type/$num удалена."
+}
+
+show_custom_strategy_file() {
+    local type="$1"
+    local num="$2"
+    local dir file=""
+
+    case "$num" in
+        ''|*[!0-9]*) echo "Неверный номер стратегии."; return 1 ;;
+    esac
+    if [ "$num" -lt "$CUSTOM_STRATEGY_START" ]; then
+        echo "Просматривать здесь можно только пользовательские стратегии с номером $CUSTOM_STRATEGY_START и выше."
+        return 1
+    fi
+
+    dir="$(strategy_dir "$type")"
+    [ -s "$dir/${num}.txt" ] && file="$dir/${num}.txt"
+    [ -z "$file" ] && [ -s "$dir/${num}.disabled.txt" ] && file="$dir/${num}.disabled.txt"
+    [ -n "$file" ] || { echo "Пользовательская стратегия $type/$num не найдена."; return 1; }
+
+    echo -e "${cyan}${type}/${num}:${plain}"
+    cat "$file"
 }
 
 clear_strategy_selection_files() {
