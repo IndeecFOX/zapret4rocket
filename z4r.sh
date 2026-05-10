@@ -168,6 +168,65 @@ EOF
  [ "$added" -eq 1 ]
 }
 
+download_strategy_file_preserve_state() {
+ local type="$1"
+ local num="$2"
+ local remote_name="$3"
+ local dir enabled_file disabled_file target tmp url
+
+ dir="/opt/zapret/z4r_strategies/$type"
+ enabled_file="$dir/${num}.txt"
+ disabled_file="$dir/${num}.disabled.txt"
+ tmp="$dir/.${remote_name}.$$"
+ url="https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/strategies/$type/$remote_name"
+
+ if ! curl -fsL -o "$tmp" "$url"; then
+  rm -f "$tmp"
+  return 1
+ fi
+
+ case "$remote_name" in
+  *.disabled.txt)
+   target="$disabled_file"
+   [ -f "$enabled_file" ] && target="$enabled_file"
+   ;;
+  *)
+   target="$enabled_file"
+   if [ -f "$disabled_file" ] && [ ! -f "$enabled_file" ]; then
+    target="$disabled_file"
+   fi
+   ;;
+ esac
+
+ mv -f "$tmp" "$target"
+ return 0
+}
+
+download_builtin_strategy_files() {
+ local type="$1"
+ local num=1
+ local misses=0
+ local downloaded
+
+ while [ "$num" -lt "$CUSTOM_STRATEGY_START" ]; do
+  downloaded=0
+  if download_strategy_file_preserve_state "$type" "$num" "${num}.txt"; then
+   downloaded=1
+  elif download_strategy_file_preserve_state "$type" "$num" "${num}.disabled.txt"; then
+   downloaded=1
+  fi
+
+  if [ "$downloaded" -eq 1 ]; then
+   misses=0
+  else
+   misses=$((misses + 1))
+   [ "$misses" -ge 20 ] && break
+  fi
+
+  num=$((num + 1))
+ done
+}
+
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
  mkdir -p /opt/zapret/lists /opt/zapret/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret/extra_strats/UDP/YT /opt/zapret/z4r_strategies/TCP /opt/zapret/z4r_strategies/UDP
@@ -176,34 +235,8 @@ get_repo() {
  curl -L -o /opt/zapret/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt
- local i target
- i=1
- while [ "$i" -le 17 ]; do
-  target="/opt/zapret/z4r_strategies/TCP/${i}.txt"
-  if [ -f "/opt/zapret/z4r_strategies/TCP/${i}.disabled.txt" ] && [ ! -f "$target" ]; then
-   target="/opt/zapret/z4r_strategies/TCP/${i}.disabled.txt"
-  fi
-  curl -L -o "$target" https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/strategies/TCP/${i}.txt
-  i=$((i + 1))
- done
- i=18
- while [ "$i" -le 20 ]; do
-  target="/opt/zapret/z4r_strategies/TCP/${i}.disabled.txt"
-  if [ -f "/opt/zapret/z4r_strategies/TCP/${i}.txt" ]; then
-   target="/opt/zapret/z4r_strategies/TCP/${i}.txt"
-  fi
-  curl -L -o "$target" https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/strategies/TCP/${i}.disabled.txt
-  i=$((i + 1))
- done
- i=1
- while [ "$i" -le 8 ]; do
-  target="/opt/zapret/z4r_strategies/UDP/${i}.txt"
-  if [ -f "/opt/zapret/z4r_strategies/UDP/${i}.disabled.txt" ] && [ ! -f "$target" ]; then
-   target="/opt/zapret/z4r_strategies/UDP/${i}.disabled.txt"
-  fi
-  curl -L -o "$target" https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/strategies/UDP/${i}.txt
-  i=$((i + 1))
- done
+ download_builtin_strategy_files TCP
+ download_builtin_strategy_files UDP
  touch /opt/zapret/lists/autohostlist.txt
  if [ -d /opt/extra_strats ]; then
   rm -rf /opt/zapret/extra_strats
