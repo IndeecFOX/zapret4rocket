@@ -1,0 +1,1 @@
+--dpi-desync=fake,fakedsplit --dpi-desync-split-pos=sld+1,midsld --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_www_google_com.bin --dpi-desync-fooling=ts,badsum --dpi-desync-repeats=4
