@@ -751,6 +751,7 @@ toggle_strategy_file() {
     esac
 
     if [ -s "$enabled_file" ]; then
+        strategy_can_be_disabled_or_deleted "$type" "$num" "отключить" || return 1
         mv -f "$enabled_file" "$disabled_file"
         clear_strategy_hostlists_on_disable "$type" "$num"
         echo "Стратегия $type/$num отключена."
@@ -802,6 +803,62 @@ strategy_file_exists() {
     [ -s "$dir/${num}.txt" ] || [ -s "$dir/${num}.disabled.txt" ]
 }
 
+strategy_usage_labels() {
+    local type="$1"
+    local num="$2"
+    local usage="" bezr_num
+
+    if [ "$type" = "UDP" ]; then
+        [ -s "$HOSTLIST_STATE_DIR/UDP/YT/${num}.txt" ] && usage="${usage}${usage:+
+}YouTube UDP QUIC"
+        echo "$usage"
+        return 0
+    fi
+
+    [ -s "$HOSTLIST_STATE_DIR/TCP/YT/${num}.txt" ] && usage="${usage}${usage:+
+}YouTube TCP"
+    [ -s "$HOSTLIST_STATE_DIR/TCP/GV/${num}.txt" ] && usage="${usage}${usage:+
+}YouTube GV"
+    [ -s "$HOSTLIST_STATE_DIR/TCP/RKN/${num}.txt" ] && usage="${usage}${usage:+
+}RKN"
+    [ -s "$HOSTLIST_STATE_DIR/TCP/User/${num}.txt" ] && usage="${usage}${usage:+
+}User-домены"
+
+    bezr_num="$(cat "$BEZRAZBOR_STATE_FILE" 2>/dev/null || true)"
+    case "$bezr_num" in
+        ''|*[!0-9]*) bezr_num="$(get_bezrazbor_num_from_config /opt/zapret/config)" ;;
+    esac
+    if [ "$bezr_num" = "$num" ]; then
+        usage="${usage}${usage:+
+}Безразборный режим"
+    fi
+
+    echo "$usage"
+}
+
+print_strategy_usage_error() {
+    local type="$1"
+    local num="$2"
+    local action="$3"
+    local usage="$4"
+
+    echo -e "${red}Нельзя ${action} стратегию $type/$num: она выбрана в режимах:${plain}"
+    echo "$usage"
+}
+
+strategy_can_be_disabled_or_deleted() {
+    local type="$1"
+    local num="$2"
+    local action="$3"
+    local usage
+
+    usage="$(strategy_usage_labels "$type" "$num")"
+    [ -z "$usage" ] && return 0
+
+    print_strategy_usage_error "$type" "$num" "$action" "$usage"
+    return 1
+}
+
 delete_strategy_hostlists_full() {
     local type="$1"
     local num="$2"
@@ -836,6 +893,7 @@ delete_custom_strategy_file() {
         echo "Пользовательская стратегия $type/$num не найдена."
         return 1
     fi
+    strategy_can_be_disabled_or_deleted "$type" "$num" "удалить" || return 1
 
     rm -f "$dir/${num}.txt" "$dir/${num}.disabled.txt"
     echo "Пользовательская стратегия $type/$num удалена."
