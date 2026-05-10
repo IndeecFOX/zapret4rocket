@@ -842,7 +842,7 @@ print_strategy_usage_error() {
     local action="$3"
     local usage="$4"
 
-    echo -e "${red}Нельзя ${action} стратегию $type/$num: она выбрана в режимах:${plain}"
+    echo -e "${red}Нельзя ${action} стратегию $type/$num - она выбрана в режимах:${plain}"
     echo "$usage"
 }
 
@@ -854,6 +854,7 @@ strategy_can_be_disabled_or_deleted() {
 
     usage="$(strategy_usage_labels "$type" "$num")"
     [ -z "$usage" ] && return 0
+    [ "$usage" = "User-домены" ] && return 0
 
     print_strategy_usage_error "$type" "$num" "$action" "$usage"
     return 1
