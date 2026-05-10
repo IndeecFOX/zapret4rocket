@@ -136,6 +136,12 @@ EOF
     return 0
   }
 
+  reset_pending_strategy_toggles() {
+    pending_tcp=""
+    pending_udp=""
+    has_changes=0
+  }
+
   resolve_custom_strategy_type() {
     local num="$1"
     local tcp_exists=0 udp_exists=0 choice
@@ -230,7 +236,12 @@ EOF
                 if delete_custom_strategy_file "$type" "$num"; then
                   pending_tcp="$(remove_pending_strategy_num "$pending_tcp" "$num")"
                   pending_udp="$(remove_pending_strategy_num "$pending_udp" "$num")"
-                  has_changes=1
+                  apply_pending_strategy_toggles TCP "$pending_tcp" || { pause_enter; continue; }
+                  apply_pending_strategy_toggles UDP "$pending_udp" || { pause_enter; continue; }
+                  if rebuild_config_and_restart; then
+                    delete_strategy_hostlists_full "$type" "$num"
+                    reset_pending_strategy_toggles
+                  fi
                 fi
               fi
             fi

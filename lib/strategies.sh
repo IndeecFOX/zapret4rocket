@@ -814,7 +814,6 @@ delete_custom_strategy_file() {
     fi
 
     rm -f "$dir/${num}.txt" "$dir/${num}.disabled.txt"
-    delete_strategy_hostlists_full "$type" "$num"
     echo "Пользовательская стратегия $type/$num удалена."
 }
 
