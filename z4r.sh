@@ -146,6 +146,28 @@ change_user() {
    fi
 }
 
+append_unique_lines() {
+ local file="$1"
+ local lines="$2"
+ local line added=0
+
+ mkdir -p "$(dirname "$file")" 2>/dev/null || true
+ touch "$file" 2>/dev/null || return 1
+
+ while IFS= read -r line; do
+  [ -n "$line" ] || continue
+  if grep -q -x -F "$line" "$file" 2>/dev/null; then
+   continue
+  fi
+  echo "$line" >> "$file"
+  added=1
+ done <<EOF
+$lines
+EOF
+
+ [ "$added" -eq 1 ]
+}
+
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
  mkdir -p /opt/zapret/lists /opt/zapret/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret/extra_strats/UDP/YT /opt/zapret/z4r_strategies/TCP /opt/zapret/z4r_strategies/UDP
@@ -801,8 +823,11 @@ bezrazbor_selector() {
         if [ -n "$add_ru" ]; then
           echo "Пропуск добавления ru доменов."
         else
-          echo "ru" >> /opt/zapret/lists/netrogat.txt
-          echo -e "Домены ru добавлены в исключения (netrogat.txt)."
+          if append_unique_lines /opt/zapret/lists/netrogat.txt "ru"; then
+            echo -e "Домены ru добавлены в исключения (netrogat.txt)."
+          else
+            echo -e "Уже есть в исключениях."
+          fi
         fi
 		echo -e "${green}Успешно! Файл /opt/zapret/config обновлен. Zapret перезапущен${plain}"
 	else
@@ -945,8 +970,11 @@ get_menu() {
     if [ "$user_domain" == "0" ] ; then
      echo "Ввод отменён"
     elif [ -n "$user_domain" ]; then
-      echo "$user_domain" >> /opt/zapret/lists/netrogat.txt
-      echo -e "Домен ${yellow}$user_domain${plain} добавлен в исключения (netrogat.txt)."
+      if append_unique_lines /opt/zapret/lists/netrogat.txt "$user_domain"; then
+        echo -e "Домен ${yellow}$user_domain${plain} добавлен в исключения (netrogat.txt)."
+      else
+        echo -e "Домен ${yellow}$user_domain${plain} уже есть в исключениях (netrogat.txt)."
+      fi
     else
       echo "Ввод пустой, ничего не добавлено"
     fi

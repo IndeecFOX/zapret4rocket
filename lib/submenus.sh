@@ -145,7 +145,7 @@ EOF
   toggle_pending_strategy_nums() {
     local type="$1"
     local nums="$2"
-    local item had_valid=0
+    local item had_valid=0 pending_list enabled_file
 
     nums="$(echo "$nums" | sed 's/[[:space:]]//g; s/,/ /g')"
     for item in $nums; do
@@ -157,6 +157,14 @@ EOF
       esac
 
       if strategy_file_exists "$type" "$item"; then
+        case "$type" in
+          TCP) pending_list="$pending_tcp" ;;
+          UDP) pending_list="$pending_udp" ;;
+        esac
+        enabled_file="$(strategy_dir "$type")/${item}.txt"
+        if ! echo "$pending_list" | grep -q -x -F "$item" && [ -s "$enabled_file" ]; then
+          strategy_can_be_disabled_or_deleted "$type" "$item" "отключить" || continue
+        fi
         case "$type" in
           TCP) pending_tcp="$(toggle_pending_strategy_num "$pending_tcp" "$item")" ;;
           UDP) pending_udp="$(toggle_pending_strategy_num "$pending_udp" "$item")" ;;
