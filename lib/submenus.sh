@@ -229,11 +229,13 @@ EOF
       "1")
         read -re -p "Введите номер(-а) TCP стратегии(-ий) (можно цифры через запятую): " nums
         toggle_pending_strategy_nums TCP "$nums"
+        echo ""
         pause_enter
         ;;
       "2")
         read -re -p "Введите номер(-а) UDP стратегии(-ий) (можно цифры через запятую): " nums
         toggle_pending_strategy_nums UDP "$nums"
+        echo ""
         pause_enter
         ;;
       "3")
