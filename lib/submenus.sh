@@ -176,6 +176,7 @@ EOF
     done
 
     [ "$had_valid" -eq 1 ] && has_changes=1
+    return 0
   }
 
   resolve_custom_strategy_type() {
