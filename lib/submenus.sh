@@ -228,14 +228,14 @@ EOF
         pause_enter
         ;;
       "3")
-        read -re -p "Введите строку TCP стратегии: " strategy_line
+        read -re -p "Введите строку TCP стратегии (без --new в конце, например --dpi-desync=fake --dpi-desync=multisplit --dpi-desync-split-seqovl=1): " strategy_line
         if add_custom_strategy_file TCP "$strategy_line"; then
           has_changes=1
         fi
         pause_enter
         ;;
       "4")
-        read -re -p "Введите строку UDP стратегии: " strategy_line
+        read -re -p "Введите строку UDP стратегии (без --new в конце, например --dpi-desync=fake --dpi-desync-repeats=11): " strategy_line
         if add_custom_strategy_file UDP "$strategy_line"; then
           has_changes=1
         fi
