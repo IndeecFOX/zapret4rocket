@@ -195,7 +195,6 @@ menu_action_update_config_reset() {
   # Раскомменчивание юзера под keenetic или merlin
   change_user
 
-  cp -f /opt/zapret/config.default /opt/zapret/config
   ensure_keenetic_policy_config_defaults /opt/zapret/config
   ensure_keenetic_policy_hooks /opt/zapret/config
   build_config_from_strategies /opt/zapret/config.default /opt/zapret/config
