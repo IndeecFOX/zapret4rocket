@@ -218,32 +218,36 @@ write_builtin_strategy_file() {
 
 apply_builtin_strategy_bundle() {
  local bundle="$1"
- local seen="/opt/zapret/z4r_strategies/.bundle_seen.$$"
  local line parsed type num disabled params dir enabled_file disabled_file target file base
+ local seen_keys key
  local count=0
 
  [ -s "$bundle" ] || return 1
- : > "$seen"
+ seen_keys=" "
 
  while IFS= read -r line || [ -n "$line" ]; do
   case "$line" in
    ''|'#'*) continue ;;
   esac
-  parsed="$(parse_builtin_strategy_bundle_line "$line")" || { rm -f "$seen"; return 1; }
+  parsed="$(parse_builtin_strategy_bundle_line "$line")" || return 1
   type="${parsed%%|*}"
   parsed="${parsed#*|}"
   num="${parsed%%|*}"
-  echo "$type/$num" >> "$seen"
+  key="$type/$num"
+  case "$seen_keys" in
+   *" $key "*) return 1 ;;
+  esac
+  seen_keys="${seen_keys}${key} "
   count=$((count + 1))
  done < "$bundle"
 
- [ "$count" -gt 0 ] || { rm -f "$seen"; return 1; }
+ [ "$count" -gt 0 ] || return 1
 
  while IFS= read -r line || [ -n "$line" ]; do
   case "$line" in
    ''|'#'*) continue ;;
   esac
-  parsed="$(parse_builtin_strategy_bundle_line "$line")" || { rm -f "$seen"; return 1; }
+  parsed="$(parse_builtin_strategy_bundle_line "$line")" || return 1
   type="${parsed%%|*}"
   parsed="${parsed#*|}"
   num="${parsed%%|*}"
@@ -280,11 +284,14 @@ apply_builtin_strategy_bundle() {
     ''|*[!0-9]*) continue ;;
    esac
    [ "$num" -lt "$CUSTOM_STRATEGY_START" ] || continue
-   grep -q -x -F "$type/$num" "$seen" 2>/dev/null || rm -f "$file"
+   key="$type/$num"
+   case "$seen_keys" in
+    *" $key "*) ;;
+    *) rm -f "$file" ;;
+   esac
   done
  done
 
- rm -f "$seen"
  return 0
 }
 

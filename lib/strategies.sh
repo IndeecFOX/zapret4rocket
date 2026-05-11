@@ -221,13 +221,23 @@ clear_strategy_hostlists_on_disable() {
 remove_domains_from_other_user_hostlists() {
     local current_num="$1"
     local domains="$2"
-    local file tmp domain
+    local file tmp domain has_match
 
     for file in "$HOSTLIST_STATE_DIR/TCP/User/"*.txt; do
         [ -e "$file" ] || continue
         case "${file##*/}" in
             "${current_num}.txt") continue ;;
         esac
+
+        has_match=0
+        while IFS= read -r domain; do
+            [ -n "$domain" ] || continue
+            if echo "$domains" | grep -q -x -F "$domain"; then
+                has_match=1
+                break
+            fi
+        done < "$file"
+        [ "$has_match" -eq 1 ] || continue
 
         tmp="${file}.tmp"
         : > "$tmp"
@@ -238,7 +248,11 @@ remove_domains_from_other_user_hostlists() {
             fi
             echo "$domain" >> "$tmp"
         done < "$file"
-        mv -f "$tmp" "$file"
+        if cmp -s "$tmp" "$file" 2>/dev/null; then
+            rm -f "$tmp"
+        else
+            mv -f "$tmp" "$file"
+        fi
     done
 }
 
@@ -531,38 +545,37 @@ apply_strategy_overrides() {
 }
 
 apply_config_overrides_file() {
-    local file="$1"
-    local tmp="${file}.override"
+    local input="$1"
+    local output="${2:-$1}"
+    local old_config="${3:-/opt/zapret/config}"
+    local final_output="$output"
     local fooling_mode sni
-
-    [ -f "$file" ] || return 1
-    fooling_mode="$(get_fooling_mode)"
-    sni="$(get_fake_tls_sni)"
-
-    if [ "$fooling_mode" = "ts,badsum" ]; then
-        sed 's/fooling=ts,badsum/fooling=__Z4R_TS_BADSUM__/g; s/fooling=ts/fooling=ts,badsum/g; s/fooling=__Z4R_TS_BADSUM__/fooling=ts,badsum/g' "$file" > "$tmp"
-    else
-        sed 's/fooling=ts,badsum/fooling=ts/g' "$file" > "$tmp"
-    fi
-
-    if [ -n "$sni" ]; then
-        sed "s|\(--dpi-desync-fake-tls-mod=[^[:space:]]*sni=\)[^,[:space:]]*\([[:space:]]\)|\1${sni}\2|g; s|\(--dpi-desync-fake-tls-mod=[^[:space:]]*sni=\)[^,[:space:]]*$|\1${sni}|g" "$tmp" > "${tmp}.sni"
-        mv -f "${tmp}.sni" "$tmp"
-    fi
-
-    mv -f "$tmp" "$file"
-}
-
-preserve_runtime_config_settings() {
-    local old_config="$1"
-    local new_config="$2"
+    local fooling_expr1 fooling_expr2 fooling_expr3 sni_expr1 sni_expr2
     local fwtype flowoffload udp_ports
     local fw_expr flow_expr udp_expr voice_expr udp_games_expr
     local noop='s/$^//'
 
-    [ -f "$old_config" ] || return 0
-    [ -f "$new_config" ] || return 0
-    [ "$old_config" = "$new_config" ] && return 0
+    [ -f "$input" ] || return 1
+    fooling_mode="$(get_fooling_mode)"
+    sni="$(get_fake_tls_sni)"
+
+    if [ "$fooling_mode" = "ts,badsum" ]; then
+        fooling_expr1='s/fooling=ts,badsum/fooling=__Z4R_TS_BADSUM__/g'
+        fooling_expr2='s/fooling=ts/fooling=ts,badsum/g'
+        fooling_expr3='s/fooling=__Z4R_TS_BADSUM__/fooling=ts,badsum/g'
+    else
+        fooling_expr1='s/fooling=ts,badsum/fooling=ts/g'
+        fooling_expr2="$noop"
+        fooling_expr3="$noop"
+    fi
+
+    sni_expr1="$noop"
+    sni_expr2="$noop"
+    if [ -n "$sni" ]; then
+        sni="$(printf '%s' "$sni" | sed 's/[\\&|]/\\&/g')"
+        sni_expr1="s|\(--dpi-desync-fake-tls-mod=[^[:space:]]*sni=\)[^,[:space:]]*\([[:space:]]\)|\1${sni}\2|g"
+        sni_expr2="s|\(--dpi-desync-fake-tls-mod=[^[:space:]]*sni=\)[^,[:space:]]*$|\1${sni}|g"
+    fi
 
     fw_expr="$noop"
     flow_expr="$noop"
@@ -570,40 +583,56 @@ preserve_runtime_config_settings() {
     voice_expr="$noop"
     udp_games_expr="$noop"
 
-    fwtype="$(sed -n 's|^FWTYPE=||p' "$old_config" 2>/dev/null | tail -n1)"
-    case "$fwtype" in
-        iptables|nftables|ipfw) fw_expr="s|^FWTYPE=.*|FWTYPE=${fwtype}|" ;;
-    esac
+    if [ -f "$old_config" ] && [ "$old_config" != "$input" ]; then
+        fwtype="$(sed -n 's|^FWTYPE=||p' "$old_config" 2>/dev/null | tail -n1)"
+        case "$fwtype" in
+            iptables|nftables|ipfw) fw_expr="s|^FWTYPE=.*|FWTYPE=${fwtype}|" ;;
+        esac
 
-    flowoffload="$(sed -n 's|^FLOWOFFLOAD=||p' "$old_config" 2>/dev/null | tail -n1)"
-    case "$flowoffload" in
-        donttouch|none|software|hardware) flow_expr="s|^FLOWOFFLOAD=.*|FLOWOFFLOAD=${flowoffload}|" ;;
-    esac
+        flowoffload="$(sed -n 's|^FLOWOFFLOAD=||p' "$old_config" 2>/dev/null | tail -n1)"
+        case "$flowoffload" in
+            donttouch|none|software|hardware) flow_expr="s|^FLOWOFFLOAD=.*|FLOWOFFLOAD=${flowoffload}|" ;;
+        esac
 
-    udp_ports="$(sed -n 's|^NFQWS_PORTS_UDP=||p' "$old_config" 2>/dev/null | tail -n1)"
-    case "$udp_ports" in
-        [0-9]*)
-            case "$udp_ports" in
-                *[!0-9,-]*) ;;
-                *) udp_expr="s|^NFQWS_PORTS_UDP=.*|NFQWS_PORTS_UDP=${udp_ports}|" ;;
-            esac
-            ;;
-    esac
+        udp_ports="$(sed -n 's|^NFQWS_PORTS_UDP=||p' "$old_config" 2>/dev/null | tail -n1)"
+        case "$udp_ports" in
+            [0-9]*)
+                case "$udp_ports" in
+                    *[!0-9,-]*) ;;
+                    *) udp_expr="s|^NFQWS_PORTS_UDP=.*|NFQWS_PORTS_UDP=${udp_ports}|" ;;
+                esac
+                ;;
+        esac
 
-    if grep -q '^--skip --filter-udp=50000' "$old_config" 2>/dev/null; then
-        voice_expr='s|^--filter-udp=50000|--skip --filter-udp=50000|'
-    elif grep -q '^--filter-udp=50000' "$old_config" 2>/dev/null; then
-        voice_expr='s|^--skip --filter-udp=50000|--filter-udp=50000|'
+        if grep -q '^--skip --filter-udp=50000' "$old_config" 2>/dev/null; then
+            voice_expr='s|^--filter-udp=50000|--skip --filter-udp=50000|'
+        elif grep -q '^--filter-udp=50000' "$old_config" 2>/dev/null; then
+            voice_expr='s|^--skip --filter-udp=50000|--filter-udp=50000|'
+        fi
+
+        if grep -q '^--skip --filter-udp=1026' "$old_config" 2>/dev/null; then
+            udp_games_expr='s|^--filter-udp=1026|--skip --filter-udp=1026|'
+        elif grep -q '^--filter-udp=1026' "$old_config" 2>/dev/null; then
+            udp_games_expr='s|^--skip --filter-udp=1026|--filter-udp=1026|'
+        fi
     fi
 
-    if grep -q '^--skip --filter-udp=1026' "$old_config" 2>/dev/null; then
-        udp_games_expr='s|^--filter-udp=1026|--skip --filter-udp=1026|'
-    elif grep -q '^--filter-udp=1026' "$old_config" 2>/dev/null; then
-        udp_games_expr='s|^--skip --filter-udp=1026|--filter-udp=1026|'
+    if [ "$input" = "$output" ]; then
+        final_output="${output}.tmp.$$"
     fi
 
-    sed -e "$fw_expr" -e "$flow_expr" -e "$udp_expr" -e "$voice_expr" -e "$udp_games_expr" "$new_config" > "${new_config}.preserve"
-    mv -f "${new_config}.preserve" "$new_config"
+    sed -e "$fooling_expr1" -e "$fooling_expr2" -e "$fooling_expr3" \
+        -e "$sni_expr1" -e "$sni_expr2" \
+        -e "$fw_expr" -e "$flow_expr" -e "$udp_expr" \
+        -e "$voice_expr" -e "$udp_games_expr" \
+        "$input" > "$final_output" || {
+            [ "$final_output" != "$output" ] && rm -f "$final_output"
+            return 1
+        }
+
+    if [ "$final_output" != "$output" ]; then
+        mv -f "$final_output" "$output"
+    fi
 }
 
 get_bezrazbor_num_from_config() {
@@ -708,13 +737,14 @@ generate_strategy_config_block() {
 build_config_from_strategies() {
     local template="${1:-/opt/zapret/config.default}"
     local target="${2:-/opt/zapret/config}"
-    local block tmp
+    local block generated tmp
 
     [ -f "$template" ] || return 1
     mkdir -p "$HOSTLIST_STATE_DIR/cache" 2>/dev/null || true
     ensure_strategy_hostlist_files
 
     block="$HOSTLIST_STATE_DIR/cache/strategy_block.$$"
+    generated="${target}.generated.$$"
     tmp="${target}.$$"
     generate_strategy_config_block "$block"
 
@@ -735,14 +765,24 @@ build_config_from_strategies() {
                 next
             }
             !skip { print }
-        ' "$template" > "$tmp"
+        ' "$template" > "$generated"
     else
-        cp -f "$template" "$tmp"
+        cp -f "$template" "$generated"
     fi
 
-    apply_config_overrides_file "$tmp"
-    preserve_runtime_config_settings "$target" "$tmp"
-    mv -f "$tmp" "$target"
+    apply_config_overrides_file "$generated" "$tmp" "$target" || {
+        rm -f "$block" "$generated" "$tmp"
+        return 1
+    }
+    if [ -f "$target" ] && cmp -s "$tmp" "$target" 2>/dev/null; then
+        rm -f "$tmp"
+    else
+        mv -f "$tmp" "$target" || {
+            rm -f "$block" "$generated" "$tmp"
+            return 1
+        }
+    fi
+    rm -f "$generated"
     rm -f "$block"
 }
 
