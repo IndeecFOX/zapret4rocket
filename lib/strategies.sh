@@ -1095,7 +1095,7 @@ try_strategies() {
     done
 
     # Если цикл закончился, а пользователь ничего не выбрал
-    [ -n "$count" ] && echo -n > "$base_path/${count}.txt"
+    [ -n "$prev_strat" ] && echo -n > "$base_path/${prev_strat}.txt"
     echo "Все стратегии испробованы. Ничего не подошло."
     return
 }
