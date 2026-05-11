@@ -168,63 +168,144 @@ EOF
  [ "$added" -eq 1 ]
 }
 
-download_strategy_file_preserve_state() {
- local type="$1"
- local num="$2"
- local remote_name="$3"
- local dir enabled_file disabled_file target tmp url
+parse_builtin_strategy_bundle_line() {
+ local line="$1"
+ local path params type file num disabled
 
- dir="/opt/zapret/z4r_strategies/$type"
- enabled_file="$dir/${num}.txt"
- disabled_file="$dir/${num}.disabled.txt"
- tmp="$dir/.${remote_name}.$$"
- url="https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/strategies/$type/$remote_name"
-
- if ! curl -fsL -o "$tmp" "$url"; then
-  rm -f "$tmp"
-  return 1
- fi
-
- case "$remote_name" in
-  *.disabled.txt)
-   target="$disabled_file"
-   [ -f "$enabled_file" ] && target="$enabled_file"
-   ;;
-  *)
-   target="$enabled_file"
-   if [ -f "$disabled_file" ] && [ ! -f "$enabled_file" ]; then
-    target="$disabled_file"
-   fi
-   ;;
+ case "$line" in
+  ''|'#'*) return 1 ;;
  esac
 
- mv -f "$tmp" "$target"
+ path="${line%% *}"
+ [ "$path" != "$line" ] || return 1
+ params="${line#* }"
+ [ -n "$params" ] || return 1
+
+ type="${path%%/*}"
+ file="${path#*/}"
+ case "$type" in
+  TCP|UDP) ;;
+  *) return 1 ;;
+ esac
+
+ disabled=0
+ case "$file" in
+  [0-9]*.disabled.txt) num="${file%%.disabled.txt}"; disabled=1 ;;
+  [0-9]*.txt) num="${file%%.txt}" ;;
+  *) return 1 ;;
+ esac
+ case "$num" in
+  ''|*[!0-9]*) return 1 ;;
+ esac
+ [ "$num" -lt "$CUSTOM_STRATEGY_START" ] || return 1
+
+ echo "$type|$num|$disabled|$params"
  return 0
 }
 
-download_builtin_strategy_files() {
- local type="$1"
- local num=1
- local misses=0
- local downloaded
+write_builtin_strategy_file() {
+ local target="$1"
+ local params="$2"
+ local tmp="${target}.$$"
 
- while [ "$num" -lt "$CUSTOM_STRATEGY_START" ]; do
-  downloaded=0
-  if download_strategy_file_preserve_state "$type" "$num" "${num}.txt"; then
-   downloaded=1
-  elif download_strategy_file_preserve_state "$type" "$num" "${num}.disabled.txt"; then
-   downloaded=1
-  fi
+ printf '%s\n' "$params" > "$tmp"
+ if [ -f "$target" ] && cmp -s "$tmp" "$target" 2>/dev/null; then
+  rm -f "$tmp"
+ else
+  mv -f "$tmp" "$target"
+ fi
+}
 
-  if [ "$downloaded" -eq 1 ]; then
-   misses=0
+apply_builtin_strategy_bundle() {
+ local bundle="$1"
+ local seen="/opt/zapret/z4r_strategies/.bundle_seen.$$"
+ local line parsed type num disabled params dir enabled_file disabled_file target file base
+ local count=0
+
+ [ -s "$bundle" ] || return 1
+ : > "$seen"
+
+ while IFS= read -r line || [ -n "$line" ]; do
+  case "$line" in
+   ''|'#'*) continue ;;
+  esac
+  parsed="$(parse_builtin_strategy_bundle_line "$line")" || { rm -f "$seen"; return 1; }
+  type="${parsed%%|*}"
+  parsed="${parsed#*|}"
+  num="${parsed%%|*}"
+  echo "$type/$num" >> "$seen"
+  count=$((count + 1))
+ done < "$bundle"
+
+ [ "$count" -gt 0 ] || { rm -f "$seen"; return 1; }
+
+ while IFS= read -r line || [ -n "$line" ]; do
+  case "$line" in
+   ''|'#'*) continue ;;
+  esac
+  parsed="$(parse_builtin_strategy_bundle_line "$line")" || { rm -f "$seen"; return 1; }
+  type="${parsed%%|*}"
+  parsed="${parsed#*|}"
+  num="${parsed%%|*}"
+  parsed="${parsed#*|}"
+  disabled="${parsed%%|*}"
+  params="${parsed#*|}"
+
+  dir="/opt/zapret/z4r_strategies/$type"
+  mkdir -p "$dir" 2>/dev/null || true
+  enabled_file="$dir/${num}.txt"
+  disabled_file="$dir/${num}.disabled.txt"
+
+  if [ -f "$enabled_file" ]; then
+   target="$enabled_file"
+   rm -f "$disabled_file"
+  elif [ -f "$disabled_file" ]; then
+   target="$disabled_file"
+  elif [ "$disabled" -eq 1 ]; then
+   target="$disabled_file"
   else
-   misses=$((misses + 1))
-   [ "$misses" -ge 20 ] && break
+   target="$enabled_file"
   fi
 
-  num=$((num + 1))
+  write_builtin_strategy_file "$target" "$params"
+ done < "$bundle"
+
+ for type in TCP UDP; do
+  dir="/opt/zapret/z4r_strategies/$type"
+  for file in "$dir"/[0-9]*.txt "$dir"/[0-9]*.disabled.txt; do
+   [ -e "$file" ] || continue
+   base="${file##*/}"
+   num="$(strategy_num_from_name "$base")"
+   case "$num" in
+    ''|*[!0-9]*) continue ;;
+   esac
+   [ "$num" -lt "$CUSTOM_STRATEGY_START" ] || continue
+   grep -q -x -F "$type/$num" "$seen" 2>/dev/null || rm -f "$file"
+  done
  done
+
+ rm -f "$seen"
+ return 0
+}
+
+download_builtin_strategy_bundle() {
+ local bundle="/opt/zapret/z4r_strategies/.bundle.$$"
+ local url="https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/strategies/bundle.txt"
+
+ if ! curl -fsL -o "$bundle" "$url"; then
+  rm -f "$bundle"
+  echo "Ошибка загрузки bundle стратегий."
+  return 1
+ fi
+
+ if ! apply_builtin_strategy_bundle "$bundle"; then
+  rm -f "$bundle"
+  echo "Ошибка применения bundle стратегий."
+  return 1
+ fi
+
+ rm -f "$bundle"
+ return 0
 }
 
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
@@ -235,8 +316,7 @@ get_repo() {
  curl -L -o /opt/zapret/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt
- download_builtin_strategy_files TCP
- download_builtin_strategy_files UDP
+ download_builtin_strategy_bundle
  touch /opt/zapret/lists/autohostlist.txt
  if [ -d /opt/extra_strats ]; then
   rm -rf /opt/zapret/extra_strats

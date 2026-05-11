@@ -1,1 +1,0 @@
---dpi-desync=fake --dpi-desync=multisplit --dpi-desync-split-seqovl=1
