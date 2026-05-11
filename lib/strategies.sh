@@ -1097,7 +1097,6 @@ try_strategies() {
     # Если цикл закончился, а пользователь ничего не выбрал
     [ -n "$count" ] && echo -n > "$base_path/${count}.txt"
     echo "Все стратегии испробованы. Ничего не подошло."
-    pause_enter
     return
 }
 

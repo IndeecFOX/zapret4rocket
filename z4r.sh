@@ -1229,6 +1229,7 @@ fi
  if [ -d /opt/zapret/extra_strats ] && [ -f "/opt/zapret/config" ]; then
     if [ $1 ]; then
         Strats_Tryer $1
+        pause_enter
     fi
     get_menu
  fi
