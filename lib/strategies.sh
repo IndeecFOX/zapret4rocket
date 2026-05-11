@@ -553,6 +553,59 @@ apply_config_overrides_file() {
     mv -f "$tmp" "$file"
 }
 
+preserve_runtime_config_settings() {
+    local old_config="$1"
+    local new_config="$2"
+    local fwtype flowoffload udp_ports
+    local fw_expr flow_expr udp_expr voice_expr udp_games_expr
+    local noop='s/$^//'
+
+    [ -f "$old_config" ] || return 0
+    [ -f "$new_config" ] || return 0
+    [ "$old_config" = "$new_config" ] && return 0
+
+    fw_expr="$noop"
+    flow_expr="$noop"
+    udp_expr="$noop"
+    voice_expr="$noop"
+    udp_games_expr="$noop"
+
+    fwtype="$(sed -n 's|^FWTYPE=||p' "$old_config" 2>/dev/null | tail -n1)"
+    case "$fwtype" in
+        iptables|nftables|ipfw) fw_expr="s|^FWTYPE=.*|FWTYPE=${fwtype}|" ;;
+    esac
+
+    flowoffload="$(sed -n 's|^FLOWOFFLOAD=||p' "$old_config" 2>/dev/null | tail -n1)"
+    case "$flowoffload" in
+        donttouch|none|software|hardware) flow_expr="s|^FLOWOFFLOAD=.*|FLOWOFFLOAD=${flowoffload}|" ;;
+    esac
+
+    udp_ports="$(sed -n 's|^NFQWS_PORTS_UDP=||p' "$old_config" 2>/dev/null | tail -n1)"
+    case "$udp_ports" in
+        [0-9]*)
+            case "$udp_ports" in
+                *[!0-9,-]*) ;;
+                *) udp_expr="s|^NFQWS_PORTS_UDP=.*|NFQWS_PORTS_UDP=${udp_ports}|" ;;
+            esac
+            ;;
+    esac
+
+    if grep -q '^--skip --filter-udp=50000' "$old_config" 2>/dev/null; then
+        voice_expr='s|^--filter-udp=50000|--skip --filter-udp=50000|'
+    elif grep -q '^--filter-udp=50000' "$old_config" 2>/dev/null; then
+        voice_expr='s|^--skip --filter-udp=50000|--filter-udp=50000|'
+    fi
+
+    if grep -q '^--skip --filter-udp=1026' "$old_config" 2>/dev/null; then
+        udp_games_expr='s|^--filter-udp=1026|--skip --filter-udp=1026|'
+    elif grep -q '^--filter-udp=1026' "$old_config" 2>/dev/null; then
+        udp_games_expr='s|^--skip --filter-udp=1026|--filter-udp=1026|'
+    fi
+
+    sed -e "$fw_expr" -e "$flow_expr" -e "$udp_expr" -e "$voice_expr" -e "$udp_games_expr" "$new_config" > "${new_config}.preserve"
+    mv -f "${new_config}.preserve" "$new_config"
+}
+
 get_bezrazbor_num_from_config() {
     local config_file="${1:-/opt/zapret/config}"
     local src_start core line params file num max
@@ -688,6 +741,7 @@ build_config_from_strategies() {
     fi
 
     apply_config_overrides_file "$tmp"
+    preserve_runtime_config_settings "$target" "$tmp"
     mv -f "$tmp" "$target"
     rm -f "$block"
 }
