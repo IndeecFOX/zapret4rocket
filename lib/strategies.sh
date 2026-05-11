@@ -147,7 +147,7 @@ strategy_sni_mod_nums_label() {
     while [ "$num" -le "$max" ]; do
         for file in "$dir/${num}.txt" "$dir/${num}.disabled.txt"; do
             [ -s "$file" ] || continue
-            if grep -q -e '--dpi-desync-fake-tls-mod=sni=[^[:space:]]' "$file"; then
+            if grep -q -e '--dpi-desync-fake-tls-mod=[^[:space:]]*sni=[^,[:space:]]*$' -e '--dpi-desync-fake-tls-mod=[^[:space:]]*sni=[^,[:space:]]*[[:space:]]' "$file"; then
                 if [ -n "$nums" ]; then
                     nums="$nums,$num"
                 else
@@ -500,7 +500,7 @@ get_fake_tls_sni() {
     sni="$(cat "$SNI_STATE_FILE" 2>/dev/null || true)"
     [ -n "$sni" ] && { echo "$sni"; return 0; }
 
-    sni="$(sed -n 's/.*--dpi-desync-fake-tls-mod=sni=\([^[:space:]]*\).*/\1/p' /opt/zapret/config 2>/dev/null | tail -n1)"
+    sni="$(sed -n 's/.*--dpi-desync-fake-tls-mod=[^[:space:]]*sni=\([^,[:space:]]*\)[[:space:]].*/\1/p; s/.*--dpi-desync-fake-tls-mod=[^[:space:]]*sni=\([^,[:space:]]*\)$/\1/p' /opt/zapret/config 2>/dev/null | tail -n1)"
     [ -n "$sni" ] || sni="msn.com"
     echo "$sni"
 }
@@ -524,7 +524,7 @@ apply_strategy_overrides() {
 
     sni="$(get_fake_tls_sni)"
     if [ -n "$sni" ]; then
-        params="$(echo "$params" | sed "s|\(--dpi-desync-fake-tls-mod=sni=\)[^[:space:]]*|\1${sni}|g")"
+        params="$(echo "$params" | sed "s|\(--dpi-desync-fake-tls-mod=[^[:space:]]*sni=\)[^,[:space:]]*\([[:space:]]\)|\1${sni}\2|g; s|\(--dpi-desync-fake-tls-mod=[^[:space:]]*sni=\)[^,[:space:]]*$|\1${sni}|g")"
     fi
 
     echo "$params"
@@ -546,7 +546,7 @@ apply_config_overrides_file() {
     fi
 
     if [ -n "$sni" ]; then
-        sed "s|\(--dpi-desync-fake-tls-mod=sni=\)[^[:space:]]*|\1${sni}|g" "$tmp" > "${tmp}.sni"
+        sed "s|\(--dpi-desync-fake-tls-mod=[^[:space:]]*sni=\)[^,[:space:]]*\([[:space:]]\)|\1${sni}\2|g; s|\(--dpi-desync-fake-tls-mod=[^[:space:]]*sni=\)[^,[:space:]]*$|\1${sni}|g" "$tmp" > "${tmp}.sni"
         mv -f "${tmp}.sni" "$tmp"
     fi
 
