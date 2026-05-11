@@ -1,1 +1,0 @@
---dpi-desync=fake,ipfrag2 --dpi-desync-fake-quic=/opt/zapret/files/fake/quic_5.bin --dpi-desync-cutoff=n3 --dpi-desync-repeats=3

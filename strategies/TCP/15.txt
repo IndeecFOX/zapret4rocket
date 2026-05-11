@@ -1,1 +1,0 @@
---dpi-desync=fake,fakedsplit --dpi-desync-split-pos=1 --dpi-desync-fooling=ts,badsum --dpi-desync-badseq-increment=2 --dpi-desync-repeats=8 --dpi-desync-fake-tls-mod=rnd,dupsid,sni=www.google.com

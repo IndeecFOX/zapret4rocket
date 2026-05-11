@@ -1,1 +1,0 @@
---dpi-desync=fake --dpi-desync-repeats=6 --dpi-desync-fooling=ts,badsum --dpi-desync-fake-tls=/opt/zapret/files/fake/tls_clienthello_4pda_to.bin --dpi-desync-fake-tls-mod=none
