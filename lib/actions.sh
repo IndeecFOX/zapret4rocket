@@ -132,9 +132,9 @@ menu_action_restore_config_backup() {
 }
 
 backup_strats() {
-  # Бэкап папки стратегий
-  if [ -d /opt/zapret/extra_strats ]; then
-    echo -e "${yellow}Сделать бэкап /opt/zapret/extra_strats ?${plain}"
+  # Бэкап папок состояния и пользовательских стратегий
+  if [ -d /opt/zapret/extra_strats ] || [ -d /opt/zapret/z4r_strategies ]; then
+    echo -e "${yellow}Сделать бэкап /opt/zapret/extra_strats и /opt/zapret/z4r_strategies ?${plain}"
     echo -e "${yellow}5 - Да, Enter - Нет, 0 - отмена${plain}"
     read -r ans
     if [ "$ans" = "0" ]; then
@@ -142,8 +142,10 @@ backup_strats() {
     fi
     if [ "$ans" = "5" ] || [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
       rm -rf /opt/extra_strats 2>/dev/null || true
-      cp -rf /opt/zapret/extra_strats /opt/ || true
-      echo -e "${green}Бэкап extra_strats сохранён в /opt/extra_strats${plain}"
+      rm -rf /opt/z4r_strategies 2>/dev/null || true
+      [ -d /opt/zapret/extra_strats ] && cp -rf /opt/zapret/extra_strats /opt/ || true
+      [ -d /opt/zapret/z4r_strategies ] && cp -rf /opt/zapret/z4r_strategies /opt/ || true
+      echo -e "${green}Бэкап extra_strats/z4r_strategies сохранён в /opt${plain}"
     fi
   fi
 
@@ -193,9 +195,9 @@ menu_action_update_config_reset() {
   # Раскомменчивание юзера под keenetic или merlin
   change_user
 
-  cp -f /opt/zapret/config.default /opt/zapret/config
   ensure_keenetic_policy_config_defaults /opt/zapret/config
   ensure_keenetic_policy_hooks /opt/zapret/config
+  build_config_from_strategies /opt/zapret/config.default /opt/zapret/config
 
   /opt/zapret/init.d/sysv/zapret start
 

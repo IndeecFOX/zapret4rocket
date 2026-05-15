@@ -14,19 +14,19 @@ strategies_submenu() {
       echo -e "${green}${CONFIG_UPDATE_NOTICE}${plain}"
       echo -e "${green}При желании можете ввести 55 для обновления config (Обновление зифира как через пункт 5 в главном меню).${plain}"
     fi
-    echo -e "${yellow}Подобрать стратегию? (1-5 для подбора, 0 или Enter для отмены)${plain}"
-    echo -e "  Текущие стратегии [${strategies_status}]"
+    echo -e "Текущие стратегии [${strategies_status}]"
     echo -e 
 
-    submenu_item "	1" "YouTube с видеопотоком (UDP QUIC)." "8 вариантов"
-    submenu_item "	2" "YouTube (TCP. Интерфейс)." "17 варианта (Приоритетнее безразборного режима)"
-    submenu_item "	3" "YouTube (TCP. Видеопоток/GV домен)." "17 варианта (Приоритетнее безразборного режима)"
-    submenu_item "	4" "RKN (Популярные блокированные сайты. Дискорд в т.ч.)." "17 варианта"
-    submenu_item "	5" "Отдельный домен." "17 варианта (Приоритетнее безразборного режима)"
+    submenu_item "	1" "YouTube с видеопотоком (UDP QUIC)." "$(strategy_variants_label UDP)"
+    submenu_item "	2" "YouTube (TCP. Интерфейс)." "$(strategy_variants_label TCP) (Приоритетнее безразборного режима)"
+    submenu_item "	3" "YouTube (TCP. Видеопоток/GV домен)." "$(strategy_variants_label TCP) (Приоритетнее безразборного режима)"
+    submenu_item "	4" "RKN (Популярные блокированные сайты. Дискорд в т.ч.)." "$(strategy_variants_label TCP)"
+    submenu_item "	5" "Отдельный домен." "$(strategy_variants_label TCP) (Приоритетнее безразборного режима)"
+    submenu_item "	6" "Включить/отключить или добавить стратегию"
     if [ -n "$CONFIG_UPDATE_NOTICE" ]; then
       submenu_item "	55" "Обновить config (пункт 5 главного меню)"
     fi
-	submenu_item "	9" "$(grep -q "fooling=ts,badsum" "/opt/zapret/config" && echo "Переключить фулинг с ${yellow}ts+badsum на ts" || echo "Переключить фулинг с ${yellow}ts на ts+badsum")" "Может помочь с Discord или иными ресурсами"
+	submenu_item "	9" "$([ "$(get_fooling_mode)" = "ts,badsum" ] && echo "Переключить фулинг с ${yellow}ts+badsum на ts" || echo "Переключить фулинг с ${yellow}ts на ts+badsum")" "Может помочь с Discord или иными ресурсами"
     submenu_item "	0" "Назад"
     echo ""
 
@@ -55,14 +55,252 @@ strategies_submenu() {
           sleep 1
         fi
         ;;
+      "6")
+        strategy_files_submenu
+        ;;
 	  "9")
 		echo "Выполняем переключение и перезапуск zapret"
-		sed -i '/fooling=ts,badsum/s/ts,badsum/ts/; t; s/fooling=ts/fooling=ts,badsum/' /opt/zapret/config
-		/opt/zapret/init.d/sysv/zapret restart
+		toggle_fooling_mode_state
+		rebuild_config_and_restart
 		echo -e "${green}Выполнено переключение фулинга. Запрет перезапущен ${plain}"
 		pause_enter
 		;;
       "0"|"")
+        return
+        ;;
+      *)
+        echo -e "${yellow}Неверный ввод.${plain}"
+        sleep 1
+        ;;
+    esac
+  done
+}
+
+strategy_files_submenu() {
+  local pending_tcp=""
+  local pending_udp=""
+  local has_changes=0
+  local ans nums num strategy_line type
+
+  toggle_pending_strategy_num() {
+    local list="$1"
+    local item="$2"
+    local line out="" found=0
+
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      if [ "$line" = "$item" ]; then
+        found=1
+        continue
+      fi
+      out="${out}${out:+
+}$line"
+    done <<EOF
+$list
+EOF
+
+    if [ "$found" -eq 0 ]; then
+      out="${out}${out:+
+}$item"
+    fi
+    echo "$out"
+  }
+
+  remove_pending_strategy_num() {
+    local list="$1"
+    local item="$2"
+    local line out=""
+
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      [ "$line" = "$item" ] && continue
+      out="${out}${out:+
+}$line"
+    done <<EOF
+$list
+EOF
+    echo "$out"
+  }
+
+  apply_pending_strategy_toggles() {
+    local type="$1"
+    local list="$2"
+    local line
+
+    while IFS= read -r line; do
+      [ -n "$line" ] || continue
+      toggle_strategy_file "$type" "$line" || return 1
+    done <<EOF
+$list
+EOF
+    return 0
+  }
+
+  reset_pending_strategy_toggles() {
+    pending_tcp=""
+    pending_udp=""
+    has_changes=0
+  }
+
+  toggle_pending_strategy_nums() {
+    local type="$1"
+    local nums="$2"
+    local item had_valid=0 pending_list enabled_file
+
+    nums="$(echo "$nums" | sed 's/[[:space:]]//g; s/,/ /g')"
+    for item in $nums; do
+      case "$item" in
+        ''|*[!0-9]*)
+          echo "Неверный номер стратегии: $item"
+          continue
+          ;;
+      esac
+
+      if strategy_file_exists "$type" "$item"; then
+        case "$type" in
+          TCP) pending_list="$pending_tcp" ;;
+          UDP) pending_list="$pending_udp" ;;
+        esac
+        enabled_file="$(strategy_dir "$type")/${item}.txt"
+        if ! echo "$pending_list" | grep -q -x -F "$item" && [ -s "$enabled_file" ]; then
+          strategy_can_be_disabled_or_deleted "$type" "$item" "отключить" || continue
+        fi
+        case "$type" in
+          TCP) pending_tcp="$(toggle_pending_strategy_num "$pending_tcp" "$item")" ;;
+          UDP) pending_udp="$(toggle_pending_strategy_num "$pending_udp" "$item")" ;;
+        esac
+        had_valid=1
+      else
+        echo "Стратегия $type/$item не найдена."
+      fi
+    done
+
+    [ "$had_valid" -eq 1 ] && has_changes=1
+    return 0
+  }
+
+  resolve_custom_strategy_type() {
+    local num="$1"
+    local tcp_exists=0 udp_exists=0 choice
+
+    strategy_file_exists TCP "$num" && tcp_exists=1
+    strategy_file_exists UDP "$num" && udp_exists=1
+
+    if [ "$tcp_exists" -eq 1 ] && [ "$udp_exists" -eq 0 ]; then
+      echo "TCP"
+      return 0
+    fi
+    if [ "$tcp_exists" -eq 0 ] && [ "$udp_exists" -eq 1 ]; then
+      echo "UDP"
+      return 0
+    fi
+    if [ "$tcp_exists" -eq 1 ] && [ "$udp_exists" -eq 1 ]; then
+      read -re -p "Найдены TCP и UDP стратегии с этим номером. Введите тип (TCP/UDP): " choice
+      case "$choice" in
+        TCP|tcp) echo "TCP"; return 0 ;;
+        UDP|udp) echo "UDP"; return 0 ;;
+      esac
+      echo "Неверный тип стратегии." >&2
+      return 1
+    fi
+
+    echo "Пользовательская стратегия $num не найдена." >&2
+    return 1
+  }
+
+  while true; do
+    clear
+    echo -e "${cyan}--- Файлы стратегий ---${plain}"
+    print_strategy_files_status TCP "$pending_tcp"
+    echo ""
+    print_strategy_files_status UDP "$pending_udp"
+    echo ""
+    submenu_item "1" "Включить/отключить TCP стратегию"
+    submenu_item "2" "Включить/отключить UDP стратегию"
+    submenu_item "3" "Добавить пользовательскую TCP стратегию"
+    submenu_item "4" "Добавить пользовательскую UDP стратегию"
+    submenu_item "5" "Удалить пользовательскую стратегию (полностью)"
+    submenu_item "6" "Посмотреть пользовательскую стратегию"
+    submenu_item "0" "Назад / Сохранить"
+    echo ""
+
+    read -re -p "Ваш выбор: " ans
+    case "$ans" in
+      "1")
+        read -re -p "Введите номер(-а) TCP стратегии(-ий) (можно цифры через запятую): " nums
+        toggle_pending_strategy_nums TCP "$nums"
+        echo ""
+        pause_enter
+        ;;
+      "2")
+        read -re -p "Введите номер(-а) UDP стратегии(-ий) (можно цифры через запятую): " nums
+        toggle_pending_strategy_nums UDP "$nums"
+        echo ""
+        pause_enter
+        ;;
+      "3")
+        read -re -p "Введите строку TCP стратегии (без --new в конце, например --dpi-desync=fake --dpi-desync=multisplit --dpi-desync-split-seqovl=1): " strategy_line
+        if add_custom_strategy_file TCP "$strategy_line"; then
+          has_changes=1
+        fi
+        pause_enter
+        ;;
+      "4")
+        read -re -p "Введите строку UDP стратегии (без --new в конце, например --dpi-desync=fake --dpi-desync-repeats=11): " strategy_line
+        if add_custom_strategy_file UDP "$strategy_line"; then
+          has_changes=1
+        fi
+        pause_enter
+        ;;
+      "5")
+        read -re -p "Введите номер пользовательской стратегии для удаления: " num
+        case "$num" in
+          ''|*[!0-9]*) echo "Неверный номер стратегии." ;;
+          *)
+            if [ "$num" -lt "$CUSTOM_STRATEGY_START" ]; then
+              echo "Удалять можно только пользовательские стратегии с номером $CUSTOM_STRATEGY_START и выше."
+            else
+              type="$(resolve_custom_strategy_type "$num")"
+              if [ "$type" = "TCP" ] || [ "$type" = "UDP" ]; then
+                if delete_custom_strategy_file "$type" "$num"; then
+                  pending_tcp="$(remove_pending_strategy_num "$pending_tcp" "$num")"
+                  pending_udp="$(remove_pending_strategy_num "$pending_udp" "$num")"
+                  apply_pending_strategy_toggles TCP "$pending_tcp" || { pause_enter; continue; }
+                  apply_pending_strategy_toggles UDP "$pending_udp" || { pause_enter; continue; }
+                  if rebuild_config_and_restart; then
+                    delete_strategy_hostlists_full "$type" "$num"
+                    reset_pending_strategy_toggles
+                  fi
+                fi
+              fi
+            fi
+            ;;
+        esac
+        pause_enter
+        ;;
+      "6")
+        read -re -p "Введите номер пользовательской стратегии для просмотра: " num
+        case "$num" in
+          ''|*[!0-9]*) echo "Неверный номер стратегии." ;;
+          *)
+            if [ "$num" -lt "$CUSTOM_STRATEGY_START" ]; then
+              echo "Просматривать здесь можно только пользовательские стратегии с номером $CUSTOM_STRATEGY_START и выше."
+            else
+              type="$(resolve_custom_strategy_type "$num")"
+              if [ "$type" = "TCP" ] || [ "$type" = "UDP" ]; then
+                show_custom_strategy_file "$type" "$num"
+              fi
+            fi
+            ;;
+        esac
+        pause_enter
+        ;;
+      "0"|"")
+        if [ "$has_changes" -eq 1 ]; then
+          apply_pending_strategy_toggles TCP "$pending_tcp" || { pause_enter; continue; }
+          apply_pending_strategy_toggles UDP "$pending_udp" || { pause_enter; continue; }
+          rebuild_config_and_restart
+        fi
         return
         ;;
       *)
