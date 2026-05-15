@@ -155,15 +155,6 @@ get_repo() {
  curl -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
  curl -L -o /opt/zapret/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt
  touch /opt/zapret/lists/autohostlist.txt /opt/zapret/extra_strats/UDP/YT/{1..8}.txt /opt/zapret/extra_strats/TCP/RKN/{1..22}.txt /opt/zapret/extra_strats/TCP/User/{1..22}.txt /opt/zapret/extra_strats/TCP/YT/{1..22}.txt /opt/zapret/extra_strats/TCP/GV/{1..22}.txt /opt/zapret/extra_strats/TCP/temp/{1..22}.txt
- if [ -d /opt/extra_strats ]; then
-  rm -rf /opt/zapret/extra_strats
-  mv /opt/extra_strats /opt/zapret/
-  echo "Восстановление настроек подбора из резерва выполнено."
- fi
- if [ -f "/opt/netrogat.txt" ]; then
-   mv -f /opt/netrogat.txt /opt/zapret/lists/netrogat.txt
-   echo "Восстановление листа исключений выполнено."
- fi
  #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
  curl -L -o /opt/zapret/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/config.default
  if which nft >/dev/null 2>&1; then
@@ -174,6 +165,46 @@ get_repo() {
  curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
  cp -f /opt/zapret/init.d/sysv/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all
  cp -f /opt/zapret/init.d/sysv/custom.d/50-discord-media /opt/zapret/init.d/openwrt/custom.d/50-discord-media
+ #Различный рестор бэкапов:
+ if [ -d /opt/extra_strats ]; then
+  rm -rf /opt/zapret/extra_strats
+  mv /opt/extra_strats /opt/zapret/
+  echo "Восстановление настроек подбора из резерва выполнено."
+ fi
+ if [ -f "/opt/fooling_ts" ]; then
+	sed -i 's/fooling=ts,badsum/fooling=ts/' /opt/zapret/config.default
+	echo -e "${green}Выполнено переключение фулинга на ts${plain}"
+ fi
+ 
+ if [ -f "/opt/bezr_strat" ]; then
+    STRAT_NUM_BEZR=$(cat /opt/bezr_strat)
+	# Ищем строку-донор для указанного номера. Убираем экранирование \ перед --new, чтобы не было warning
+	NEW_LINE_BEZR=$(grep "RKN/${STRAT_NUM_BEZR}.txt" "/opt/zapret/config" | grep "\-\-new" | head -n 1)
+
+	if [ -z "$NEW_LINE_BEZR" ]; then
+		echo "Ошибка: Стратегия с номером $STRAT_NUM_BEZR не найдена в файле."
+		pause_enter
+		return
+	fi
+
+	# Извлекаем параметры из донора (всё, что после RKN/номер.txt и до --new)
+	NEW_PARAMS_BEZR=$(echo "$NEW_LINE_BEZR" | sed -n "s/.*RKN\/${STRAT_NUM_BEZR}\.txt \(.*\) --new/\1/p")
+		
+	# Если параметры после .txt отсутствуют, пробуем альтернативный захват (после none.dom)
+	if [ -z "$NEW_PARAMS_BEZR" ]; then
+		NEW_PARAMS_BEZR=$(echo "$NEW_LINE_BEZR" | sed -n 's/.*none.dom \(.*\) --new/\1/p')
+	fi	
+	echo "Выбраны параметры для стратегии $STRAT_NUM_BEZR: $NEW_PARAMS_BEZR"
+
+	#Применение изменений в файле. Используем модифицированную строку sed
+	sed -i "s|\(2096,8443 --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt \).*\( --new\)|\1$NEW_PARAMS_BEZR\2|" "/opt/zapret/config.default"
+fi
+
+ if [ -f "/opt/netrogat.txt" ]; then
+   mv -f /opt/netrogat.txt /opt/zapret/lists/netrogat.txt
+   echo "Восстановление листа исключений выполнено."
+ fi
+
  if [ "$hardware" = "keenetic" ]; then
   ensure_keenetic_policy_config_defaults /opt/zapret/config.default
   ensure_keenetic_policy_hooks /opt/zapret/config.default
