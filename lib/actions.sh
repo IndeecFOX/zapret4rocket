@@ -134,13 +134,17 @@ menu_action_restore_config_backup() {
 backup_strats() {
   # Бэкап папки стратегий
   if [ -d /opt/zapret/extra_strats ]; then
-    echo -e "${yellow}Сделать бэкап /opt/zapret/extra_strats ?${plain}"
+    echo -e "${yellow}Сделать бэкап /opt/zapret/extra_strats, выбранного фулинга и статуса безразборного режима?${plain}"
     echo -e "${yellow}5 - Да, Enter - Нет, 0 - отмена${plain}"
     read -r ans
     if [ "$ans" = "0" ]; then
         get_menu # сигнал “отмена/в меню”
     fi
     if [ "$ans" = "5" ] || [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
+	  rm -f /opt/fooling_ts
+	  grep -q "fooling=ts,badsum" "/opt/zapret/config" || touch /opt/fooling_ts
+	  rm -f /opt/bezr_strat
+	  [ "$(get_bezr_status)" != "Выключен" ] && echo "$(get_bezr_status)" > /opt/bezr_strat
       rm -rf /opt/extra_strats 2>/dev/null || true
       cp -rf /opt/zapret/extra_strats /opt/ || true
       echo -e "${green}Бэкап extra_strats сохранён в /opt/extra_strats${plain}"
