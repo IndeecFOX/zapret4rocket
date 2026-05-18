@@ -134,17 +134,20 @@ menu_action_restore_config_backup() {
 backup_strats() {
   # Бэкап папки стратегий
   if [ -d /opt/zapret/extra_strats ]; then
-    echo -e "${yellow}Сделать бэкап /opt/zapret/extra_strats, выбранного фулинга и статуса безразборного режима?${plain}"
+    echo -e "${yellow}Сделать бэкап /opt/zapret/extra_strats, выбранного фулинга, статуса безразборного режима и текущего SNI?${plain}"
     echo -e "${yellow}5 - Да, Enter - Нет, 0 - отмена${plain}"
     read -r ans
     if [ "$ans" = "0" ]; then
         get_menu # сигнал “отмена/в меню”
     fi
     if [ "$ans" = "5" ] || [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
-	  rm -f /opt/fooling_ts
-	  grep -q "fooling=ts,badsum" "/opt/zapret/config" || touch /opt/fooling_ts
-	  rm -f /opt/bezr_strat
-	  [ "$(get_bezr_status)" != "Выключен" ] && echo "$(get_bezr_status)" > /opt/bezr_strat
+	  rm -f /opt/z4r_settings_backup 
+ 	  # Строка 1: fooling (ts или ts,badsum)
+	  grep -q "fooling=ts,badsum" "/opt/zapret/config" && echo "ts,badsum" > /opt/z4r_settings_backup || echo "ts" > /opt/z4r_settings_backup
+	  # Строка 2: sni
+	  grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1 >> /opt/z4r_settings_backup
+	  # Строка 3: bezr
+	  [ "$(get_bezr_status)" != "Выключен" ] && echo "$(get_bezr_status)" >> /opt/z4r_settings_backup || echo "" >> /opt/z4r_settings_backup
       rm -rf /opt/extra_strats 2>/dev/null || true
       cp -rf /opt/zapret/extra_strats /opt/ || true
       echo -e "${green}Бэкап extra_strats сохранён в /opt/extra_strats${plain}"
