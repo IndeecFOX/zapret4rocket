@@ -171,34 +171,36 @@ get_repo() {
   mv /opt/extra_strats /opt/zapret/
   echo "Восстановление настроек подбора из резерва выполнено."
  fi
- if [ -f "/opt/fooling_ts" ]; then
-	sed -i 's/fooling=ts,badsum/fooling=ts/' /opt/zapret/config.default
-	echo -e "${green}Выполнено переключение фулинга на ts${plain}"
+ if [ -f "/opt/z4r_settings_backup" ]; then
+    Backuped_FOOLING=$(sed -n '1p' /opt/z4r_settings_backup)
+    Backuped_SNI=$(sed -n '2p' /opt/z4r_settings_backup)
+    Backuped_STRAT_NUM_BEZR=$(sed -n '3p' /opt/z4r_settings_backup)
+	#Fooling 1 строка
+    if [ "$Backuped_FOOLING" = "ts" ]; then
+        sed -i 's/fooling=ts,badsum/fooling=ts/' /opt/zapret/config.default
+        echo -e "${green}Выполнено переключение фулинга на ts${plain}"
+    fi
+	#SNI 2 строка
+    if [ -n "$Backuped_SNI" ] && [ "$Backuped_SNI" != "msn.com" ]; then
+        sed -i -E "s|(=sni=)[^[:space:]]+( --)|\1${Backuped_SNI}\2|g" "/opt/zapret/config.default"
+        echo -e "${green}SNI теперь фейкуется под:${plain} $Backuped_SNI"
+    fi
+    #Bezrazbor 3 строка
+    if [ -n "$Backuped_STRAT_NUM_BEZR" ]; then
+        NEW_LINE_BEZR=$(grep "RKN/${Backuped_STRAT_NUM_BEZR}.txt" "/opt/zapret/config.default" | grep "\-\-new" | head -n 1)
+        if [ -z "$NEW_LINE_BEZR" ]; then
+            echo "Ошибка: Стратегия $Backuped_STRAT_NUM_BEZR не найдена."
+            pause_enter
+            return
+        fi
+        NEW_PARAMS_BEZR=$(echo "$NEW_LINE_BEZR" | sed -n "s/.*RKN\/${Backuped_STRAT_NUM_BEZR}\.txt \(.*\) --new/\1/p")
+        if [ -z "$NEW_PARAMS_BEZR" ]; then
+            NEW_PARAMS_BEZR=$(echo "$NEW_LINE_BEZR" | sed -n 's/.*none.dom \(.*\) --new/\1/p')
+        fi
+        sed -i "s|\(2096,8443 --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt \).*\( --new\)|\1$NEW_PARAMS_BEZR\2|" "/opt/zapret/config.default"
+        echo "Применена стратегия $Backuped_STRAT_NUM_BEZR: $NEW_PARAMS_BEZR"
+    fi
  fi
- 
- if [ -f "/opt/bezr_strat" ]; then
-    STRAT_NUM_BEZR=$(cat /opt/bezr_strat)
-	# Ищем строку-донор для указанного номера. Убираем экранирование \ перед --new, чтобы не было warning
-	NEW_LINE_BEZR=$(grep "RKN/${STRAT_NUM_BEZR}.txt" "/opt/zapret/config" | grep "\-\-new" | head -n 1)
-
-	if [ -z "$NEW_LINE_BEZR" ]; then
-		echo "Ошибка: Стратегия с номером $STRAT_NUM_BEZR не найдена в файле."
-		pause_enter
-		return
-	fi
-
-	# Извлекаем параметры из донора (всё, что после RKN/номер.txt и до --new)
-	NEW_PARAMS_BEZR=$(echo "$NEW_LINE_BEZR" | sed -n "s/.*RKN\/${STRAT_NUM_BEZR}\.txt \(.*\) --new/\1/p")
-		
-	# Если параметры после .txt отсутствуют, пробуем альтернативный захват (после none.dom)
-	if [ -z "$NEW_PARAMS_BEZR" ]; then
-		NEW_PARAMS_BEZR=$(echo "$NEW_LINE_BEZR" | sed -n 's/.*none.dom \(.*\) --new/\1/p')
-	fi	
-	echo "Выбраны параметры для стратегии $STRAT_NUM_BEZR: $NEW_PARAMS_BEZR"
-
-	#Применение изменений в файле. Используем модифицированную строку sed
-	sed -i "s|\(2096,8443 --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt \).*\( --new\)|\1$NEW_PARAMS_BEZR\2|" "/opt/zapret/config.default"
-fi
 
  if [ -f "/opt/netrogat.txt" ]; then
    mv -f /opt/netrogat.txt /opt/zapret/lists/netrogat.txt
