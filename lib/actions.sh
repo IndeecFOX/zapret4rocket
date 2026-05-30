@@ -219,6 +219,8 @@ menu_action_toggle_bolvan_ports() {
     sed -i '83s/443$/443,1400,3478-3481,5349,50000-50099,19294-19344/' /opt/zapret/config
     sed -i 's/^--skip --filter-udp=50000/--filter-udp=50000/' "/opt/zapret/config"
 
+	/opt/zapret/init.d/sysv/zapret stop
+	echo -e "${green}Выполнена команда остановки zapret${plain}"
     rm -f /opt/zapret/init.d/sysv/custom.d/50-discord-media \
           /opt/zapret/init.d/sysv/custom.d/50-stun4all \
           /opt/zapret/init.d/openwrt/custom.d/50-stun4all \
