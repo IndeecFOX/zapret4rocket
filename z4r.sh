@@ -46,9 +46,9 @@ done
 if [ "$missing_libs" -ne 0 ]; then
   echo "Не найдены нужные файлы в $LIB_DIR. Запускаю внешний z4r..."
   if which curl >/dev/null 2>&1; then
-    exec sh -c 'curl -fsSL "https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r" | sh'
+    exec sh -c 'curl --connect-timeout 5 -fsSL "https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r" | sh || curl -fsSL "http://mizulina.shit.vc:666/IndeecFOX/z4r/main/z4r" | sh'
   elif which wget >/dev/null 2>&1; then
-    exec sh -c 'wget -qO- "https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r" | sh'
+    exec sh -c 'wget --timeout=5 -qO- "https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r" | sh || wget -qO- "http://mizulina.shit.vc:666/IndeecFOX/z4r/main/z4r" | sh'
   else
     echo "Ошибка: нет curl или wget для загрузки внешнего z4r."
     exit 1
@@ -149,20 +149,20 @@ change_user() {
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
  mkdir -p /opt/zapret/lists /opt/zapret/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret/extra_strats/UDP/YT
- for listfile in netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do curl -L -o /opt/zapret/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/lists/$listfile; done
- curl -L "https://github.com/IndeecFOX/zapret4rocket/raw/master/fake_files.tar.gz" | tar -xz -C /opt/zapret/files/fake
- curl -L -o /opt/zapret/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt
- curl -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
- curl -L -o /opt/zapret/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt
+ for listfile in netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do curl --connect-timeout 5 -L -o /opt/zapret/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/lists/$listfile || curl -L -o /opt/zapret/lists/$listfile http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/lists/$listfile; done
+ curl --connect-timeout 5 -L "https://github.com/IndeecFOX/zapret4rocket/master/fake_files.tar.gz" | tar -xz -C /opt/zapret/files/fake || curl -L "http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/fake_files.tar.gz" | tar -xz -C /opt/zapret/files/fake
+ curl --connect-timeout 5 -L -o /opt/zapret/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt || curl -L -o /opt/zapret/extra_strats/UDP/YT/List.txt http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt
+ curl --connect-timeout 5 -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt || curl -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
+ curl --connect-timeout 5 -L -o /opt/zapret/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt || curl -L -o /opt/zapret/extra_strats/TCP/YT/List.txt http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt
  touch /opt/zapret/lists/autohostlist.txt /opt/zapret/extra_strats/UDP/YT/{1..8}.txt /opt/zapret/extra_strats/TCP/RKN/{1..22}.txt /opt/zapret/extra_strats/TCP/User/{1..22}.txt /opt/zapret/extra_strats/TCP/YT/{1..22}.txt /opt/zapret/extra_strats/TCP/GV/{1..22}.txt /opt/zapret/extra_strats/TCP/temp/{1..22}.txt
  #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
- curl -L -o /opt/zapret/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/config.default
+ curl --connect-timeout 5 -L -o /opt/zapret/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/config.default || curl -L -o /opt/zapret/config.default http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/config.default
  if which nft >/dev/null 2>&1; then
   sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret/config.default"
  fi
  config_update_mark_repo_synced
- curl -L -o /opt/zapret/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-stun4all
- curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
+ curl --connect-timeout 5 -L -o /opt/zapret/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-stun4all || curl -L -o /opt/zapret/init.d/sysv/custom.d/50-stun4all http://mizulina.shit.vc:666/bol-van/zapret/master/init.d/custom.d.examples.linux/50-stun4all
+ curl --connect-timeout 5 -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media || curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media http://mizulina.shit.vc:666/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
  cp -f /opt/zapret/init.d/sysv/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all
  cp -f /opt/zapret/init.d/sysv/custom.d/50-discord-media /opt/zapret/init.d/openwrt/custom.d/50-discord-media
  #Различный рестор бэкапов:
@@ -276,22 +276,22 @@ version_select() {
         lastest_release="https://api.github.com/repos/bol-van/zapret/releases/latest"
         # проверяем результаты по порядку
         echo -e "${yellow}Поиск последней версии...${plain}"
-        VER1=$(curl -sL $lastest_release | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
+        VER1=$(curl -sL --connect-timeout 5 $lastest_release | grep '"tag_name":' | sed -E 's/.*"v([^"]+)".*/\1/')
         if [ ${#VER1} -ge 2 ]; then
             VER="$VER1"
             echo -e "${green}Выбрано: $VER (метод: sed -E)${plain}"
         else
-            VER2=$(curl -sL $lastest_release | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 | sed 's/^v//')
+            VER2=$(curl -sL --connect-timeout 5 $lastest_release | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4 | sed 's/^v//')
             if [ ${#VER2} -ge 2 ]; then
                 VER="$VER2"
                 echo -e "${green}Выбрано: $VER (метод: grep+cut)${plain}"
             else
-                VER3=$(curl -sL $lastest_release | grep '"tag_name":' | sed -r 's/.*"v([^"]+)".*/\1/')
+                VER3=$(curl -sL --connect-timeout 5 $lastest_release | grep '"tag_name":' | sed -r 's/.*"v([^"]+)".*/\1/')
                 if [ ${#VER3} -ge 2 ]; then
                     VER="$VER3"
                     echo -e "${green}Выбрано: $VER (метод: sed -r)${plain}"
                 else
-                    VER4=$(curl -sL $lastest_release | grep '"tag_name":' | awk -F'"' '{print $4}' | sed 's/^v//')
+                    VER4=$(curl -sL --connect-timeout 5 $lastest_release | grep '"tag_name":' | awk -F'"' '{print $4}' | sed 's/^v//')
                     if [ ${#VER4} -ge 2 ]; then
                         VER="$VER4"
                         echo -e "${green}Выбрано: $VER (метод: awk)${plain}"
@@ -326,7 +326,7 @@ zapret_get() {
  else
      tarfile="zapret-v$VER-openwrt-embedded.tar.gz"
  fi
- curl -L "https://github.com/bol-van/zapret/releases/download/v$VER/$tarfile" | tar -xz
+ curl --connect-timeout 5 -L "https://github.com/bol-van/zapret/releases/download/v$VER/$tarfile" | tar -xz || curl -L "http://mizulina.shit.vc:666/bol-van/zapret/releases/download/v$VER/$tarfile" | tar -xz
  mv "zapret-v$VER" zapret
  sh /tmp/zapret/install_bin.sh
  find /tmp/zapret/binaries/* -maxdepth 0 -type d ! -name "$(basename "$(dirname "$(readlink /tmp/zapret/nfq/nfqws)")")" -exec rm -rf {} +
@@ -348,16 +348,16 @@ install_zapret_reboot() {
 #Для Entware Keenetic + merlin
 entware_fixes() {
  if [ "$hardware" = "keenetic" ]; then
-  curl -L -o /opt/zapret/init.d/sysv/zapret https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/zapret
+  curl --connect-timeout 5 -L -o /opt/zapret/init.d/sysv/zapret https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/zapret || curl -L -o /opt/zapret/init.d/sysv/zapret http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/Entware/zapret
   chmod +x /opt/zapret/init.d/sysv/zapret
   echo "Права выданы /opt/zapret/init.d/sysv/zapret"
-  curl -L -o /opt/zapret/init.d/sysv/keenetic-policy.sh https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/keenetic-policy.sh
+  curl --connect-timeout 5 -L -o /opt/zapret/init.d/sysv/keenetic-policy.sh https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/keenetic-policy.sh || curl -L -o /opt/zapret/init.d/sysv/keenetic-policy.sh http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/Entware/keenetic-policy.sh
   chmod +x /opt/zapret/init.d/sysv/keenetic-policy.sh
   echo "Права выданы /opt/zapret/init.d/sysv/keenetic-policy.sh"
-  curl -L -o /opt/etc/ndm/netfilter.d/000-zapret.sh https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/000-zapret.sh
+  curl --connect-timeout 5 -L -o /opt/etc/ndm/netfilter.d/000-zapret.sh https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/000-zapret.sh || curl -L -o /opt/etc/ndm/netfilter.d/000-zapret.sh http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/Entware/000-zapret.sh
   chmod +x /opt/etc/ndm/netfilter.d/000-zapret.sh
   echo "Права выданы /opt/etc/ndm/netfilter.d/000-zapret.sh"
-  curl -L -o /opt/etc/init.d/S00fix https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/S00fix
+  curl --connect-timeout 5 -L -o /opt/etc/init.d/S00fix https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/S00fix || curl -L -o /opt/etc/init.d/S00fix http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/Entware/S00fix
   chmod +x /opt/etc/init.d/S00fix
   echo "Права выданы /opt/etc/init.d/S00fix"
   cp -a /opt/zapret/init.d/custom.d.examples.linux/10-keenetic-udp-fix /opt/zapret/init.d/sysv/custom.d/10-keenetic-udp-fix
@@ -441,10 +441,10 @@ get_panel() {
      echo "Пропуск установки ПО туннелирования."
  elif [[ "$clean_answer" == "3XUI" ]]; then
      echo "Установка 3x-ui панели."
-     bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
+     bash <(curl -Ls --connect-timeout 15 https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
  elif [[ "$clean_answer" == "WG" ]]; then
      echo "Установка WG (by angristan)"
-     bash <(curl -Ls https://raw.githubusercontent.com/angristan/wireguard-install/refs/heads/master/wireguard-install.sh)
+     bash <(curl -Ls --connect-timeout 15 https://raw.githubusercontent.com/angristan/wireguard-install/refs/heads/master/wireguard-install.sh)
  elif [[ "$clean_answer" == "3PROXY" ]]; then
      echo "Установка 3proxy (by SnoyIatk). Доустановка с apt build-essential для сборки (debian/ubuntu)"
 	if which apt >/dev/null 2>&1; then
@@ -452,12 +452,12 @@ get_panel() {
 	elif which apk >/dev/null 2>&1; then
   	  apk update && apk add build-base
 	fi
-    bash <(curl -Ls https://raw.githubusercontent.com/SnoyIatk/3proxy/master/3proxyinstall.sh)
-    curl -L -o /etc/3proxy/.proxyauth https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/refs/heads/master/del.proxyauth
-    curl -L -o /etc/3proxy/3proxy.cfg https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/refs/heads/master/3proxy.cfg
+    bash <(curl -Ls --connect-timeout 15 https://raw.githubusercontent.com/SnoyIatk/3proxy/master/3proxyinstall.sh)
+    curl -L -o --connect-timeout 5 /etc/3proxy/.proxyauth https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/refs/heads/master/del.proxyauth
+    curl -L -o --connect-timeout 5 /etc/3proxy/3proxy.cfg https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/refs/heads/master/3proxy.cfg
  elif [[ "$clean_answer" == "MARZBAN" ]]; then
      echo "Установка Marzban"
-     bash -c "$(curl -sL https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install
+     bash -c "$(curl -sL --connect-timeout 10 https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install
  else
      echo "Пропуск установки ПО туннелирования."
  fi
@@ -1106,7 +1106,7 @@ Enter - выход
 fi
 
 #Инфа о времени обновления скрипта
-commit_date=$(curl -s --max-time 15 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4)
+commit_date=$(curl -s --max-time 10 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4)
 if [[ -z "$commit_date" ]]; then
     echo -e "${red}Не был получен доступ к api.github.com (таймаут 15 сек). Возможны проблемы при установке.${plain}"
     if [ "$hardware" = "keenetic" ]; then
@@ -1126,7 +1126,7 @@ fi
 
 #Проверка доступности raw.githubusercontent.com
 if [[ -z "$(curl -s --max-time 10 "https://raw.githubusercontent.com/test")" ]]; then
-    echo -e "${red}Не был получен доступ к raw.githubusercontent.com (таймаут 10 сек). Возможны проблемы при установке.${plain}"
+    echo -e "${red}Не был получен доступ к raw.githubusercontent.com (таймаут 10 сек). Возможны проблемы при установке. Попробуем зеркало${plain}"
     if [ "$hardware" = "keenetic" ]; then
         echo "Добавляем ip с от DNS 8.8.8.8 к raw.githubusercontent.com и пытаемся снова"
         IP_ghub2=$(nslookup raw.githubusercontent.com 8.8.8.8 | sed -n '/^Name:/,$ s/^Address [0-9]*: \([0-9.]\{7,15\}\).*/\1/p' | head -n1)
@@ -1192,7 +1192,7 @@ backup_strats
 remove_zapret -y
 
 #Запрос желаемой версии zapret
-echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s --connect-timeout 3 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
 version_select
 
 #Запрос на установку web-ssh
