@@ -138,7 +138,7 @@ Barnaul - CJSC ER-Telecom Holding Barnaul branch|UDP:0, 2|TCP:0|GV:0, 2|RKN:1
 Barnaul - ENTER-NETWORK|UDP:0|TCP:0|GV:0|RKN:11
 Barnaul - JSC ER-Telecom Holding|UDP:2, 5|TCP:0|GV:2, 0, 12|RKN:0
 Barnaul - JSC Rostelecom regional branch Siberia|UDP:2, 0, 1|TCP:1|GV:1, 11|RKN:0
-Barnaul - MTS PJSC|UDP:2|TCP:1|GV:1, 3|RKN:0
+Barnaul - MTS PJSC|UDP:2|TCP:1|GV:1|RKN:0
 Barnaul - NAT-M25B|UDP:0|TCP:1|GV:0|RKN:0
 Barnaul - OJSC Sibirtelecom|UDP:0, 6|TCP:1|GV:1, 0|RKN:5
 Barnaul - Rostelecom networks|UDP:0|TCP:0|GV:0|RKN:9
@@ -347,6 +347,7 @@ Haverfordwest - Global Connectivity Solutions LLP|UDP:0|TCP:0|GV:0|RKN:5
 Helsinki - Aeza International LTD|UDP:1|TCP:0|GV:0|RKN:0
 Helsinki - Baykov Ilya Sergeevich|UDP:0|TCP:0|GV:0|RKN:5
 Helsinki - Hetzner Online GmbH|UDP:0|TCP:0|GV:0|RKN:7
+Helsinki - Play2go International Limited|UDP:0|TCP:0|GV:0|RKN:8
 html - headtitle301 Moved Permanentlytitlehead|UDP:0|TCP:0|GV:0|RKN:0
 htmlheadtitle403 Forbiddentitleheadbodycenterh1403 Forbidden|UDP:0, 1|TCP:0|GV:0, 3|RKN:0
 Iglino - JSC Ufanet|UDP:2|TCP:0|GV:0, 2|RKN:0
@@ -442,7 +443,7 @@ Kazan - PJSC Tattelecom|UDP:0, 1|TCP:0|GV:0, 1|RKN:5
 Kazan - PJSC Vimpelcom|UDP:0|TCP:0|GV:0, 1, 3|RKN:5
 Kazan - Rostelecom|UDP:0, 1|TCP:0|GV:0, 1|RKN:5
 Kazan - Rostelecom networks|UDP:0, 2|TCP:0|GV:0|RKN:0
-Kazan - SkyNetwork Ltd.|UDP:0, 6|TCP:1|GV:0, 1|RKN:1
+Kazan - SkyNetwork Ltd.|UDP:0, 6|TCP:1|RKN:1
 Kazan - Tattelecom|UDP:0, 4, 1|TCP:0|RKN:7
 Kazan - TATTELECOM|UDP:0, 1, 4|TCP:1|RKN:5
 Kazan - Teleset Company. City of Kazan.|UDP:0, 1, 4|TCP:0|RKN:0
@@ -483,6 +484,7 @@ Kirov - MTS PJSC|UDP:1, 2, 0|TCP:1|RKN:12
 Kirov - PJSC Rostelecom|UDP:3, 0, 1|TCP:17|RKN:0
 Kirov - Rostelecom networks|UDP:1, 0|TCP:0|RKN:0
 Kirovgrad|UDP:0|TCP:0|RKN:1
+Kizlyar - PJSC MegaFon|UDP:1|TCP:16|RKN:5
 Klin - JSC ER-Telecom Holding Moscow branch|UDP:0, 1|TCP:0|RKN:1
 Knyazhaya Baygora - Address point-to-poiLipetsk Regional Pub|UDP:5|TCP:11|RKN:12
 Kolchugino - Trytek broadband|UDP:1|TCP:7|RKN:0
@@ -522,7 +524,7 @@ Kozlovka - VolgaTelecom Cheboxary|UDP:1|TCP:1|RKN:5
 Krasnodar - Caucasus Branch of OJSC MegaFon|UDP:0|TCP:2|RKN:0
 Krasnodar - CORBINA-BROADBAND|UDP:0, 6, 1|TCP:0|RKN:0
 Krasnodar - D-telekom LLC|UDP:0, 4|TCP:0|RKN:5
-Krasnodar - Freedom Krasnodar|UDP:0, 2, 1|TCP:0|RKN:0
+Krasnodar - Freedom Krasnodar|UDP:2, 0, 1|TCP:0|RKN:0
 Krasnodar - General IT RUS LLC|UDP:0|TCP:0|RKN:0
 Krasnodar - Innovation Technologies Ltd|UDP:0, 1|TCP:0|RKN:0
 Krasnodar - JSC ER-Telecom Holding Krasnodar branch|UDP:3, 6|TCP:3|RKN:3
@@ -622,7 +624,7 @@ Lida - Reliable Software Ltd.|UDP:5|TCP:0|RKN:0
 Limburg an der Lahn - OVH SAS|UDP:0|TCP:1|RKN:1
 Line-r - SPb|UDP:0|TCP:0|RKN:0
 Liner - St. Petersburg|UDP:0|TCP:1|RKN:1
-Lipetsk - Address point-to-poiLipetsk Regional Public Networ|UDP:2|TCP:0|RKN:0
+Lipetsk - Address point-to-poiLipetsk Regional Public Networ|UDP:2, 0|TCP:0|RKN:0
 Lipetsk - Address point-to-point Lipetsk Regional Public Net|UDP:2, 0, 3|TCP:0|RKN:0
 Lipetsk - CJSC ER-Telecom Holding Lipetsk branch|UDP:0|TCP:1|RKN:0
 Lipetsk - JSC ER-Telecom Holding|UDP:0, 2|TCP:1|RKN:5
@@ -735,7 +737,7 @@ Moscow - BNET|UDP:3|TCP:0|RKN:4
 Moscow - brand AtHome|UDP:2, 0|TCP:1|RKN:0
 Moscow - Centr Tekhnicheskogo Obsluzhivania FNPR Ltd|UDP:5|TCP:1|RKN:0
 Moscow - Chernyshov Aleksandr Aleksandrovich|UDP:0, 4, 1|TCP:0|RKN:4
-Moscow - Citytelecom LLC|UDP:0|TCP:0|RKN:0
+Moscow - Citytelecom LLC|UDP:0|TCP:0|RKN:10
 Moscow - Citytelecom SPB|UDP:1|TCP:1|RKN:0
 Moscow - CJSC Kolomna-Sviaz TV|UDP:1|TCP:12|RKN:12
 Moscow - Cloud assets LLC|UDP:2|TCP:2|RKN:2
@@ -819,7 +821,7 @@ Moscow - JSC Telephone Company Sotcom|UDP:0|TCP:0|RKN:5
 Moscow - JSC TIMEWEB|UDP:0, 1|TCP:0|RKN:6
 Moscow - JSC Ufanet|UDP:0|TCP:0|RKN:5
 Moscow - K-telekom LLC|UDP:1|TCP:1|RKN:5
-Moscow - known AS8752|UDP:0, 1|TCP:1|RKN:5
+Moscow - known AS8752|UDP:0, 1|TCP:0|RKN:5
 Moscow - Kontel LLC|UDP:0|TCP:0|RKN:0
 Moscow - Kostroma-SVEN Networks|UDP:0|TCP:1|RKN:0
 Moscow - KPD group OOO|UDP:0|TCP:2|RKN:0
@@ -1181,6 +1183,7 @@ Petrozavodsk - CityLink Ltd|UDP:0, 6|TCP:11|RKN:2
 Petrozavodsk - CityLink Ltd ISP|UDP:1, 4|TCP:1|RKN:1
 Petrozavodsk - Rostelecom networks|UDP:0|TCP:0|RKN:0
 Pinerovka - Helou LLC|UDP:0|TCP:3|RKN:6
+Pitkyaranta - CityLink Ltd|UDP:0|TCP:0|RKN:0
 Pjsc Mgts|UDP:0|TCP:0|RKN:1
 PJSC Rostelecom|UDP:1|TCP:0|RKN:0
 PJSC Rostelecom - Saint-Petersburg|UDP:1|TCP:1|RKN:5
@@ -1270,7 +1273,7 @@ Rostov-on-Don - CJSC ER-Telecom Holding Rostov-na-Donu branc|UDP:1, 0, 4|TCP:0|R
 Rostov-on-Don - CORBINA-BROADBAND|UDP:2, 0, 1|TCP:0|RKN:6
 Rostov-on-Don - CTSRND-NETWORK|UDP:0, 1, 3|TCP:0|RKN:12
 Rostov-on-Don - Don-plus LTD|UDP:1, 4|TCP:1|RKN:1
-Rostov-on-Don - JSC ER-Telecom Holding|UDP:2, 0, 1|TCP:1|RKN:0
+Rostov-on-Don - JSC ER-Telecom Holding|UDP:0, 2, 1|TCP:1|RKN:0
 Rostov-on-Don - Limited Liability Company TTK-Svyaz|UDP:0, 1|TCP:1|RKN:1
 Rostov-on-Don - LLC Digital Dialogue-Nets|UDP:0, 1, 3|TCP:2|RKN:0
 Rostov-on-Don - Macroregional South|UDP:1, 3, 5|TCP:0|RKN:0
@@ -1314,7 +1317,7 @@ Samara - JSC ER-Telecom Holding|UDP:0, 1, 2|TCP:0|RKN:0
 Samara - LADA-MEDIA Ltd.|UDP:1|TCP:0|RKN:0
 Samara - LLC NEW NETWORK|UDP:4, 2|TCP:3|RKN:0
 Samara - LLC SIP NIS|UDP:2|TCP:0|RKN:0
-Samara - MegaFon|UDP:0, 1, 2|TCP:0|RKN:5
+Samara - MegaFon|UDP:1, 0, 2|TCP:0|RKN:5
 Samara - MetroMAX|UDP:2|TCP:4|RKN:5
 Samara - MF SCARTEL EAST|UDP:0|TCP:0|RKN:4
 Samara - PJSC MegaFon|UDP:1, 0, 2|TCP:0|RKN:5
@@ -1386,7 +1389,7 @@ Simferopol - CMS 21|UDP:0|TCP:0|RKN:0
 Simferopol - Crelcom LLC|UDP:0, 1|TCP:0|RKN:0
 Simferopol - CRIMEANET-N1|UDP:1, 4|TCP:0|RKN:0
 Simferopol - FOP Sinev Maksim Viktorovich|UDP:0, 1, 3|TCP:0|RKN:0
-Simferopol - GIGANET|UDP:0, 1, 2|TCP:0|RKN:0
+Simferopol - GIGANET|UDP:0, 1, 4|TCP:0|RKN:0
 Simferopol - Infostroy LLC|UDP:1, 0|TCP:0|RKN:2
 Simferopol - K-telekom LLC|UDP:1|TCP:3|RKN:0
 Simferopol - Kazakov Viktor Aleksandrovich|UDP:0|TCP:0|RKN:0
@@ -1451,7 +1454,7 @@ St Petersburg - Hosting Ltd|UDP:0|TCP:0|RKN:12
 St Petersburg - Hypercore Ltd|UDP:0|TCP:0|RKN:5
 St Petersburg - INFO-LAN Network|UDP:0, 6, 7|TCP:0|RKN:3
 St Petersburg - Interzet|UDP:0, 1, 4|TCP:0|RKN:0
-St Petersburg - IT Outsourcing LLC|UDP:2, 4, 8|TCP:5|RKN:0
+St Petersburg - IT Outsourcing LLC|UDP:0, 2, 4|TCP:0|RKN:0
 St Petersburg - JSC ER-Telecom Holding|UDP:0, 5|TCP:0|RKN:5
 St Petersburg - JSC ER-Telecom Holding Lipetsk branch|UDP:0|TCP:1|RKN:9
 St Petersburg - JSC Selectel|UDP:1, 0|TCP:2|RKN:2
@@ -1509,6 +1512,7 @@ St Petersburg - UNIS Ltd.|UDP:0|TCP:0|RKN:2
 St Petersburg - vds|UDP:1|TCP:2|RKN:13
 St Petersburg - Veesp datacenter|UDP:0, 1|TCP:0|RKN:0
 St Petersburg - VilTel Ltd|UDP:1, 0|TCP:0|RKN:1
+St Petersburg - Viva LLC|UDP:1|TCP:9|RKN:15
 St Petersburg - VPS network|UDP:4|TCP:2|RKN:2
 St Petersburg - X-Trim Ltd.|UDP:7|TCP:17|RKN:2
 St Petersburg - You Online LLC|UDP:0|TCP:1|RKN:0
