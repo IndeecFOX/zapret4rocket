@@ -18,6 +18,7 @@ strategies_submenu() {
     submenu_item "	3" "YouTube (TCP. Видеопоток/GV домен)." "17 вариантов"
     submenu_item "	4" "RKN (Популярные блокированные сайты. Дискорд в т.ч.)." "17 вариантов"
     submenu_item "	5" "Отдельный домен." "17 вариантов"
+    submenu_item "	6" "Discord/voice UDP профиль." "0 - выключить, 1 - auto"
     submenu_item "	0" "Назад"
     echo ""
 
@@ -35,6 +36,10 @@ strategies_submenu() {
         Strats_Tryer "$user_domain"
         pause_enter
         ;;
+      "6")
+        voice_profile_submenu
+        pause_enter
+        ;;
       "0"|"")
         return
         ;;
@@ -44,6 +49,50 @@ strategies_submenu() {
         ;;
     esac
   done
+}
+
+voice_profile_submenu() {
+  local state display ans
+
+  state="$(profile_lock_get "VOICE_UDP")"
+  display="$state"
+  [ "$display" = "skip" ] && display="0"
+  [ -z "$display" ] && display="auto"
+
+  echo -e "${cyan}--- Discord/voice UDP профиль ---${plain}"
+  echo -e "Текущее состояние: ${yellow}${display}${plain}"
+  echo ""
+  echo "0 - выключить профиль через --skip, убрать voice-порты и отключить custom.d scripts"
+  echo "1 - вернуть auto/default; для классических стратегий используйте пункт 8 главного меню"
+  echo "Enter - назад"
+  echo ""
+
+  read -re -p "Ваш выбор: " ans
+  case "$ans" in
+    "0")
+      profile_lock_set "VOICE_UDP" "skip"
+      profile_apply_one "VOICE_UDP" "skip"
+      if [[ -n "${ZAPRET2_INIT:-}" && -f "$ZAPRET2_INIT" ]]; then
+        "$ZAPRET2_INIT" restart || true
+      fi
+      echo -e "${green}VOICE_UDP сохранён как 0 и применён.${plain}"
+      ;;
+    "1")
+      profile_lock_clear "VOICE_UDP"
+      profile_apply_voice_auto "$(z2r_config_file)"
+      if [[ -n "${ZAPRET2_INIT:-}" && -f "$ZAPRET2_INIT" ]]; then
+        "$ZAPRET2_INIT" restart || true
+      fi
+      echo -e "${green}VOICE_UDP возвращён в auto/default.${plain}"
+      ;;
+    "")
+      return
+      ;;
+    *)
+      echo -e "${yellow}Неверный ввод.${plain}"
+      sleep 1
+      ;;
+  esac
 }
 
 flowoffload_submenu() {
