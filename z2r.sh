@@ -36,7 +36,7 @@ SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
 # Проверяем наличие всех нужных lib-файлов, иначе запускаем внешний скрипт
 missing_libs=0
 LIB_DIR="$SCRIPT_DIR/zapret2/z2r_lib"
-for lib in ui.sh provider.sh telemetry.sh recommendations.sh netcheck.sh premium.sh strategies.sh submenus.sh actions.sh; do
+for lib in ui.sh provider.sh telemetry.sh recommendations.sh netcheck.sh premium.sh config_mutation.sh profile_lock.sh strategies.sh submenus.sh actions.sh; do
   if [ ! -f "$LIB_DIR/$lib" ]; then
     missing_libs=1
     break
@@ -81,6 +81,14 @@ source "$SCRIPT_DIR/zapret2/z2r_lib/netcheck.sh"
 # “Premium” пункты 777/999 и их вспомогательные эффекты (рандом, спиннер, титулы)
 # Функции: rand_from_list, spinner_for_seconds, premium_get_or_set_title, zefeer_premium_777, zefeer_space_999
 source "$SCRIPT_DIR/zapret2/z2r_lib/premium.sh" 
+
+# Низкоуровневые правки config/ports/custom.d для profile lock
+# Функции: config_line_skip, config_tcp_hostlist_add, config_ports_remove
+source "$SCRIPT_DIR/zapret2/z2r_lib/config_mutation.sh"
+
+# Persisted profile lock: auto/skip/N, применение skip после обновления config
+# Функции: profile_lock_get, profile_lock_set, profile_apply_one, profile_apply_all
+source "$SCRIPT_DIR/zapret2/z2r_lib/profile_lock.sh"
 
 # Логика стратегий: определение активной стратегии, статус строкой, перебор стратегий, быстрый подбор
 # Функции: get_active_strat_num, get_current_strategies_info, try_strategies, Strats_Tryer
@@ -462,9 +470,9 @@ Enter (без цифр) - переустановка/обновление zapret
 5. Обновить стратегии, сбросить листы подбора стратегий и исключений (есть бэкап)
 6. Исключить домен из zapret2 обработки
 7. Открыть в редакторе config (Установит nano редактор ~250kb)
-8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '"${plain}"'['"$(grep -Eq '^NFQWS_PORTS_UDP=.*443$' /opt/zapret2/config && echo "Скрипты" || (grep -Eq '443,1400,3478-3481,5349,50000-50099,19294-19344$' /opt/zapret2/config && echo "Классические стратегии" || echo "Незвестно"))"']'"${yellow}"'
+8. Преключатель скриптов bol-van обхода войсов DS,WA,TG на стандартные страты или возврат к скриптам. Сейчас: '"${plain}"'['"$(grep -Eq '^NFQWS2_PORTS_UDP=.*50000-50099' /opt/zapret2/config && echo "Классические стратегии" || echo "Скрипты/auto/выкл")"']'"${yellow}"'
 9. Переключатель zapret2 на nftables/iptables (На всё жать Enter). Актуально для OpenWRT 21+. Может помочь с войсами. Сейчас: '"${plain}"'['"$(grep -q '^FWTYPE=iptables$' /opt/zapret2/config && echo "iptables" || (grep -q '^FWTYPE=nftables$' /opt/zapret2/config && echo "nftables" || echo "Неизвестно"))"']'"${yellow}"'
-10. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '"${plain}"'['"$(grep -q '^NFQWS_PORTS_UDP=443' /opt/zapret2/config && echo "Выключен" || (grep -q '^NFQWS_PORTS_UDP=1026-65531,443' /opt/zapret2/config && echo "Включен" || echo "Неизвестно"))"']'"${yellow}"'
+10. (Де)активировать обход UDP на 1026-65531 портах (BF6, Fifa и т.п.). Сейчас: '"${plain}"'['"$(grep -q '^NFQWS2_PORTS_UDP=443' /opt/zapret2/config && echo "Выключен" || (grep -q '^NFQWS2_PORTS_UDP=1026-65531,443' /opt/zapret2/config && echo "Включен" || echo "Неизвестно"))"']'"${yellow}"'
 11. Управление аппаратным ускорением zapret2. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret2/config)"']'"${yellow}"'
 12. Меню (Де)Активации работы по всем доменам TCP-443 без хост-листов (не затрагивает youtube стратегии) (безразборный режим) Сейчас: '"${plain}"'['"$(num=$(sed -n '112,128p' /opt/zapret2/config | grep -n '^--filter-tcp=443 --hostlist-domains= --' | head -n1 | cut -d: -f1); [ -n "$num" ] && echo "$num" || echo "Отключен")"']'"${yellow}"'
 13. Активировать доступ в меню через браузер (~3мб места)
@@ -751,6 +759,10 @@ fi
 if [[ "$release" == "x-wrt" ]]; then
 	sed -i 's/kmod-nft-nat kmod-nft-offload/kmod-nft-nat/' /opt/zapret2/common/installer.sh
 fi
+
+# Сохраняем явные profile skip/N после полной переустановки:
+# install_easy.sh дальше возьмет уже поправленный config.default.
+profile_apply_all /opt/zapret2/config.default
 
 #Запуск установочных скриптов и перезагрузка
 install_zapret_reboot

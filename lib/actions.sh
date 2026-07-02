@@ -55,6 +55,7 @@ menu_action_update_config_reset() {
   change_user
 
   cp -f /opt/zapret2/config.default /opt/zapret2/config
+  profile_apply_all /opt/zapret2/config
 
   "$ZAPRET2_INIT" start
 
@@ -67,20 +68,20 @@ menu_action_update_config_reset() {
 }
 
 menu_action_toggle_bolvan_ports() {
-  if grep -Eq '^NFQWS_PORTS_UDP=.*443$' "/opt/zapret2/config"; then
-    sed -i '76s/443$/443,1400,3478-3481,5349,50000-50099,19294-19344/' /opt/zapret2/config
-    sed -i 's/^--skip --filter-udp=50000/--filter-udp=50000/' "/opt/zapret2/config"
+  local cfg="/opt/zapret2/config"
+  local voice_ports="50000-50099,1400,3478-3481,5349,19294-19344"
+  local init_dir custom_dir
 
-    init_dir="$(dirname "$ZAPRET2_INIT")"
-    custom_dir="$init_dir/custom.d"
-    rm -f "$custom_dir/50-discord-media" \
-          "$custom_dir/50-stun4all"
+  if ! grep -Eq '^NFQWS2_PORTS_UDP=.*50000-50099' "$cfg"; then
+    profile_lock_clear "VOICE_UDP"
+    profile_apply_voice_classic "$cfg"
 
     echo -e "${green}Уход от скриптов bol-van. Выделены порты 50000-50099,1400,3478-3481,5349 и раскомментированы стратегии DS, WA, TG${plain}"
 
-  elif grep -q '443,1400,3478-3481,5349,50000-50099,19294-19344$' "/opt/zapret2/config"; then
-    sed -i 's/443,1400,3478-3481,5349,50000-50099,19294-19344$/443/' /opt/zapret2/config
-    sed -i 's/^--filter-udp=50000/--skip --filter-udp=50000/' "/opt/zapret2/config"
+  else
+    profile_lock_clear "VOICE_UDP"
+    config_ports_remove "$cfg" "NFQWS2_PORTS_UDP" "$voice_ports"
+    config_line_skip "$cfg" "--filter-udp=50000-50099,1400,3478-3481,5349,19294-19344"
 
     init_dir="$(dirname "$ZAPRET2_INIT")"
     custom_dir="$init_dir/custom.d"
@@ -90,10 +91,7 @@ menu_action_toggle_bolvan_ports() {
     curl -L -o "$custom_dir/50-discord-media" \
       https://raw.githubusercontent.com/bol-van/zapret2/master/init.d/custom.d.examples.linux/50-discord-media
 
-    echo -e "${green}Работа от скриптов bol-van. Вернули строку к виду NFQWS_PORTS_UDP=443 и добавили \"--skip \" в начале строк стратегии войса${plain}"
-  else
-    echo -e "${yellow}Неизвестное состояние строки NFQWS_PORTS_UDP. Проверь конфиг вручную.${plain}"
-    return 0
+    echo -e "${green}Работа от скриптов bol-van. Убрали voice-порты из NFQWS2_PORTS_UDP и добавили \"--skip \" в начале строк стратегии войса${plain}"
   fi
 
   "$ZAPRET2_INIT" restart
@@ -122,18 +120,18 @@ menu_action_toggle_fwtype() {
 }
 
 menu_action_toggle_udp_range() {
-  if grep -q '^NFQWS_PORTS_UDP=443' "/opt/zapret2/config"; then
-    sed -i 's/^NFQWS_PORTS_UDP=443/NFQWS_PORTS_UDP=1026-65531,443/' "/opt/zapret2/config"
+  if grep -q '^NFQWS2_PORTS_UDP=443' "/opt/zapret2/config"; then
+    sed -i 's/^NFQWS2_PORTS_UDP=443/NFQWS2_PORTS_UDP=1026-65531,443/' "/opt/zapret2/config"
     sed -i 's/^--skip --filter-udp=1026/--filter-udp=1026/' "/opt/zapret2/config"
     echo -e "${green}Стратегия UDP обхода активирована. Выделены порты 1026-65531${plain}"
 
-  elif grep -q '^NFQWS_PORTS_UDP=1026-65531,443' "/opt/zapret2/config"; then
-    sed -i 's/^NFQWS_PORTS_UDP=1026-65531,443/NFQWS_PORTS_UDP=443/' "/opt/zapret2/config"
+  elif grep -q '^NFQWS2_PORTS_UDP=1026-65531,443' "/opt/zapret2/config"; then
+    sed -i 's/^NFQWS2_PORTS_UDP=1026-65531,443/NFQWS2_PORTS_UDP=443/' "/opt/zapret2/config"
     sed -i 's/^--filter-udp=1026/--skip --filter-udp=1026/' "/opt/zapret2/config"
     echo -e "${green}Стратегия UDP обхода ДЕактивирована. Выделенные порты 1026-65531 убраны${plain}"
 
   else
-    echo -e "${yellow}Неизвестное состояние строки NFQWS_PORTS_UDP. Проверь конфиг вручную.${plain}"
+    echo -e "${yellow}Неизвестное состояние строки NFQWS2_PORTS_UDP. Проверь конфиг вручную.${plain}"
     return 0
   fi
 

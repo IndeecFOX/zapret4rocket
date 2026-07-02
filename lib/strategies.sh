@@ -19,22 +19,55 @@ get_active_strat_num() {
 
 # Функция для генерации строки статуса стратегий
 get_current_strategies_info() {
-    local s_udp=$(get_active_strat_num "/opt/zapret2/extra_strats/UDP/YT" 8)
-    local s_tcp=$(get_active_strat_num "/opt/zapret2/extra_strats/TCP/YT" 17)
-    local s_gv=$(get_active_strat_num "/opt/zapret2/extra_strats/TCP/GV" 17)
-    local s_rkn=$(get_active_strat_num "/opt/zapret2/extra_strats/TCP/RKN" 17)
-    
-    # Формируем красивую строку. Цвета можно менять.
-    # Функция для окраски: 0 - серый, >0 - зеленый
-    colorize_num() {
-        if [ "$1" == "0" ]; then
-            echo "${gray}Def${plain}"
+    local s_udp s_tcp s_gv s_rkn s_voice
+
+    profile_status_value() {
+        local profile="$1"
+        local folder="$2"
+        local max="$3"
+        local state active
+
+        state="$(profile_lock_get "$profile")"
+        case "$state" in
+          "skip")
+            echo "0"
+            return
+            ;;
+          "auto"|"")
+            ;;
+          *)
+            if echo "$state" | grep -Eq '^[1-9][0-9]*$'; then
+              echo "$state"
+              return
+            fi
+            ;;
+        esac
+
+        active="$(get_active_strat_num "$folder" "$max")"
+        if [ "$active" = "0" ]; then
+          echo "auto"
         else
-            echo "${green}$1${plain}"
+          echo "$active"
         fi
     }
 
-    echo -e "YT_UDP:$(colorize_num "$s_udp") YT_TCP:$(colorize_num "$s_tcp") YT_GV:$(colorize_num "$s_gv") RKN:$(colorize_num "$s_rkn")"
+    colorize_state() {
+        case "$1" in
+          "auto") echo "${yellow}auto${plain}" ;;
+          "0")    echo "${red}0${plain}" ;;
+          *)      echo "${green}$1${plain}" ;;
+        esac
+    }
+
+    s_udp="$(profile_status_value "YT_UDP" "$(profile_strategy_base YT_UDP)" 8)"
+    s_tcp="$(profile_status_value "YT_TCP" "$(profile_strategy_base YT_TCP)" 17)"
+    s_gv="$(profile_status_value "YT_GV" "$(profile_strategy_base YT_GV)" 17)"
+    s_rkn="$(profile_status_value "RKN" "$(profile_strategy_base RKN)" 17)"
+    s_voice="$(profile_lock_get "VOICE_UDP")"
+    [ "$s_voice" = "skip" ] && s_voice="0"
+    [ -z "$s_voice" ] && s_voice="auto"
+
+    echo -e "YT_UDP=$(colorize_state "$s_udp") YT_TCP=$(colorize_state "$s_tcp") YT_GV=$(colorize_state "$s_gv") RKN=$(colorize_state "$s_rkn") VOICE_UDP=$(colorize_state "$s_voice")"
 }
 
 #Функция для функции подбора стратегий
@@ -43,16 +76,39 @@ try_strategies() {
     local base_path="$2"
     local list_file="$3"
     local final_action="$4"
+    local profile_name="$5"
+    local strat_num answer_strat
     
-    read -re -p "Введите номер стратегии к которой перейти или Enter: " strat_num
-    if (( strat_num < 1 || strat_num > count )); then
+    read -re -p "Введите номер стратегии (0 - отключить профиль, Enter - без изменений): " strat_num
+    if [[ -z "$strat_num" ]]; then
+        echo "Без изменений."
+        return
+    fi
+
+    if [[ "$strat_num" == "0" ]]; then
+        if [[ -n "$profile_name" ]] && profile_can_skip "$profile_name"; then
+            profile_lock_set "$profile_name" "skip"
+            profile_apply_one "$profile_name" "skip"
+            if [[ -n "${ZAPRET2_INIT:-}" && -f "$ZAPRET2_INIT" ]]; then
+              "$ZAPRET2_INIT" restart || true
+            fi
+            echo "Профиль $profile_name отключён и сохранён как 0."
+        else
+            echo "Этот профиль пока нельзя безопасно отключить через 0."
+        fi
+        return
+    fi
+
+    if ! echo "$strat_num" | grep -Eq '^[0-9]+$' || (( strat_num < 1 || strat_num > count )); then
         echo "Введено значение не из диапазона. Начинаем с 1 стратегии"
         strat_num=1
     fi
 
+    mkdir -p "$base_path"
+
     # Предварительная очистка всех файлов стратегий в папке
     for ((clr_txt=1; clr_txt<=count; clr_txt++)); do
-        echo -n > "$base_path/${clr_txt}.txt"
+        [ -s "$base_path/${clr_txt}.txt" ] && echo -n > "$base_path/${clr_txt}.txt"
     done
 
     # Основной цикл перебора
@@ -61,16 +117,22 @@ try_strategies() {
         # Очищаем файл предыдущей стратегии (чтобы не было дублей)
         if [[ $strat_num -ge 2 ]]; then
             prev=$((strat_num - 1))
-            echo -n > "$base_path/${prev}.txt"
+            [ -s "$base_path/${prev}.txt" ] && echo -n > "$base_path/${prev}.txt"
         fi
 
         # Запись в файл текущей стратегии
         if [[ "$list_file" != "/dev/null" ]]; then
             # Режим списка (копируем весь файл)
-            cp "$list_file" "$base_path/${strat_num}.txt"
+            if [ ! -s "$list_file" ]; then
+              echo "Не найден список доменов: $list_file"
+              return 1
+            fi
+            if [ ! -f "$base_path/${strat_num}.txt" ] || ! cmp -s "$list_file" "$base_path/${strat_num}.txt"; then
+              cp "$list_file" "$base_path/${strat_num}.txt"
+            fi
         else
             # Режим одного домена
-            echo "$user_domain" > "$base_path/${strat_num}.txt"
+            profile_write_if_changed "$base_path/${strat_num}.txt" "$user_domain"
         fi
         
         echo "Стратегия номер $strat_num активирована"
@@ -104,6 +166,13 @@ try_strategies() {
         
         if [[ "$answer_strat" == "1" ]]; then
             echo "Стратегия $strat_num сохранена."
+            if [[ -n "$profile_name" ]]; then
+              profile_lock_set "$profile_name" "$strat_num"
+              profile_apply_one "$profile_name" "$strat_num"
+              if [[ -n "${ZAPRET2_INIT:-}" && -f "$ZAPRET2_INIT" ]]; then
+                "$ZAPRET2_INIT" restart || true
+              fi
+            fi
             send_stats  # Отправка телеметрии (если включена)
             
             # Если передано дополнительное действие (final_action), выполняем его
@@ -114,14 +183,14 @@ try_strategies() {
             
         elif [[ "$answer_strat" == "0" ]]; then
             # Сброс текущей стратегии при отмене
-            echo -n > "$base_path/${strat_num}.txt"
+            [ -s "$base_path/${strat_num}.txt" ] && echo -n > "$base_path/${strat_num}.txt"
             echo "Изменения отменены."
             return
         fi
     done
 
     # Если цикл закончился, а пользователь ничего не выбрал
-    echo -n > "$base_path/${count}.txt"
+    [ -s "$base_path/${count}.txt" ] && echo -n > "$base_path/${count}.txt"
     echo "Все стратегии испробованы. Ничего не подошло."
     pause_enter
     return
@@ -154,13 +223,13 @@ Strats_Tryer() {
       echo "Подбор для хост-листа YouTube с видеопотоком (UDP QUIC - браузеры, моб. приложения). Ранее заданная стратегия этого листа сброшена в дефолт."
       #вывод подсказки
       show_hint "UDP"
-      try_strategies 8 "/opt/zapret2/extra_strats/UDP/YT" "/opt/zapret2/extra_strats/UDP/YT/List.txt" ""
+      try_strategies 8 "$(profile_strategy_base YT_UDP)" "$(profile_strategy_list_file YT_UDP)" "" "YT_UDP"
       ;;
     "2")
       echo "Подбор для хост-листа YouTube (TCP - сам интерфейс. Без видео-домена). Ранее заданная стратегия этого листа сброшена в дефолт."
       #вывод подсказки
       show_hint "TCP"
-      try_strategies 17 "/opt/zapret2/extra_strats/TCP/YT" "/opt/zapret2/extra_strats/TCP/YT/List.txt" ""
+      try_strategies 17 "$(profile_strategy_base YT_TCP)" "$(profile_strategy_list_file YT_TCP)" "" "YT_TCP"
       ;;
     "3")
       echo "Подбор для googlevideo.com (Видеопоток YouTube). Ранее заданная стратегия этого листа сброшена в дефолт."
@@ -170,17 +239,15 @@ Strats_Tryer() {
       user_domain="googlevideo.com"
       #вывод подсказки
       show_hint "GV"
-      try_strategies 17 "/opt/zapret2/extra_strats/TCP/GV" "/dev/null" ""
+      try_strategies 17 "$(profile_strategy_base YT_GV)" "/dev/null" "" "YT_GV"
       ;;
     "4")
       echo "Подбор для хост-листа основных доменов блока RKN. Проверка доступности задана на домен meduza.io. Ранее заданная стратегия этого листа сброшена в дефолт."
-      for numRKN in {1..17}; do
-        echo -n > "/opt/zapret2/extra_strats/TCP/RKN/${numRKN}.txt"
-      done
+      profile_clear_strategy_files "RKN"
       user_domain="meduza.io"
       #вывод подсказки
       show_hint "RKN"
-      try_strategies 17 "/opt/zapret2/extra_strats/TCP/RKN" "/opt/zapret2/extra_strats/TCP/RKN/List.txt" ""
+      try_strategies 17 "$(profile_strategy_base RKN)" "$(profile_strategy_list_file RKN)" "" "RKN"
       ;;
     "5")
       echo "Режим ручного указания домена"
