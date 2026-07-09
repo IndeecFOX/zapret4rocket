@@ -95,6 +95,7 @@ Amsterdam - Managed by ISPIRIA Networks|UDP:3|TCP:2|GV:1|RKN:0
 Amsterdam - OC NETWORKS LIMITED|UDP:0|TCP:0|GV:0|RKN:2
 Amsterdam - Servers Tech Fzco|UDP:0, 1|TCP:1|GV:1, 0, 13|RKN:0
 Amsterdam - TW-Cloud|UDP:0|TCP:0|GV:1|RKN:7
+Amsterdam - Wireless Ltd|UDP:3|TCP:9|GV:3|RKN:5
 Amsterdam - xorek.cloud International LTD|UDP:1|TCP:1|GV:1|RKN:0
 Amursk - Sat-dv LLC|UDP:0|TCP:13|GV:0|RKN:0
 an. |UDP:0|TCP:1|GV:0|RKN:6
@@ -222,6 +223,7 @@ Cambridge - Mythic Beasts Address|UDP:0|TCP:0|GV:0|RKN:7
 Central - CGI GLOBAL LIMITED|UDP:0, 1, 3|TCP:0|GV:0, 3|RKN:0
 Central - CloudBackbone|UDP:0|TCP:3|GV:1|RKN:2
 Chaykovskiy - K-telekom LLC|UDP:0|TCP:0|GV:0|RKN:0
+Cheboksary - AKVILON Ltd.|UDP:1|TCP:1|GV:3|RKN:5
 Cheboksary - Cheboksary 1 region|UDP:1|TCP:4|GV:2|RKN:1
 Cheboksary - Cheboksary 3 region|UDP:1|TCP:1|GV:1|RKN:5
 Cheboksary - CJSC ER-Telecom Holding Cheboksary branch|UDP:1, 4, 0|TCP:1|GV:1, 0, 17|RKN:5
@@ -245,7 +247,7 @@ Chelyabinsk - PJSC MegaFon|UDP:0|TCP:1|GV:1|RKN:1
 Chelyabinsk - Rostelecom networks|UDP:1|TCP:1|GV:0, 1|RKN:0
 Chelyabinsk - South Ural State University|UDP:0|TCP:0|GV:1|RKN:0
 Chelyabinsk - T2 Russia Groups|UDP:0, 2|TCP:0|GV:0, 1|RKN:2
-Chelyabinsk - Tele2 Russia Groups|UDP:1|TCP:1|GV:1, 0|RKN:2
+Chelyabinsk - Tele2 Russia Groups|UDP:1|TCP:3|GV:0, 1, 3|RKN:2
 Cherepovets - CORBINA-BROADBAND|UDP:2|TCP:1|GV:0|RKN:6
 Cherepovets - PJSC Rostelecom|UDP:0|TCP:5|GV:1, 0|RKN:5
 Cherepovets - PJSC Vimpelcom|UDP:2|TCP:1|GV:0|RKN:5
@@ -441,8 +443,8 @@ Kaluga - Helou LLC|UDP:0, 3|TCP:1|GV:13|RKN:0
 Kaluga - Macroregional Center|UDP:0, 2|TCP:1|GV:1|RKN:12
 Kaluga - MAXnet Systems Ltd.|UDP:0, 6|TCP:0|GV:0, 1|RKN:0
 Kaluga - MTS PJSC|UDP:0|TCP:0|GV:0, 11|RKN:0
-Kaluga - PJSC Rostelecom|UDP:4, 0, 1|TCP:7|GV:1, 6, 5|RKN:5
-Kaluga - PJSC Vimpelcom|UDP:1, 0, 2|TCP:0|GV:0, 1, 11|RKN:0
+Kaluga - PJSC Rostelecom|UDP:4, 0, 1|TCP:7|RKN:5
+Kaluga - PJSC Vimpelcom|UDP:1, 0, 2|TCP:0|RKN:0
 Kaluga - Rostelecom networks|UDP:3, 0, 1|TCP:1|RKN:4
 Kamen-na-Obi - ZSTTK|UDP:0|TCP:3|RKN:3
 Kamyshin - Rostelecom networks|UDP:0|TCP:1|RKN:4
@@ -889,7 +891,7 @@ Moscow - Net By Net Holding LLC|UDP:3, 0, 1|TCP:1|RKN:0
 Moscow - Net By Net Holding LLC Kursk|UDP:0, 1|TCP:0|RKN:0
 Moscow - NetByNet|UDP:0, 1|TCP:0|RKN:5
 Moscow - New Communication Technologies LLC|UDP:5|TCP:5|RKN:0
-Moscow - New Hosting Technologies LLC|UDP:0, 7|TCP:1|RKN:5
+Moscow - New Hosting Technologies LLC|UDP:0, 7|TCP:0|RKN:5
 Moscow - NIC-HOSTING|UDP:3|TCP:2|RKN:0
 Moscow - OJSC Comcor|UDP:6|TCP:0|RKN:6
 Moscow - OJSC Rostelecom Macroregional Branch South|UDP:0, 2|TCP:0|RKN:0
@@ -1707,7 +1709,7 @@ Tula - MTS PJSC|UDP:0|TCP:12|RKN:12
 Tula - NKOORT|UDP:1, 5|TCP:0|RKN:0
 Tula - PJSC Rostelecom|UDP:0, 2, 5|TCP:0|RKN:0
 Tula - PJSC Vimpelcom|UDP:0, 3|TCP:0|RKN:5
-Tula - Top half|UDP:0|TCP:1|RKN:3
+Tula - Top half|UDP:0|TCP:0|RKN:0
 TUT|UDP:0|TCP:1|RKN:5
 Tver - Annet Ltd.|UDP:7, 5, 1|TCP:1|RKN:2
 Tver - CJSC ER-Telecom Holding Tver branch|UDP:1, 0|TCP:1|RKN:5
@@ -1770,7 +1772,7 @@ Urzhum - MTS PJSC|UDP:1|TCP:1|RKN:5
 Urzhum - Tele2 Russia IP Network|UDP:1, 0|TCP:0|RKN:5
 Ussuriysk - Rostelecom networks|UDP:2, 3|TCP:1|RKN:5
 Ussuriysk - Tele2 Russia Groups|UDP:0|TCP:0|RKN:6
-Uzlovaya - Low half of broadband|UDP:0, 1|TCP:0|RKN:0
+Uzlovaya - Low half of broadband|UDP:1|TCP:17|RKN:0
 Velikiy Ustyug - LLC Terabit|UDP:0|TCP:0|RKN:0
 Veliky Novgorod - DATACOM|UDP:0, 1|TCP:11|RKN:0
 Veliky Novgorod - Eurocontact Veliky Novgorod LLC|UDP:2|TCP:15|RKN:8
@@ -1845,7 +1847,7 @@ Vologda - TELIX|UDP:1|TCP:1|RKN:0
 Volokolamsk - TDS NETWORK|UDP:0|TCP:5|RKN:0
 Volzhsk - Volgatelecom Mari El branch|UDP:0, 1|TCP:0|RKN:5
 Volzhskiy - Tele2 Russia IP Network|UDP:1|TCP:16|RKN:0
-Volzhsky - LLC POWERNET|UDP:3|TCP:3|RKN:4
+Volzhsky - LLC POWERNET|UDP:4|TCP:3|RKN:4
 Volzhsky - Powernet ISP|UDP:5, 0, 1|TCP:1|RKN:2
 Volzhsky - SvyazInform Network|UDP:0, 4|TCP:0|RKN:0
 Voronezh|UDP:0, 1, 3|TCP:0|RKN:0
@@ -1915,7 +1917,7 @@ Yekaterinburg - INSYS Ekb N Tagil|UDP:0, 1|TCP:4|RKN:0
 Yekaterinburg - INSYS network|UDP:1, 4|TCP:0|RKN:0
 Yekaterinburg - INSYS network in Ekaterinbrug|UDP:0, 7|TCP:0|RKN:0
 Yekaterinburg - Interra TG Ltd.|UDP:1, 3, 5|TCP:1|RKN:0
-Yekaterinburg - Joint stock company For|UDP:1|TCP:0|RKN:0
+Yekaterinburg - Joint stock company For|UDP:0, 1|TCP:0|RKN:0
 Yekaterinburg - JSC ER-Telecom Holding|UDP:0, 1, 4|TCP:0|RKN:5
 Yekaterinburg - JSC ER-Telecom Holding Yekaterinburg branch|UDP:0|TCP:0|RKN:1
 Yekaterinburg - JSC Rostelecom regional branch Siberia|UDP:7|TCP:0|RKN:0
@@ -1971,7 +1973,7 @@ Zarinsk - JSC Rostelecom regional branch Siberia|UDP:2|TCP:0|RKN:0
 Zarinsk - OJSC Sibirtelecom|UDP:6|TCP:1|RKN:5
 Zelenograd - Cloud Technologies LLC trading as Cloud.ru|UDP:2, 0|TCP:0|RKN:0
 Zelenograd - Martyukhin Alexandr Viktorovich|UDP:0|TCP:2|RKN:2
-Zelenograd - Mikron-Media LLC|UDP:1, 0, 5|TCP:0|RKN:15
+Zelenograd - Mikron-Media LLC|UDP:1, 0, 5|TCP:1|RKN:15
 Zelenograd - PJSC MegaFon|UDP:0|TCP:1|RKN:0
 Zelenograd - PJSC Vimpelcom|UDP:3|TCP:0|RKN:0
 Zernograd - Macroregional South|UDP:5|TCP:1|RKN:9
