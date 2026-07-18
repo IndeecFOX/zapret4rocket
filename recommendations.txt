@@ -157,7 +157,7 @@ Barnaul - NAT-M25B|UDP:0|TCP:1|GV:0|RKN:0
 Barnaul - OJSC Sibirtelecom|UDP:0, 6|TCP:1|GV:1, 0|RKN:5
 Barnaul - Rostelecom networks|UDP:0|TCP:0|GV:0|RKN:9
 Barnaul - ZSTTK|UDP:2|TCP:0|GV:0|RKN:4
-Barvikha - ZagorodTelecom LLC|UDP:3, 0, 1|TCP:0|GV:0, 1, 2|RKN:2
+Barvikha - ZagorodTelecom LLC|UDP:3, 0, 1|TCP:0|GV:0, 5, 1|RKN:2
 bashtel|UDP:3|TCP:1|GV:0|RKN:2
 BAZA.NET LLC|UDP:1|TCP:0|GV:1|RKN:0
 Beeline|UDP:0, 6, 1|TCP:0|GV:1, 0, 3|RKN:0
@@ -1299,6 +1299,7 @@ Rostelecom - Chita|UDP:1|TCP:0|RKN:5
 Rostelecom - Kazan|UDP:1|TCP:1|RKN:11
 rostelecom - kirov|UDP:0|TCP:0|RKN:5
 Rostelecom - Krasnodar|UDP:0|TCP:0|RKN:2
+Rostelecom - Lipetsk|UDP:0|TCP:0|RKN:13
 rostelecom - moscow|UDP:1|TCP:0|RKN:0
 Rostelecom - Moscow|UDP:0, 8, 1|TCP:0|RKN:5
 Rostelecom - Novosibirsk|UDP:1, 2|TCP:1|RKN:0
@@ -1419,6 +1420,7 @@ Saratov - VTT-4 Retail-2 Saratovskaya obl.|UDP:5|TCP:0|RKN:0
 Saratov - VTT-Saratov Retail|UDP:2|TCP:1|RKN:5
 Satka - SKAT-Media Ltd.|UDP:0|TCP:0|RKN:4
 SatNet - Saint-Petersburg|UDP:0|TCP:0|RKN:0
+Sayansk - Ilim Telecom Ltd.|UDP:0|TCP:0|RKN:0
 Serdobsk - Rocket Telecom Center LLC|UDP:0|TCP:0|RKN:4
 Sergiyev Posad - Amatek Ltd|UDP:0|TCP:1|RKN:8
 Sergiyev Posad - Bitrace telecom Ltd.|UDP:2|TCP:0|RKN:5
@@ -1528,7 +1530,7 @@ St Petersburg - Hypercore Ltd|UDP:0|TCP:0|RKN:5
 St Petersburg - INFO-LAN Network|UDP:0, 6, 7|TCP:0|RKN:3
 St Petersburg - Interzet|UDP:0, 1, 4|TCP:0|RKN:0
 St Petersburg - IT Outsourcing LLC|UDP:0, 1, 2|TCP:0|RKN:0
-St Petersburg - ITMO University|UDP:0|TCP:2|RKN:0
+St Petersburg - ITMO University|UDP:0|TCP:3|RKN:0
 St Petersburg - JSC ER-Telecom Holding|UDP:0, 5|TCP:0|RKN:5
 St Petersburg - JSC ER-Telecom Holding Lipetsk branch|UDP:0|TCP:1|RKN:9
 St Petersburg - JSC Selectel|UDP:1, 0, 2|TCP:2|RKN:2
@@ -1934,6 +1936,7 @@ Yaroslavl - Yaroslavl Unit of Telecommunication|UDP:0|TCP:11|RKN:14
 Yaroslavl - Yaroslavsky Branch|UDP:2, 4|TCP:0|RKN:0
 Yartsevo - Rostelecom Nets|UDP:0|TCP:0|RKN:4
 Yasnogorsk - TRANS-TELECOM|UDP:6|TCP:1|RKN:0
+Yastrebovka - Net By Net Holding LLC|UDP:2|TCP:0|RKN:0
 Yaushi - VolgaTelecom Cheboxary|UDP:1, 7|TCP:1|RKN:2
 Yegoryevsk - INKO Ltd.|UDP:0|TCP:5|RKN:0
 Yegoryevsk - INKO2|UDP:1|TCP:1|RKN:2
@@ -1995,6 +1998,3 @@ zagorodtelecom - vidnoe|UDP:4|TCP:8|RKN:3
 Zalukokoazhe - PJSC Rostelecom|UDP:2|TCP:1|RKN:7
 ZAO MTU-Intel|UDP:3|TCP:2|RKN:12
 Zarechnyy - Zolotaya Linia Ltd.|UDP:3|TCP:0|RKN:3
-Zarechye - GORCOM|UDP:8|TCP:0|RKN:0
-Zarechye - Moscow Local Telephone Network OAO MGTS|UDP:0|TCP:1|RKN:0
-Zarinsk - JSC Rostelecom regional branch Siberia|UDP:2|TCP:0|RKN:0
