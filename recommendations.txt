@@ -273,7 +273,7 @@ Chita - MTS Zabaikalskiy krai|UDP:2|TCP:0|GV:0|RKN:12
 Chita - PJSC Rostelecom|UDP:0|TCP:0|GV:1|RKN:5
 Chita - Rostelecom networks|UDP:7|TCP:1|GV:1, 16|RKN:5
 City of London - Microsoft Corporation|UDP:0|TCP:1|GV:0|RKN:5
-City of London - OVH SAS|UDP:2|TCP:0|GV:0|RKN:0
+City of London - OVH SAS|UDP:3|TCP:0|GV:0|RKN:0
 CJSC ER-Telecom Holding Lipetsk Branch|UDP:0|TCP:0|GV:1|RKN:0
 CJSC Kuzbassenergosviaz|UDP:0|TCP:0|GV:0|RKN:0
 CJSC TransTeleCom|UDP:0|TCP:3|GV:3|RKN:3
@@ -558,7 +558,7 @@ Kozlovka - VolgaTelecom Cheboxary|UDP:1|TCP:1|RKN:5
 Krasnodar - Caucasus Branch of OJSC MegaFon|UDP:0|TCP:2|RKN:0
 Krasnodar - CORBINA-BROADBAND|UDP:0, 6, 1|TCP:0|RKN:0
 Krasnodar - D-telekom LLC|UDP:0, 4|TCP:0|RKN:5
-Krasnodar - Freedom Krasnodar|UDP:0, 2, 1|TCP:0|RKN:0
+Krasnodar - Freedom Krasnodar|UDP:2, 0, 1|TCP:0|RKN:0
 Krasnodar - General IT RUS LLC|UDP:0|TCP:0|RKN:0
 Krasnodar - Innovation Technologies Ltd|UDP:0, 1|TCP:0|RKN:0
 Krasnodar - JSC ER-Telecom Holding Krasnodar branch|UDP:3, 0, 6|TCP:3|RKN:0
@@ -667,7 +667,7 @@ Lipetsk - JSC ER-Telecom Holding|UDP:0, 2|TCP:1|RKN:5
 Lipetsk - JSC ER-Telecom Holding Lipetsk branch|UDP:0|TCP:1|RKN:0
 Lipetsk - Macroregional Center|UDP:0, 1|TCP:0|RKN:0
 Lipetsk - PJSC MegaFon|UDP:1|TCP:1|RKN:4
-Lipetsk - PJSC Rostelecom|UDP:0|TCP:5|RKN:0
+Lipetsk - PJSC Rostelecom|UDP:1|TCP:5|RKN:0
 Lipetsk - Rostelecom networks|UDP:5|TCP:0|RKN:4
 Lipetsk - TI Lipetsk|UDP:2|TCP:0|RKN:1
 LLC Flex|UDP:0, 2|TCP:0|RKN:6
@@ -918,6 +918,7 @@ Moscow - NetByNet|UDP:0, 1|TCP:0|RKN:5
 Moscow - New Communication Technologies LLC|UDP:5|TCP:5|RKN:0
 Moscow - New Hosting Technologies LLC|UDP:0, 7|TCP:0|RKN:3
 Moscow - NIC-HOSTING|UDP:3|TCP:2|RKN:0
+Moscow - Nk-net OOO|UDP:0|TCP:16|RKN:0
 Moscow - OJSC Comcor|UDP:6|TCP:0|RKN:6
 Moscow - OJSC Rostelecom Macroregional Branch South|UDP:0, 2|TCP:0|RKN:0
 Moscow - OJSC Telecom-Service|UDP:0, 5, 1|TCP:0|RKN:5
@@ -1997,4 +1998,3 @@ Yevpatoriya - PE Zinstein Hariton Vladimirovich|UDP:0|TCP:17|RKN:17
 Yeysk - Firm Svyaz Ltd|UDP:0|TCP:0|RKN:0
 Yoshkar-Ola - CJSC ER-Telecom Holding Yoshkar-Ola branch|UDP:0|TCP:0|RKN:0
 Yoshkar-Ola - JSC Ufanet|UDP:0, 2, 1|TCP:1|RKN:5
-Yoshkar-Ola - ROSTELECOM Mari El branch|UDP:2, 0, 1|TCP:1|RKN:0
