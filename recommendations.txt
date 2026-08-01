@@ -213,7 +213,7 @@ Bor - Access Telecom Ltd.|UDP:0|TCP:0|GV:0, 1|RKN:0
 Bor - NMTS|UDP:0|TCP:0|GV:1|RKN:0
 Borisova Griva - Progress Technology LLC|UDP:0|TCP:1|GV:0|RKN:0
 Borogontsy - MTS PJSC|UDP:0, 1|TCP:0|GV:0, 2|RKN:12
-Borovichi - Rostelecom networks|UDP:0, 1, 6|TCP:1|GV:0, 1|RKN:0
+Borovichi - Rostelecom networks|UDP:0, 1, 6|TCP:1|GV:0, 1, 5|RKN:0
 Borovsk - Rostelecom networks|UDP:0|TCP:2|GV:0, 1|RKN:0
 Bratsk - Teleradiocompany Teleos-1 Ltd|UDP:1, 2, 3|TCP:0|GV:0, 1|RKN:5
 Bromley - Ace Data Centers II|UDP:0|TCP:15|GV:1|RKN:0
@@ -331,7 +331,7 @@ Dzerzhinsky - AVK-Wellcom Ltd.|UDP:2|TCP:1|GV:0, 6|RKN:1
 Elektrostal - Flex ISP|UDP:0, 1, 2|TCP:1|GV:1, 3, 0|RKN:2
 Elektrostal - Flex Ltd.|UDP:0, 4|TCP:0|GV:1|RKN:5
 Elektrostal - OKB PROGRESS LLC|UDP:0|TCP:1|GV:0|RKN:0
-Enem - Southen Telecommunication Maintainer|UDP:0, 1|TCP:0|GV:1, 14|RKN:4
+Enem - Southen Telecommunication Maintainer|UDP:0, 1|TCP:0|GV:14, 1|RKN:4
 Enerhodar - OOO Tenor|UDP:0, 1|TCP:0|GV:0, 6, 3|RKN:0
 Engels - JSC ER-Telecom Holding Lipetsk branch|UDP:8|TCP:11|GV:2|RKN:14
 Engels - PJSC Rostelecom|UDP:0|TCP:0|GV:0|RKN:2
@@ -384,7 +384,7 @@ Helsinki - Play2go International Limited|UDP:0|TCP:0|GV:0|RKN:8
 html - headtitle301 Moved Permanentlytitlehead|UDP:0|TCP:0|GV:0|RKN:0
 htmlheadtitle403 Forbiddentitleheadbodycenterh1403 Forbidden|UDP:0, 1|TCP:0|GV:0, 3|RKN:0
 iauliai - Solid Systems LLC|UDP:0|TCP:12|GV:0|RKN:0
-Iglino - JSC Ufanet|UDP:2|TCP:0|GV:0, 2|RKN:0
+Iglino - JSC Ufanet|UDP:2, 0|TCP:1|GV:0, 2|RKN:0
 Imeni Vorovskogo - Intelsc Ltd.|UDP:5|TCP:1|GV:1, 0|RKN:13
 Inozemtsevo - OJSC Rostelecom Macroregional Branch South|UDP:8|TCP:3|GV:0|RKN:0
 Inozemtsevo - PJSC Rostelecom|UDP:1|TCP:1|GV:1|RKN:2
@@ -493,7 +493,7 @@ Kemerovo - Goodline.info|UDP:0, 1, 2|TCP:0|RKN:0
 Kemerovo - Limited Liability Company TTK-Svyaz|UDP:0|TCP:0|RKN:0
 Kemerovo - OJSC Sibirtelecom|UDP:0|TCP:0|RKN:0
 Kemerovo - VympelKom broadband internet|UDP:2, 3, 1|TCP:5|RKN:5
-Khabarovsk - CJSC Transtelecom-DV|UDP:0|TCP:0|RKN:5
+Khabarovsk - CJSC Transtelecom-DV|UDP:0, 3|TCP:0|RKN:5
 Khabarovsk - JSC Redcom-lnternet|UDP:0, 7, 2|TCP:0|RKN:0
 Khabarovsk - KHT RU|UDP:8, 0|TCP:0|RKN:0
 Khabarovsk - PJSC Rostelecom|UDP:0|TCP:0|RKN:5
@@ -557,7 +557,7 @@ Kostroma - Technical Unit of Telecommunication|UDP:0|TCP:11|RKN:4
 Kotelnich - JSC VolgaTelecom|UDP:0|TCP:1|RKN:0
 Kotlas - Astra-Sever LTD|UDP:1|TCP:3|RKN:17
 Kotovsk - OJSC Rostelecom|UDP:2|TCP:0|RKN:0
-Kovdor - Teleradiokompaniya Kandalaksha LLC|UDP:1|TCP:1|RKN:5
+Kovdor - Teleradiokompaniya Kandalaksha LLC|UDP:1|TCP:1|RKN:4
 Kovrov - OOO Kiss|UDP:1|TCP:0|RKN:2
 Kozlovka - VolgaTelecom Cheboxary|UDP:1|TCP:1|RKN:5
 Krasnodar - Caucasus Branch of OJSC MegaFon|UDP:0|TCP:2|RKN:0
@@ -577,7 +577,7 @@ Krasnodar - MIR Telecom|UDP:0, 2|TCP:0|RKN:0
 Krasnodar - Msk SCARTEL Network|UDP:1|TCP:0|RKN:0
 Krasnodar - MTS PJSC|UDP:0, 2, 1|TCP:1|RKN:0
 Krasnodar - MTS PJSC Krasnodar region|UDP:0, 1|TCP:1|RKN:0
-Krasnodar - OJSC Rostelecom Macroregional Branch South|UDP:1, 0, 3|TCP:1|RKN:0
+Krasnodar - OJSC Rostelecom Macroregional Branch South|UDP:0, 1, 3|TCP:1|RKN:0
 Krasnodar - PAO Rostelecom|UDP:0, 1, 2|TCP:1|RKN:0
 Krasnodar - PJSC Rostelecom Macroregional Branch South|UDP:1|TCP:1|RKN:5
 Krasnodar - PJSC Vimpelcom|UDP:0, 1, 3|TCP:1|RKN:0
@@ -677,6 +677,7 @@ Lipetsk - PJSC MegaFon|UDP:1|TCP:1|RKN:4
 Lipetsk - PJSC Rostelecom|UDP:1|TCP:5|RKN:0
 Lipetsk - Rostelecom networks|UDP:5, 3|TCP:0|RKN:4
 Lipetsk - TI Lipetsk|UDP:2|TCP:0|RKN:1
+Lipetsk - Ural-NET INC.|UDP:1|TCP:3|RKN:5
 LLC Flex|UDP:0, 2|TCP:0|RKN:6
 LLC KOMTEHCENTR FTTB Customers|UDP:0|TCP:2|RKN:0
 lm|UDP:0|TCP:0|RKN:5
@@ -893,6 +894,7 @@ Moscow - Lealta Ltd|UDP:3, 1, 0|TCP:1|RKN:5
 Moscow - Letit LLC|UDP:0, 8|TCP:1|RKN:0
 Moscow - LLC ASTRA CLOUD|UDP:0, 1|TCP:0|RKN:0
 Moscow - LLC Baxet|UDP:4, 0|TCP:0|RKN:0
+Moscow - LLC BAXET|UDP:0|TCP:0|RKN:4
 Moscow - LLC Digital Network|UDP:0|TCP:1|RKN:12
 Moscow - LLC Electron-Telecom|UDP:0, 1|TCP:0|RKN:2
 Moscow - LLC Incomsvyaz|UDP:0|TCP:1|RKN:2
@@ -933,6 +935,7 @@ Moscow - OJSC Rostelecom Macroregional Branch South|UDP:0, 2|TCP:0|RKN:0
 Moscow - OJSC Telecom-Service|UDP:0, 5, 1|TCP:0|RKN:5
 Moscow - OOO NECSTEL|UDP:0|TCP:5|RKN:17
 Moscow - OOO Scientific-Production Enterprise Edma|UDP:0|TCP:1|RKN:4
+Moscow - OOO Suntel|UDP:0|TCP:0|RKN:4
 Moscow - OOO WestCall Ltd|UDP:0, 2, 6|TCP:1|RKN:0
 Moscow - Orion telecom ltd|UDP:0, 2|TCP:0|RKN:0
 Moscow - PE Zinstein Hariton Vladimirovich|UDP:1|TCP:1|RKN:2
@@ -1225,8 +1228,8 @@ Penza - MTS Penza|UDP:4, 0, 7|TCP:1|RKN:0
 Penza - MTS PJSC|UDP:7, 1, 0|TCP:1|RKN:0
 Penza - Penzenskaya Telephonnaya company closed joint-stock |UDP:0|TCP:1|RKN:0
 Penza - PJSC Rostelecom|UDP:0, 5, 1|TCP:1|RKN:0
-Penza - Rostelecom MRF Volga|UDP:3|TCP:1|RKN:3
-Penza - Rostelecom networks|UDP:0, 3|TCP:1|RKN:5
+Penza - Rostelecom MRF Volga|UDP:3, 1|TCP:1|RKN:5
+Penza - Rostelecom networks|UDP:0, 1, 3|TCP:1|RKN:5
 Penza - SM Ltd.|UDP:2, 1, 3|TCP:1|RKN:17
 Pereslavl-Zalesskiy - Foton Company Ltd|UDP:0|TCP:0|RKN:7
 Pereslavl-Zalesskiy - PJSC Vimpelcom|UDP:1|TCP:1|RKN:5
@@ -1776,7 +1779,7 @@ Tver - MTS PJSC|UDP:0|TCP:1|RKN:0
 Tver - Net By Net Holding LLC Tver|UDP:0, 8|TCP:17|RKN:7
 Tver - PJSC MegaFon|UDP:0, 1, 5|TCP:0|RKN:0
 Tver - Regionsvyaz OOO|UDP:1, 0|TCP:1|RKN:0
-Tver - Ural-NET INC.|UDP:1|TCP:5|RKN:5
+Tver - Ural-NET INC.|UDP:1|TCP:3|RKN:5
 Tyubuk - Tele2 Russia Groups|UDP:3|TCP:0|RKN:0
 Tyumen - CJSC ER-Telecom Holding Tyumen branch|UDP:0, 4, 2|TCP:0|RKN:1
 Tyumen - Comtel network|UDP:0, 4|TCP:0|RKN:1
@@ -1836,7 +1839,7 @@ Veliky Novgorod - DATACOM|UDP:0, 1|TCP:11|RKN:0
 Veliky Novgorod - Eurocontact Veliky Novgorod LLC|UDP:2|TCP:15|RKN:8
 Veliky Novgorod - Ltd Maxima|UDP:0, 1|TCP:0|RKN:2
 Veliky Novgorod - MTS Velikiy Novgorod Regional Network|UDP:0, 4, 8|TCP:0|RKN:12
-Veliky Novgorod - Rostelecom networks|UDP:1, 8, 0|TCP:1|RKN:0
+Veliky Novgorod - Rostelecom networks|UDP:1, 4, 8|TCP:1|RKN:0
 Veliky Novgorod - Sever Telecom JSC|UDP:0|TCP:0|RKN:9
 Verkh-Chebula - Rostelecom networks|UDP:5|TCP:0|RKN:0
 Verkh-Neyvinskiy - KTEL|UDP:0|TCP:1|RKN:0
@@ -1995,6 +1998,3 @@ Yekaterinburg - MT FINANCE LLC|UDP:0|TCP:2|RKN:5
 Yekaterinburg - MTS EKB B2C 1|UDP:0, 4|TCP:0|RKN:0
 Yekaterinburg - MTS EKB B2C 2|UDP:0, 1, 2|TCP:0|RKN:0
 Yekaterinburg - Mts-ekb Ipoe|UDP:0, 1, 2|TCP:0|RKN:17
-Yekaterinburg - Network Oylmpus NSP Ltd|UDP:0|TCP:0|RKN:5
-Yekaterinburg - OJSC uralsvyazinform|UDP:0|TCP:0|RKN:5
-Yekaterinburg - PJSC Rostelecom|UDP:0, 1, 2|TCP:1|RKN:1
