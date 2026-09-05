@@ -661,7 +661,7 @@ Kursk - CORBINA-BROADBAND|UDP:1, 2|TCP:1|RKN:2
 Kursk - Joint Stock Company TransTeleCom|UDP:0|TCP:0|RKN:3
 Kursk - JSC Ivtelecom|UDP:0|TCP:0|RKN:3
 Kursk - Kursknet.ru|UDP:1, 0|TCP:1|RKN:5
-Kursk - Limited liability company|UDP:5, 0, 6|TCP:1|RKN:1
+Kursk - Limited liability company|UDP:5, 0, 6|TCP:0|RKN:1
 Kursk - MTS Kursk|UDP:0, 6, 1|TCP:0|RKN:12
 Kursk - MTS PJSC|UDP:0, 1, 3|TCP:1|RKN:12
 Kursk - Net By Net Holding LLC Kursk|UDP:1|TCP:1|RKN:12
@@ -907,7 +907,7 @@ Moscow - JSC AMTEL-SVYAZ|UDP:0|TCP:0|RKN:0
 Moscow - JSC Comcor|UDP:1, 0, 2|TCP:0|RKN:0
 Moscow - JSC ER-Telecom Holding|UDP:0, 4|TCP:0|RKN:4
 Moscow - JSC ER-Telecom Holding Moscow branch|UDP:0, 1, 2|TCP:1|RKN:5
-Moscow - JSC IOT|UDP:0, 1|TCP:0|RKN:0
+Moscow - JSC IOT|UDP:0, 1, 5|TCP:0|RKN:0
 Moscow - JSC Lan-Telecom|UDP:1|TCP:1|RKN:5
 Moscow - JSC Mastertel|UDP:0, 4, 5|TCP:1|RKN:2
 Moscow - JSC Mediasoft ekspert|UDP:0, 2|TCP:0|RKN:0
@@ -959,7 +959,7 @@ Moscow - MTS PJSC|UDP:1, 0, 3|TCP:1|RKN:0
 Moscow - Nasteka Maksim Viktorovich|UDP:0|TCP:1|RKN:0
 Moscow - National Cable Networks|UDP:0|TCP:0|RKN:0
 Moscow - Nauka-Svyaz|UDP:1, 2|TCP:1|RKN:0
-Moscow - NCNET|UDP:0, 3, 1|TCP:1|RKN:0
+Moscow - NCNET|UDP:0, 3, 1|TCP:0|RKN:0
 Moscow - Net By Net Holding LLC|UDP:3, 0, 1|TCP:1|RKN:0
 Moscow - Net By Net Holding LLC Kursk|UDP:0, 1|TCP:0|RKN:0
 Moscow - NetByNet|UDP:0, 1|TCP:0|RKN:5
@@ -1059,6 +1059,7 @@ Mtsensk - Rostelecom Nets|UDP:1|TCP:1|RKN:2
 Mugreyevskiy - Modern Solutions LTD|UDP:1|TCP:1|RKN:1
 Mugreyevskiy - Westlan LTD|UDP:0|TCP:1|RKN:4
 Murashi - MTS PJSC|UDP:1|TCP:1|RKN:10
+Murino - Global Network Management Inc|UDP:2|TCP:0|RKN:12
 Murino - SkyNet LLC|UDP:1|TCP:1|RKN:10
 Murmansk - AVANGARD-DSL|UDP:0, 1|TCP:1|RKN:4
 Murmansk - Ionit-telecom|UDP:5|TCP:17|RKN:0
@@ -1279,7 +1280,7 @@ Penza - PJSC Rostelecom|UDP:0, 5, 1|TCP:1|RKN:0
 Penza - Rostelecom MRF Volga|UDP:1, 3|TCP:1|RKN:5
 Penza - Rostelecom networks|UDP:0, 3, 1|TCP:1|RKN:5
 Penza - SM Ltd.|UDP:2, 1, 3|TCP:1|RKN:17
-Pereslavl-Zalesskiy - Foton Company Ltd|UDP:0|TCP:0|RKN:4
+Pereslavl-Zalesskiy - Foton Company Ltd|UDP:0|TCP:1|RKN:0
 Pereslavl-Zalesskiy - PJSC Vimpelcom|UDP:1|TCP:1|RKN:5
 Perm - CJSC COMSTAR-Regiony|UDP:0, 8|TCP:1|RKN:12
 Perm - CORBINA-BROADBAND|UDP:1, 0|TCP:0|RKN:0
@@ -1652,7 +1653,7 @@ St Petersburg - NODEX|UDP:0, 1|TCP:0|RKN:0
 St Petersburg - OBIT Ltd.|UDP:4, 0, 1|TCP:1|RKN:13
 St Petersburg - Obit-Telecommunications Ltd.|UDP:0|TCP:0|RKN:0
 St Petersburg - OJSC Mobile TeleSystems|UDP:1|TCP:2|RKN:12
-St Petersburg - OJSC North-West Telecom|UDP:1, 7|TCP:1|RKN:2
+St Petersburg - OJSC North-West Telecom|UDP:1, 4|TCP:0|RKN:2
 St Petersburg - OOO Svyaz-Invest Severo-Zapad|UDP:6, 8|TCP:1|RKN:0
 St Petersburg - OOO VPS|UDP:0|TCP:1|RKN:0
 St Petersburg - P.A.K.T LLC|UDP:0, 1, 2|TCP:0|RKN:0
@@ -1888,7 +1889,7 @@ Ulan-Ude - JSC ER-Telecom Holding Ulan-Ude branch|UDP:0, 1|TCP:0|RKN:0
 Ulan-Ude - JSC Sibirtelecom Buryat branch|UDP:0|TCP:0|RKN:0
 Ulan-Ude - PJSC Rostelecom|UDP:0|TCP:1|RKN:0
 Ulyanovsk - CJSC ER-Telecom Holding Ulyanovsk branch|UDP:0, 1, 2|TCP:0|RKN:14
-Ulyanovsk - CMST-ULJANOVSK|UDP:0, 6, 1|TCP:0|RKN:5
+Ulyanovsk - CMST-ULJANOVSK|UDP:1, 0, 6|TCP:0|RKN:5
 Ulyanovsk - CORBINA-BROADBAND|UDP:1, 0|TCP:0|RKN:0
 Ulyanovsk - JSC Telecom.ru|UDP:0, 1, 8|TCP:0|RKN:2
 Ulyanovsk - PJSC MegaFon|UDP:0, 1, 2|TCP:0|RKN:0
@@ -1997,4 +1998,3 @@ Voronezh - JSC KVANT-TELEKOM|UDP:1, 2|TCP:0|RKN:0
 Voronezh - Kursk|UDP:0|TCP:2|RKN:0
 Voronezh - LLC Intercon|UDP:0|TCP:2|RKN:4
 Voronezh - MTS PJSC|UDP:7|TCP:0|RKN:1
-Voronezh - OJSC RTLabs|UDP:1|TCP:3|RKN:3
