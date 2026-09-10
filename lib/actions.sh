@@ -168,7 +168,7 @@ backup_strats() {
 
 
 menu_action_update_config_reset() {
-  echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+  echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/serogaq/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
 
   mkdir -p "$CONFIG_ROLLBACK_CACHE_DIR" 2>/dev/null || true
   if [ -f /opt/zapret/config ]; then
@@ -214,6 +214,8 @@ menu_action_toggle_bolvan_ports() {
     sed -i '83s/443$/443,1400,3478-3481,5349,50000-50099,19294-19344/' /opt/zapret/config
     sed -i 's/^--skip --filter-udp=50000/--filter-udp=50000/' "/opt/zapret/config"
 
+	/opt/zapret/init.d/sysv/zapret stop
+	echo -e "${green}Выполнена команда остановки zapret${plain}"
     rm -f /opt/zapret/init.d/sysv/custom.d/50-discord-media \
           /opt/zapret/init.d/sysv/custom.d/50-stun4all \
           /opt/zapret/init.d/openwrt/custom.d/50-stun4all \
@@ -225,10 +227,8 @@ menu_action_toggle_bolvan_ports() {
     sed -i 's/443,1400,3478-3481,5349,50000-50099,19294-19344$/443/' /opt/zapret/config
     sed -i 's/^--filter-udp=50000/--skip --filter-udp=50000/' "/opt/zapret/config"
 
-    curl -L -o /opt/zapret/init.d/sysv/custom.d/50-stun4all \
-      https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-stun4all
-    curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media \
-      https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
+	curl --connect-timeout 5 -L -o /opt/zapret/init.d/sysv/custom.d/50-stun4all https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-stun4all || curl -L -o /opt/zapret/init.d/sysv/custom.d/50-stun4all http://mizulina.shit.vc:666/bol-van/zapret/master/init.d/custom.d.examples.linux/50-stun4all
+	curl --connect-timeout 5 -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media || curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media http://mizulina.shit.vc:666/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
 
     cp -f /opt/zapret/init.d/sysv/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all
     cp -f /opt/zapret/init.d/sysv/custom.d/50-discord-media /opt/zapret/init.d/openwrt/custom.d/50-discord-media
