@@ -32,11 +32,17 @@ Bcyan='\033[46m'
 
 #Определяем путь скрипта, подгружаем функции
 SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
+LIB_DIR="$SCRIPT_DIR/zapret/z4r_lib"
+
+if [ ! -f "$LIB_DIR/repository.sh" ]; then
+  echo "Не найден файл настроек репозитория: $LIB_DIR/repository.sh" >&2
+  exit 1
+fi
+source "$LIB_DIR/repository.sh"
 
 # Проверяем наличие всех нужных lib-файлов, иначе запускаем внешний скрипт
 missing_libs=0
-LIB_DIR="$SCRIPT_DIR/zapret/z4r_lib"
-for lib in ui.sh provider.sh telemetry.sh recommendations.sh netcheck.sh premium.sh strategies.sh submenus.sh actions.sh; do
+for lib in repository.sh ui.sh provider.sh telemetry.sh recommendations.sh netcheck.sh premium.sh strategies.sh submenus.sh actions.sh; do
   if [ ! -f "$LIB_DIR/$lib" ]; then
     missing_libs=1
     break
@@ -45,14 +51,15 @@ done
 
 if [ "$missing_libs" -ne 0 ]; then
   echo "Не найдены нужные файлы в $LIB_DIR. Запускаю внешний z4r..."
-  if which curl >/dev/null 2>&1; then
-    exec sh -c 'curl --connect-timeout 5 -fsSL "https://raw.githubusercontent.com/serogaq/z4r/main/z4r" | sh || curl -fsSL "http://mizulina.shit.vc:666/serogaq/z4r/main/z4r" | sh'
-  elif which wget >/dev/null 2>&1; then
-    exec sh -c 'wget --timeout=5 -qO- "https://raw.githubusercontent.com/serogaq/z4r/main/z4r" | sh || wget -qO- "http://mizulina.shit.vc:666/serogaq/z4r/main/z4r" | sh'
-  else
-    echo "Ошибка: нет curl или wget для загрузки внешнего z4r."
+  launcher_tmp="/tmp/z4r.$$"
+  if ! download_z4r_launcher_file z4r "$launcher_tmp"; then
+    rm -f "$launcher_tmp"
     exit 1
   fi
+  launcher_rc=0
+  sh "$launcher_tmp" || launcher_rc=$?
+  rm -f "$launcher_tmp"
+  exit "$launcher_rc"
 fi
 
 #___Сначала идут анонсы функций____
@@ -297,9 +304,8 @@ apply_builtin_strategy_bundle() {
 
 download_builtin_strategy_bundle() {
  local bundle="/opt/zapret/z4r_strategies/.bundle.$$"
- local url="https://raw.githubusercontent.com/serogaq/zapret4rocket/master/strategies/bundle.txt"
 
- if ! curl -fsL -o "$bundle" "$url"; then
+ if ! download_z4r_file "strategies/bundle.txt" "$bundle"; then
   rm -f "$bundle"
   echo "Ошибка загрузки bundle стратегий."
   return 1
@@ -318,11 +324,13 @@ download_builtin_strategy_bundle() {
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
  mkdir -p /opt/zapret/lists /opt/zapret/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret/extra_strats/UDP/YT /opt/zapret/z4r_strategies/TCP /opt/zapret/z4r_strategies/UDP
- for listfile in netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do curl --connect-timeout 5 -L -o /opt/zapret/lists/$listfile https://raw.githubusercontent.com/serogaq/zapret4rocket/master/lists/$listfile || curl -L -o /opt/zapret/lists/$listfile http://mizulina.shit.vc:666/serogaq/zapret4rocket/master/lists/$listfile; done
- curl --connect-timeout 5 -L "https://github.com/serogaq/zapret4rocket/raw/master/fake_files.tar.gz" | tar -xz -C /opt/zapret/files/fake || curl -L "http://mizulina.shit.vc:666/serogaq/zapret4rocket/master/fake_files.tar.gz" | tar -xz -C /opt/zapret/files/fake
- curl --connect-timeout 5 -L -o /opt/zapret/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/serogaq/zapret4rocket/master/extra_strats/UDP/YT/List.txt || curl -L -o /opt/zapret/extra_strats/UDP/YT/List.txt http://mizulina.shit.vc:666/serogaq/zapret4rocket/master/extra_strats/UDP/YT/List.txt
- curl --connect-timeout 5 -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/serogaq/zapret4rocket/master/extra_strats/TCP/RKN/List.txt || curl -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt http://mizulina.shit.vc:666/serogaq/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
- curl --connect-timeout 5 -L -o /opt/zapret/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/serogaq/zapret4rocket/master/extra_strats/TCP/YT/List.txt || curl -L -o /opt/zapret/extra_strats/TCP/YT/List.txt http://mizulina.shit.vc:666/serogaq/zapret4rocket/master/extra_strats/TCP/YT/List.txt
+ for listfile in netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do
+  download_z4r_file "lists/$listfile" "/opt/zapret/lists/$listfile"
+ done
+ stream_z4r_file "fake_files.tar.gz" | tar -xz -C /opt/zapret/files/fake
+ download_z4r_file "extra_strats/UDP/YT/List.txt" /opt/zapret/extra_strats/UDP/YT/List.txt
+ download_z4r_file "extra_strats/TCP/RKN/List.txt" /opt/zapret/extra_strats/TCP/RKN/List.txt
+ download_z4r_file "extra_strats/TCP/YT/List.txt" /opt/zapret/extra_strats/TCP/YT/List.txt
  download_builtin_strategy_bundle
  touch /opt/zapret/lists/autohostlist.txt
  if [ -d /opt/extra_strats ]; then
@@ -388,7 +396,7 @@ get_repo() {
  fi
 
  #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
- curl --connect-timeout 5 -L -o /opt/zapret/config.default https://raw.githubusercontent.com/serogaq/zapret4rocket/master/config.default || curl -L -o /opt/zapret/config.default http://mizulina.shit.vc:666/serogaq/zapret4rocket/master/config.default
+ download_z4r_file "config.default" /opt/zapret/config.default
  if which nft >/dev/null 2>&1; then
   sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret/config.default"
  fi
@@ -541,16 +549,16 @@ install_zapret_reboot() {
 #Для Entware Keenetic + merlin
 entware_fixes() {
  if [ "$hardware" = "keenetic" ]; then
-  curl --connect-timeout 5 -L -o /opt/zapret/init.d/sysv/zapret https://raw.githubusercontent.com/serogaq/zapret4rocket/master/Entware/zapret || curl -L -o /opt/zapret/init.d/sysv/zapret http://mizulina.shit.vc:666/serogaq/zapret4rocket/master/Entware/zapret
+  download_z4r_file "Entware/zapret" /opt/zapret/init.d/sysv/zapret
   chmod +x /opt/zapret/init.d/sysv/zapret
   echo "Права выданы /opt/zapret/init.d/sysv/zapret"
-  curl --connect-timeout 5 -L -o /opt/zapret/init.d/sysv/keenetic-policy.sh https://raw.githubusercontent.com/serogaq/zapret4rocket/master/Entware/keenetic-policy.sh || curl -L -o /opt/zapret/init.d/sysv/keenetic-policy.sh http://mizulina.shit.vc:666/serogaq/zapret4rocket/master/Entware/keenetic-policy.sh
+  download_z4r_file "Entware/keenetic-policy.sh" /opt/zapret/init.d/sysv/keenetic-policy.sh
   chmod +x /opt/zapret/init.d/sysv/keenetic-policy.sh
   echo "Права выданы /opt/zapret/init.d/sysv/keenetic-policy.sh"
-  curl --connect-timeout 5 -L -o /opt/etc/ndm/netfilter.d/000-zapret.sh https://raw.githubusercontent.com/serogaq/zapret4rocket/master/Entware/000-zapret.sh || curl -L -o /opt/etc/ndm/netfilter.d/000-zapret.sh http://mizulina.shit.vc:666/serogaq/zapret4rocket/master/Entware/000-zapret.sh
+  download_z4r_file "Entware/000-zapret.sh" /opt/etc/ndm/netfilter.d/000-zapret.sh
   chmod +x /opt/etc/ndm/netfilter.d/000-zapret.sh
   echo "Права выданы /opt/etc/ndm/netfilter.d/000-zapret.sh"
-  curl --connect-timeout 5 -L -o /opt/etc/init.d/S00fix https://raw.githubusercontent.com/serogaq/zapret4rocket/master/Entware/S00fix || curl -L -o /opt/etc/init.d/S00fix http://mizulina.shit.vc:666/serogaq/zapret4rocket/master/Entware/S00fix
+  download_z4r_file "Entware/S00fix" /opt/etc/init.d/S00fix
   chmod +x /opt/etc/init.d/S00fix
   echo "Права выданы /opt/etc/init.d/S00fix"
   cp -a /opt/zapret/init.d/custom.d.examples.linux/10-keenetic-udp-fix /opt/zapret/init.d/sysv/custom.d/10-keenetic-udp-fix
@@ -646,8 +654,8 @@ get_panel() {
   	  apk update && apk add build-base
 	fi
     bash <(curl -Ls --connect-timeout 15 https://raw.githubusercontent.com/SnoyIatk/3proxy/master/3proxyinstall.sh)
-    curl -L -o --connect-timeout 5 /etc/3proxy/.proxyauth https://raw.githubusercontent.com/serogaq/zapret4rocket/refs/heads/master/del.proxyauth
-    curl -L -o --connect-timeout 5 /etc/3proxy/3proxy.cfg https://raw.githubusercontent.com/serogaq/zapret4rocket/refs/heads/master/3proxy.cfg
+    download_z4r_file "del.proxyauth" /etc/3proxy/.proxyauth
+    download_z4r_file "3proxy.cfg" /etc/3proxy/3proxy.cfg
  elif [[ "$clean_answer" == "MARZBAN" ]]; then
      echo "Установка Marzban"
      bash -c "$(curl -sL --connect-timeout 10 https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install
@@ -1275,7 +1283,7 @@ Enter - выход
 fi
 
 #Инфа о времени обновления скрипта
-commit_date=$(curl -s --max-time 10 "https://api.github.com/repos/serogaq/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4)
+commit_date=$(curl -s --max-time 10 "$(z4r_api_url 'commits?path=z4r.sh&per_page=1')" | grep '"date"' | head -n1 | cut -d'"' -f4)
 if [[ -z "$commit_date" ]]; then
     echo -e "${red}Не был получен доступ к api.github.com (таймаут 15 сек). Возможны проблемы при установке.${plain}"
     if [ "$hardware" = "keenetic" ]; then
@@ -1286,7 +1294,7 @@ if [[ -z "$commit_date" ]]; then
         else
             echo $IP_ghub
             ndmc -c "ip host api.github.com $IP_ghub"
-            echo -e "${yellow}zeefeer обновлен (UTC +0): $(curl -s --max-time 10 "https://api.github.com/repos/serogaq/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+            echo -e "${yellow}zeefeer обновлен (UTC +0): $(curl -s --max-time 10 "$(z4r_api_url 'commits?path=z4r.sh&per_page=1')" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
         fi
     fi
 else
@@ -1362,7 +1370,7 @@ backup_strats
 remove_zapret -y
 
 #Запрос желаемой версии zapret
-echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s --connect-timeout 3 "https://api.github.com/repos/serogaq/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s --connect-timeout 3 "$(z4r_api_url 'commits?path=config.default&per_page=1')" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
 version_select
 
 #Запрос на установку web-ssh

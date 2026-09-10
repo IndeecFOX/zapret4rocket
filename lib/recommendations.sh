@@ -1,6 +1,5 @@
 # ---- Recomendations module ----
 
-RECS_URL="https://raw.githubusercontent.com/serogaq/zapret4rocket/master/recommendations.txt"
 RECS_FILE="/opt/zapret/extra_strats/cache/recommendations.txt"
 
 # 1. Функция обновления базы
@@ -15,7 +14,7 @@ update_recommendations() {
   fi
 
   # Если файла нет или он старый - качаем
-  curl -s --max-time 5 "$RECS_URL" -o "$RECS_FILE" || rm -f "$RECS_FILE"
+  download_z4r_file "recommendations.txt" "$RECS_FILE" 5 >/dev/null 2>&1 || rm -f "$RECS_FILE"
   return 0
 }
 

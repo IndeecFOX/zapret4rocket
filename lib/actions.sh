@@ -168,7 +168,7 @@ backup_strats() {
 
 
 menu_action_update_config_reset() {
-  echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/serogaq/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+  echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "$(z4r_api_url 'commits?path=config.default&per_page=1')" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
 
   mkdir -p "$CONFIG_ROLLBACK_CACHE_DIR" 2>/dev/null || true
   if [ -f /opt/zapret/config ]; then
