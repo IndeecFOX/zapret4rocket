@@ -131,7 +131,7 @@ Arsenyev - Rostelecom networks|UDP:1|TCP:11|GV:1|RKN:0
 Arshan - PJSC MegaFon|UDP:1|TCP:17|GV:1|RKN:5
 Artyomovskiy - KTEL|UDP:0|TCP:5|GV:0|RKN:0
 Arzamas - KTVS Ltd.|UDP:0, 1, 3|TCP:0|GV:1, 2, 0|RKN:3
-Arzamas - MTS PJSC|UDP:0, 1, 3|TCP:1|GV:2, 3, 0|RKN:0
+Arzamas - MTS PJSC|UDP:0, 1, 3|TCP:1|GV:2, 3, 6|RKN:0
 Asbest - Suhoy Log Intersat Ltd.|UDP:1|TCP:1|GV:0|RKN:0
 Asbest - VPN PPPoE customers Polevskoy Sverdlovsk reg. Inter|UDP:3, 0, 4|TCP:3|GV:0, 1, 3|RKN:11
 Asino - JSC Rostelecom regional branch Siberia|UDP:0|TCP:1|GV:1|RKN:0
@@ -201,7 +201,7 @@ Beloretsk - Ufa Zelenaya Tochka|UDP:1, 2, 0|TCP:1|GV:1, 0, 3|RKN:1
 Belovo - Rostelecom networks|UDP:2|TCP:16|GV:16|RKN:0
 Belyashi - Andrey Chuenkov PE|UDP:1|TCP:0|GV:0|RKN:2
 Berdsk - Media Holding TVK Ltd.|UDP:2|TCP:2|GV:2|RKN:1
-Berdsk - Rostelecom networks|UDP:0|TCP:0|GV:0|RKN:5
+Berdsk - Rostelecom networks|UDP:0|TCP:0|GV:5|RKN:5
 Beslan - Limited Liability Company Irtelcom|UDP:1|TCP:0|GV:2, 0|RKN:0
 Beslan - SOES Vladikavkaz|UDP:0|TCP:0|GV:0|RKN:5
 Beya - Rostelecom networks|UDP:1|TCP:1|GV:1|RKN:5
@@ -1005,7 +1005,7 @@ Moscow - PHAETON PLUS d.o.o|UDP:0|TCP:0|RKN:7
 Moscow - PJSC MegaFon|UDP:0, 2, 1|TCP:0|RKN:0
 Moscow - PJSC MegaFon MVNO-nbn|UDP:0|TCP:0|RKN:0
 Moscow - PJSC Moscow city telephone network|UDP:1, 5, 0|TCP:12|RKN:0
-Moscow - PJSC Rostelecom|UDP:0, 1, 5|TCP:0|RKN:0
+Moscow - PJSC Rostelecom|UDP:0, 1, 5|TCP:0|RKN:5
 Moscow - PJSC Rostelecom Russian Federation|UDP:0|TCP:15|RKN:0
 Moscow - PJSC Vimpelcom|UDP:0, 1, 3|TCP:0|RKN:0
 Moscow - POIG Ltd.|UDP:0, 1, 3|TCP:1|RKN:0
@@ -1260,7 +1260,7 @@ Omsk - PJSC Rostelecom|UDP:3|TCP:0|RKN:2
 Omsk - PJSC Vimpelcom|UDP:0|TCP:0|RKN:0
 Omsk - Rostelecom networks|UDP:0, 1|TCP:0|RKN:5
 Omsk - Tele2 Russia Groups|UDP:0, 1|TCP:0|RKN:0
-Omsk - ZSTTK|UDP:0, 1, 3|TCP:1|RKN:5
+Omsk - ZSTTK|UDP:0, 3, 1|TCP:1|RKN:5
 Omutninsk - T2 Russia Groups|UDP:1|TCP:0|RKN:7
 Ordynskoye - Rostelecom networks|UDP:2, 1|TCP:2|RKN:0
 Orem - AdGuard Software Limited|UDP:2|TCP:0|RKN:0
@@ -1314,7 +1314,7 @@ Penza - PJSC Rostelecom|UDP:0, 5, 1|TCP:1|RKN:0
 Penza - Rostelecom MRF Volga|UDP:1, 3|TCP:1|RKN:5
 Penza - Rostelecom networks|UDP:0, 3, 1|TCP:1|RKN:5
 Penza - SM Ltd.|UDP:2, 1, 3|TCP:1|RKN:17
-Pereslavl-Zalesskiy - Foton Company Ltd|UDP:3|TCP:1|RKN:5
+Pereslavl-Zalesskiy - Foton Company Ltd|UDP:0|TCP:3|RKN:5
 Pereslavl-Zalesskiy - PJSC Vimpelcom|UDP:1|TCP:1|RKN:5
 Perm - CJSC COMSTAR-Regiony|UDP:8, 0|TCP:1|RKN:12
 Perm - CORBINA-BROADBAND|UDP:1, 0|TCP:0|RKN:0
