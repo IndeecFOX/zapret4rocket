@@ -1,6 +1,5 @@
 # ---- Recomendations module ----
 
-RECS_URL="https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/recommendations.txt"
 RECS_FILE="/opt/zapret/extra_strats/cache/recommendations.txt"
 
 # 1. Функция обновления базы
@@ -15,8 +14,29 @@ update_recommendations() {
   fi
 
   # Если файла нет или он старый - качаем
-  curl -s --max-time 5 "$RECS_URL" -o "$RECS_FILE" || rm -f "$RECS_FILE"
+  download_z4r_file "recommendations.txt" "$RECS_FILE" 5 >/dev/null 2>&1 || rm -f "$RECS_FILE"
   return 0
+}
+
+filter_builtin_recommendations() {
+  local value="$1"
+  local out="" item num
+
+  value="$(echo "$value" | sed 's/,/ /g')"
+  for item in $value; do
+    num="${item%%[^0-9]*}"
+    case "$num" in
+      ''|*[!0-9]*) continue ;;
+    esac
+    [ "$num" -ge 1000 ] && continue
+    if [ -n "$out" ]; then
+      out="$out,$num"
+    else
+      out="$num"
+    fi
+  done
+
+  echo "$out"
 }
 
 # 2. Функция показа подсказки (Logic + UI)
@@ -48,6 +68,7 @@ show_hint() {
     "RKN") part="$(echo "$line" | cut -d'|' -f5 | cut -d':' -f2)" ;;
     *) return 0 ;;
   esac
+  part="$(filter_builtin_recommendations "$part")"
 
   # Д. Выводим
   if [ -n "$part" ] && [ "$part" != "-" ]; then
