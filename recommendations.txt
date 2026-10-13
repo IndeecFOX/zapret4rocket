@@ -679,7 +679,7 @@ Kulebaki - NMTS|UDP:1|TCP:1|RKN:4
 Kumertau - Telecompany Fialka Ltd|UDP:0|TCP:0|RKN:0
 Kurgan - CJSC ER-Telecom Holding Kurgan branch|UDP:0|TCP:0|RKN:0
 Kurgan - JSC ER-Telecom Holding|UDP:0|TCP:0|RKN:0
-Kurgan - LLC Infocentr|UDP:0, 1|TCP:1|RKN:15
+Kurgan - LLC Infocentr|UDP:0, 1, 3|TCP:1|RKN:15
 Kurgan - LLC Kurgan-Telecom|UDP:2|TCP:0|RKN:12
 Kurgan - MTS PJSC|UDP:1|TCP:0|RKN:1
 Kurgan - OJSC uralsvyazinform|UDP:0|TCP:11|RKN:0
@@ -1067,7 +1067,7 @@ Moscow - Telko JSC|UDP:0, 4, 6|TCP:0|RKN:0
 Moscow - TI Pskov|UDP:1|TCP:1|RKN:5
 Moscow - Timer LLC|UDP:0, 3|TCP:0|RKN:4
 Moscow - Trinet Ltd.|UDP:5, 0, 2|TCP:2|RKN:0
-Moscow - TZ-Telecom MSK Address|UDP:0|TCP:0|RKN:0
+Moscow - TZ-Telecom MSK Address|UDP:0|TCP:0|RKN:5
 Moscow - UUT|UDP:7, 0, 1|TCP:0|RKN:0
 Moscow - VDS-Telecom LLC.|UDP:0|TCP:1|RKN:2
 Moscow - VDSINA|UDP:1, 8|TCP:0|RKN:0
@@ -1147,7 +1147,7 @@ Nemchinovka - Moscow Local Telephone Network OAO MGTS|UDP:0|TCP:0|RKN:6
 Nerekhta - OOO MediaLan|UDP:0|TCP:0|RKN:0
 Neryungri - SVEN Networks|UDP:0|TCP:0|RKN:0
 Networks CLN Internet access|UDP:0|TCP:0|RKN:8
-Nevinnomyssk - OOOSET|UDP:1|TCP:7|RKN:11
+Nevinnomyssk - OOOSET|UDP:1, 0|TCP:7|RKN:11
 Nevinnomyssk - SM Ltd.|UDP:0|TCP:0|RKN:0
 newlink - -|UDP:0|TCP:0|RKN:0
 Nizhnekamsk - CJSC ER-Telecom Holding Naberezhnye Chelny bra|UDP:0, 1|TCP:1|RKN:9
@@ -1442,7 +1442,7 @@ Rostelecom - 0|UDP:0|TCP:0|RKN:11
 Rostelecom - Arkhangelsk|UDP:0|TCP:1|RKN:5
 Rostelecom - Astrakhan|UDP:0|TCP:0|RKN:0
 Rostelecom - Balashiha|UDP:1|TCP:3|RKN:2
-Rostelecom - Chelyabinsk|UDP:0, 2|TCP:3|RKN:0
+Rostelecom - Chelyabinsk|UDP:2|TCP:3|RKN:0
 Rostelecom - Kazan|UDP:1|TCP:1|RKN:11
 rostelecom - kirov|UDP:0|TCP:0|RKN:5
 Rostelecom - Krasnodar|UDP:0|TCP:0|RKN:2
@@ -1722,7 +1722,7 @@ St Petersburg - Mobile TeleSystems PJSC|UDP:1, 0, 4|TCP:0|RKN:0
 St Petersburg - MTS PJSC|UDP:1, 2, 3|TCP:1|RKN:1
 St Petersburg - MTS Saint-Petersburg  former Telix|UDP:1, 0|TCP:1|RKN:0
 St Petersburg - MTS-SPB|UDP:1|TCP:1|RKN:17
-St Petersburg - Net By Net Holding LLC|UDP:0, 1, 2|TCP:0|RKN:0
+St Petersburg - Net By Net Holding LLC|UDP:0, 2, 1|TCP:0|RKN:0
 St Petersburg - NetCrafters OU|UDP:0|TCP:1|RKN:5
 St Petersburg - Nevalink LLC|UDP:0, 1|TCP:0|RKN:0
 St Petersburg - NevalinkRoute|UDP:0, 2, 1|TCP:0|RKN:4
@@ -1941,7 +1941,7 @@ Tyumen - CORBINA-BROADBAND|UDP:0, 3, 1|TCP:3|RKN:0
 Tyumen - JSC ER-Telecom Holding|UDP:0, 4, 8|TCP:1|RKN:5
 Tyumen - Khanty-Mansyisk department|UDP:0, 8|TCP:0|RKN:0
 Tyumen - Metroset Ltd|UDP:0|TCP:0|RKN:0
-Tyumen - MKS75 Network|UDP:0, 7, 1|TCP:0|RKN:0
+Tyumen - MKS75 Network|UDP:0, 7, 1|TCP:0|RKN:5
 Tyumen - MTS PJSC|UDP:1, 5|TCP:0|RKN:0
 Tyumen - MTS-TUMEN|UDP:5|TCP:0|RKN:0
 Tyumen - OJSC Uralsvyazinform|UDP:0|TCP:0|RKN:2
