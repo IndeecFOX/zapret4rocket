@@ -32,11 +32,17 @@ Bcyan='\033[46m'
 
 #Определяем путь скрипта, подгружаем функции
 SCRIPT_DIR="$(cd -- "$(dirname -- "$0")" && pwd)"
+LIB_DIR="$SCRIPT_DIR/zapret/z4r_lib"
+
+if [ ! -f "$LIB_DIR/repository.sh" ]; then
+  echo "Не найден файл настроек репозитория: $LIB_DIR/repository.sh" >&2
+  exit 1
+fi
+source "$LIB_DIR/repository.sh"
 
 # Проверяем наличие всех нужных lib-файлов, иначе запускаем внешний скрипт
 missing_libs=0
-LIB_DIR="$SCRIPT_DIR/zapret/z4r_lib"
-for lib in ui.sh provider.sh telemetry.sh recommendations.sh netcheck.sh premium.sh strategies.sh submenus.sh actions.sh; do
+for lib in repository.sh ui.sh provider.sh telemetry.sh recommendations.sh netcheck.sh premium.sh strategies.sh submenus.sh actions.sh; do
   if [ ! -f "$LIB_DIR/$lib" ]; then
     missing_libs=1
     break
@@ -45,14 +51,15 @@ done
 
 if [ "$missing_libs" -ne 0 ]; then
   echo "Не найдены нужные файлы в $LIB_DIR. Запускаю внешний z4r..."
-  if which curl >/dev/null 2>&1; then
-    exec sh -c 'curl --connect-timeout 5 -fsSL "https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r" | sh || curl -fsSL "http://mizulina.shit.vc:666/IndeecFOX/z4r/main/z4r" | sh'
-  elif which wget >/dev/null 2>&1; then
-    exec sh -c 'wget --timeout=5 -qO- "https://raw.githubusercontent.com/IndeecFOX/z4r/main/z4r" | sh || wget -qO- "http://mizulina.shit.vc:666/IndeecFOX/z4r/main/z4r" | sh'
-  else
-    echo "Ошибка: нет curl или wget для загрузки внешнего z4r."
+  launcher_tmp="/tmp/z4r.$$"
+  if ! download_z4r_launcher_file z4r "$launcher_tmp"; then
+    rm -f "$launcher_tmp"
     exit 1
   fi
+  launcher_rc=0
+  sh "$launcher_tmp" || launcher_rc=$?
+  rm -f "$launcher_tmp"
+  exit "$launcher_rc"
 fi
 
 #___Сначала идут анонсы функций____
@@ -146,17 +153,250 @@ change_user() {
    fi
 }
 
+append_unique_lines() {
+ local file="$1"
+ local lines="$2"
+ local line added=0
+
+ mkdir -p "$(dirname "$file")" 2>/dev/null || true
+ touch "$file" 2>/dev/null || return 1
+
+ while IFS= read -r line; do
+  [ -n "$line" ] || continue
+  if grep -q -x -F "$line" "$file" 2>/dev/null; then
+   continue
+  fi
+  echo "$line" >> "$file"
+  added=1
+ done <<EOF
+$lines
+EOF
+
+ [ "$added" -eq 1 ]
+}
+
+parse_builtin_strategy_bundle_line() {
+ local line="$1"
+ local path params type file num disabled
+
+ case "$line" in
+  ''|'#'*) return 1 ;;
+ esac
+
+ path="${line%% *}"
+ [ "$path" != "$line" ] || return 1
+ params="${line#* }"
+ [ -n "$params" ] || return 1
+
+ type="${path%%/*}"
+ file="${path#*/}"
+ case "$type" in
+  TCP|UDP) ;;
+  *) return 1 ;;
+ esac
+
+ disabled=0
+ case "$file" in
+  [0-9]*.disabled.txt) num="${file%%.disabled.txt}"; disabled=1 ;;
+  [0-9]*.txt) num="${file%%.txt}" ;;
+  *) return 1 ;;
+ esac
+ case "$num" in
+  ''|*[!0-9]*) return 1 ;;
+ esac
+ [ "$num" -lt "$CUSTOM_STRATEGY_START" ] || return 1
+
+ echo "$type|$num|$disabled|$params"
+ return 0
+}
+
+write_builtin_strategy_file() {
+ local target="$1"
+ local params="$2"
+ local tmp="${target}.$$"
+
+ printf '%s\n' "$params" > "$tmp"
+ if [ -f "$target" ] && cmp -s "$tmp" "$target" 2>/dev/null; then
+  rm -f "$tmp"
+ else
+  mv -f "$tmp" "$target"
+ fi
+}
+
+apply_builtin_strategy_bundle() {
+ local bundle="$1"
+ local line parsed type num disabled params dir enabled_file disabled_file target file base
+ local seen_keys key
+ local count=0
+
+ [ -s "$bundle" ] || return 1
+ seen_keys=" "
+
+ while IFS= read -r line || [ -n "$line" ]; do
+  case "$line" in
+   ''|'#'*) continue ;;
+  esac
+  parsed="$(parse_builtin_strategy_bundle_line "$line")" || return 1
+  type="${parsed%%|*}"
+  parsed="${parsed#*|}"
+  num="${parsed%%|*}"
+  key="$type/$num"
+  case "$seen_keys" in
+   *" $key "*) return 1 ;;
+  esac
+  seen_keys="${seen_keys}${key} "
+  count=$((count + 1))
+ done < "$bundle"
+
+ [ "$count" -gt 0 ] || return 1
+
+ while IFS= read -r line || [ -n "$line" ]; do
+  case "$line" in
+   ''|'#'*) continue ;;
+  esac
+  parsed="$(parse_builtin_strategy_bundle_line "$line")" || return 1
+  type="${parsed%%|*}"
+  parsed="${parsed#*|}"
+  num="${parsed%%|*}"
+  parsed="${parsed#*|}"
+  disabled="${parsed%%|*}"
+  params="${parsed#*|}"
+
+  dir="/opt/zapret/z4r_strategies/$type"
+  mkdir -p "$dir" 2>/dev/null || true
+  enabled_file="$dir/${num}.txt"
+  disabled_file="$dir/${num}.disabled.txt"
+
+  if [ -f "$enabled_file" ]; then
+   target="$enabled_file"
+   rm -f "$disabled_file"
+  elif [ -f "$disabled_file" ]; then
+   target="$disabled_file"
+  elif [ "$disabled" -eq 1 ]; then
+   target="$disabled_file"
+  else
+   target="$enabled_file"
+  fi
+
+  write_builtin_strategy_file "$target" "$params"
+ done < "$bundle"
+
+ for type in TCP UDP; do
+  dir="/opt/zapret/z4r_strategies/$type"
+  for file in "$dir"/[0-9]*.txt "$dir"/[0-9]*.disabled.txt; do
+   [ -e "$file" ] || continue
+   base="${file##*/}"
+   num="$(strategy_num_from_name "$base")"
+   case "$num" in
+    ''|*[!0-9]*) continue ;;
+   esac
+   [ "$num" -lt "$CUSTOM_STRATEGY_START" ] || continue
+   key="$type/$num"
+   case "$seen_keys" in
+    *" $key "*) ;;
+    *) rm -f "$file" ;;
+   esac
+  done
+ done
+
+ return 0
+}
+
+download_builtin_strategy_bundle() {
+ local bundle="/opt/zapret/z4r_strategies/.bundle.$$"
+
+ if ! download_z4r_file "strategies/bundle.txt" "$bundle"; then
+  rm -f "$bundle"
+  echo "Ошибка загрузки bundle стратегий."
+  return 1
+ fi
+
+ if ! apply_builtin_strategy_bundle "$bundle"; then
+  rm -f "$bundle"
+  echo "Ошибка применения bundle стратегий."
+  return 1
+ fi
+
+ rm -f "$bundle"
+ return 0
+}
+
 #Создаём папки и забираем файлы папок lists, fake, extra_strats, копируем конфиг, скрипты для войсов DS, WA, TG
 get_repo() {
- mkdir -p /opt/zapret/lists /opt/zapret/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret/extra_strats/UDP/YT
- for listfile in netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do curl --connect-timeout 5 -L -o /opt/zapret/lists/$listfile https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/lists/$listfile || curl -L -o /opt/zapret/lists/$listfile http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/lists/$listfile; done
- curl --connect-timeout 5 -L "https://github.com/IndeecFOX/zapret4rocket/raw/master/fake_files.tar.gz" | tar -xz -C /opt/zapret/files/fake || curl -L "http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/fake_files.tar.gz" | tar -xz -C /opt/zapret/files/fake
- curl --connect-timeout 5 -L -o /opt/zapret/extra_strats/UDP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt || curl -L -o /opt/zapret/extra_strats/UDP/YT/List.txt http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/extra_strats/UDP/YT/List.txt
- curl --connect-timeout 5 -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt || curl -L -o /opt/zapret/extra_strats/TCP/RKN/List.txt http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/extra_strats/TCP/RKN/List.txt
- curl --connect-timeout 5 -L -o /opt/zapret/extra_strats/TCP/YT/List.txt https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt || curl -L -o /opt/zapret/extra_strats/TCP/YT/List.txt http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/extra_strats/TCP/YT/List.txt
- touch /opt/zapret/lists/autohostlist.txt /opt/zapret/extra_strats/UDP/YT/{1..8}.txt /opt/zapret/extra_strats/TCP/RKN/{1..22}.txt /opt/zapret/extra_strats/TCP/User/{1..22}.txt /opt/zapret/extra_strats/TCP/YT/{1..22}.txt /opt/zapret/extra_strats/TCP/GV/{1..22}.txt /opt/zapret/extra_strats/TCP/temp/{1..22}.txt
+ mkdir -p /opt/zapret/lists /opt/zapret/extra_strats/TCP/{RKN,User,YT,temp,GV} /opt/zapret/extra_strats/UDP/YT /opt/zapret/z4r_strategies/TCP /opt/zapret/z4r_strategies/UDP
+ for listfile in netrogat.txt russia-discord.txt russia-youtube-rtmps.txt russia-youtube.txt russia-youtubeQ.txt tg_cidr.txt; do
+  download_z4r_file "lists/$listfile" "/opt/zapret/lists/$listfile"
+ done
+ stream_z4r_file "fake_files.tar.gz" | tar -xz -C /opt/zapret/files/fake
+ download_z4r_file "extra_strats/UDP/YT/List.txt" /opt/zapret/extra_strats/UDP/YT/List.txt
+ download_z4r_file "extra_strats/TCP/RKN/List.txt" /opt/zapret/extra_strats/TCP/RKN/List.txt
+ download_z4r_file "extra_strats/TCP/YT/List.txt" /opt/zapret/extra_strats/TCP/YT/List.txt
+ download_builtin_strategy_bundle
+ touch /opt/zapret/lists/autohostlist.txt
+ if [ -d /opt/extra_strats ]; then
+  rm -rf /opt/zapret/extra_strats
+  mv /opt/extra_strats /opt/zapret/
+  echo "Восстановление настроек подбора из резерва выполнено."
+ fi
+ if [ -d /opt/z4r_strategies ]; then
+  local saved file base num enabled_file disabled_file
+  for saved in /opt/z4r_strategies/TCP/[0-9]*.txt /opt/z4r_strategies/TCP/[0-9]*.disabled.txt; do
+   [ -e "$saved" ] || continue
+   base="${saved##*/}"
+   num="$(strategy_num_from_name "$base")"
+   case "$num" in
+    ''|*[!0-9]*) continue ;;
+   esac
+   if [ "$num" -ge "$CUSTOM_STRATEGY_START" ]; then
+    cp -f "$saved" "/opt/zapret/z4r_strategies/TCP/$base"
+   fi
+  done
+  for saved in /opt/z4r_strategies/UDP/[0-9]*.txt /opt/z4r_strategies/UDP/[0-9]*.disabled.txt; do
+   [ -e "$saved" ] || continue
+   base="${saved##*/}"
+   num="$(strategy_num_from_name "$base")"
+   case "$num" in
+    ''|*[!0-9]*) continue ;;
+   esac
+   if [ "$num" -ge "$CUSTOM_STRATEGY_START" ]; then
+    cp -f "$saved" "/opt/zapret/z4r_strategies/UDP/$base"
+   fi
+  done
+  for saved in /opt/z4r_strategies/TCP/*.disabled.txt /opt/z4r_strategies/UDP/*.disabled.txt; do
+   [ -e "$saved" ] || continue
+   base="${saved##*/}"
+   num="${base%%.disabled.txt}"
+   [ "$num" -ge "$CUSTOM_STRATEGY_START" ] && continue
+   case "$saved" in
+    */TCP/*) enabled_file="/opt/zapret/z4r_strategies/TCP/${num}.txt"; disabled_file="/opt/zapret/z4r_strategies/TCP/${num}.disabled.txt" ;;
+    */UDP/*) enabled_file="/opt/zapret/z4r_strategies/UDP/${num}.txt"; disabled_file="/opt/zapret/z4r_strategies/UDP/${num}.disabled.txt" ;;
+   esac
+   [ -f "$enabled_file" ] && mv -f "$enabled_file" "$disabled_file"
+  done
+  for saved in /opt/z4r_strategies/TCP/[0-9]*.txt /opt/z4r_strategies/UDP/[0-9]*.txt; do
+   [ -e "$saved" ] || continue
+   base="${saved##*/}"
+   case "$base" in
+    *.disabled.txt) continue ;;
+   esac
+   num="${base%%.txt}"
+   [ "$num" -ge "$CUSTOM_STRATEGY_START" ] && continue
+   case "$saved" in
+    */TCP/*) enabled_file="/opt/zapret/z4r_strategies/TCP/${num}.txt"; disabled_file="/opt/zapret/z4r_strategies/TCP/${num}.disabled.txt" ;;
+    */UDP/*) enabled_file="/opt/zapret/z4r_strategies/UDP/${num}.txt"; disabled_file="/opt/zapret/z4r_strategies/UDP/${num}.disabled.txt" ;;
+   esac
+   [ -f "$disabled_file" ] && mv -f "$disabled_file" "$enabled_file"
+  done
+  rm -rf /opt/z4r_strategies
+  echo "Восстановление стратегий и их состояний выполнено."
+ fi
+ if [ -f "/opt/netrogat.txt" ]; then
+   mv -f /opt/netrogat.txt /opt/zapret/lists/netrogat.txt
+   echo "Восстановление листа исключений выполнено."
+ fi
+
  #Копирование нашего конфига на замену стандартному и скриптов для войсов DS, WA, TG
- curl --connect-timeout 5 -L -o /opt/zapret/config.default https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/config.default || curl -L -o /opt/zapret/config.default http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/config.default
+ download_z4r_file "config.default" /opt/zapret/config.default
  if which nft >/dev/null 2>&1; then
   sed -i 's/^FWTYPE=iptables$/FWTYPE=nftables/' "/opt/zapret/config.default"
  fi
@@ -165,52 +405,12 @@ get_repo() {
  curl --connect-timeout 5 -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media https://raw.githubusercontent.com/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media || curl -L -o /opt/zapret/init.d/sysv/custom.d/50-discord-media http://mizulina.shit.vc:666/bol-van/zapret/master/init.d/custom.d.examples.linux/50-discord-media
  cp -f /opt/zapret/init.d/sysv/custom.d/50-stun4all /opt/zapret/init.d/openwrt/custom.d/50-stun4all
  cp -f /opt/zapret/init.d/sysv/custom.d/50-discord-media /opt/zapret/init.d/openwrt/custom.d/50-discord-media
- #Различный рестор бэкапов:
- if [ -d /opt/extra_strats ]; then
-  rm -rf /opt/zapret/extra_strats
-  mv /opt/extra_strats /opt/zapret/
-  echo "Восстановление настроек подбора из резерва выполнено."
- fi
- if [ -f "/opt/z4r_settings_backup" ]; then
-    Backuped_FOOLING=$(sed -n '1p' /opt/z4r_settings_backup)
-    Backuped_SNI=$(sed -n '2p' /opt/z4r_settings_backup)
-    Backuped_STRAT_NUM_BEZR=$(sed -n '3p' /opt/z4r_settings_backup)
-	#Fooling 1 строка
-    if [ "$Backuped_FOOLING" = "ts" ]; then
-        sed -i 's/fooling=ts,badsum/fooling=ts/' /opt/zapret/config.default
-        echo -e "${green}Выполнено переключение фулинга на ts${plain}"
-    fi
-	#SNI 2 строка
-    if [ -n "$Backuped_SNI" ] && [ "$Backuped_SNI" != "msn.com" ]; then
-        sed -i -E "s|(=sni=)[^[:space:]]+( --)|\1${Backuped_SNI}\2|g" "/opt/zapret/config.default"
-        echo -e "${green}SNI теперь фейкуется под:${plain} $Backuped_SNI"
-    fi
-    #Bezrazbor 3 строка
-    if [ -n "$Backuped_STRAT_NUM_BEZR" ]; then
-        NEW_LINE_BEZR=$(grep "RKN/${Backuped_STRAT_NUM_BEZR}.txt" "/opt/zapret/config.default" | grep "\-\-new" | head -n 1)
-        if [ -z "$NEW_LINE_BEZR" ]; then
-            echo "Ошибка: Стратегия $Backuped_STRAT_NUM_BEZR не найдена."
-            pause_enter
-            return
-        fi
-        NEW_PARAMS_BEZR=$(echo "$NEW_LINE_BEZR" | sed -n "s/.*RKN\/${Backuped_STRAT_NUM_BEZR}\.txt \(.*\) --new/\1/p")
-        if [ -z "$NEW_PARAMS_BEZR" ]; then
-            NEW_PARAMS_BEZR=$(echo "$NEW_LINE_BEZR" | sed -n 's/.*none.dom \(.*\) --new/\1/p')
-        fi
-        sed -i "s|\(2096,8443 --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt \).*\( --new\)|\1$NEW_PARAMS_BEZR\2|" "/opt/zapret/config.default"
-        echo "Применена стратегия $Backuped_STRAT_NUM_BEZR: $NEW_PARAMS_BEZR"
-    fi
- fi
-
- if [ -f "/opt/netrogat.txt" ]; then
-   mv -f /opt/netrogat.txt /opt/zapret/lists/netrogat.txt
-   echo "Восстановление листа исключений выполнено."
- fi
 
  if [ "$hardware" = "keenetic" ]; then
   ensure_keenetic_policy_config_defaults /opt/zapret/config.default
   ensure_keenetic_policy_hooks /opt/zapret/config.default
  fi
+ ensure_strategy_hostlist_files
 
 # cache
 mkdir -p /opt/zapret/extra_strats/cache
@@ -336,6 +536,7 @@ zapret_get() {
 #Запуск установочных скриптов и перезагрузка
 install_zapret_reboot() {
  sh -i /opt/zapret/install_easy.sh
+ build_config_from_strategies /opt/zapret/config.default /opt/zapret/config
  /opt/zapret/init.d/sysv/zapret restart
  if pidof nfqws >/dev/null; then
   check_access_list
@@ -348,16 +549,16 @@ install_zapret_reboot() {
 #Для Entware Keenetic + merlin
 entware_fixes() {
  if [ "$hardware" = "keenetic" ]; then
-  curl --connect-timeout 5 -L -o /opt/zapret/init.d/sysv/zapret https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/zapret || curl -L -o /opt/zapret/init.d/sysv/zapret http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/Entware/zapret
+  download_z4r_file "Entware/zapret" /opt/zapret/init.d/sysv/zapret
   chmod +x /opt/zapret/init.d/sysv/zapret
   echo "Права выданы /opt/zapret/init.d/sysv/zapret"
-  curl --connect-timeout 5 -L -o /opt/zapret/init.d/sysv/keenetic-policy.sh https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/keenetic-policy.sh || curl -L -o /opt/zapret/init.d/sysv/keenetic-policy.sh http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/Entware/keenetic-policy.sh
+  download_z4r_file "Entware/keenetic-policy.sh" /opt/zapret/init.d/sysv/keenetic-policy.sh
   chmod +x /opt/zapret/init.d/sysv/keenetic-policy.sh
   echo "Права выданы /opt/zapret/init.d/sysv/keenetic-policy.sh"
-  curl --connect-timeout 5 -L -o /opt/etc/ndm/netfilter.d/000-zapret.sh https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/000-zapret.sh || curl -L -o /opt/etc/ndm/netfilter.d/000-zapret.sh http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/Entware/000-zapret.sh
+  download_z4r_file "Entware/000-zapret.sh" /opt/etc/ndm/netfilter.d/000-zapret.sh
   chmod +x /opt/etc/ndm/netfilter.d/000-zapret.sh
   echo "Права выданы /opt/etc/ndm/netfilter.d/000-zapret.sh"
-  curl --connect-timeout 5 -L -o /opt/etc/init.d/S00fix https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/master/Entware/S00fix || curl -L -o /opt/etc/init.d/S00fix http://mizulina.shit.vc:666/IndeecFOX/zapret4rocket/master/Entware/S00fix
+  download_z4r_file "Entware/S00fix" /opt/etc/init.d/S00fix
   chmod +x /opt/etc/init.d/S00fix
   echo "Права выданы /opt/etc/init.d/S00fix"
   cp -a /opt/zapret/init.d/custom.d.examples.linux/10-keenetic-udp-fix /opt/zapret/init.d/sysv/custom.d/10-keenetic-udp-fix
@@ -370,7 +571,7 @@ entware_fixes() {
   if [ ! -f "$FW" ]; then
     echo "$FW не найден, пропускаю добавление правила"
   else
-    grep -qxF '/opt/zapret/init.d/sysv/zapret restart' "$FW" || echo '/opt/zapret/init.d/sysv/zapret restart' >> "$FW"
+    grep -q -x -F '/opt/zapret/init.d/sysv/zapret restart' "$FW" || echo '/opt/zapret/init.d/sysv/zapret restart' >> "$FW"
     chmod +x /jffs/scripts/firewall-start
   fi
  fi
@@ -453,8 +654,8 @@ get_panel() {
   	  apk update && apk add build-base
 	fi
     bash <(curl -Ls --connect-timeout 15 https://raw.githubusercontent.com/SnoyIatk/3proxy/master/3proxyinstall.sh)
-    curl -L -o --connect-timeout 5 /etc/3proxy/.proxyauth https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/refs/heads/master/del.proxyauth
-    curl -L -o --connect-timeout 5 /etc/3proxy/3proxy.cfg https://raw.githubusercontent.com/IndeecFOX/zapret4rocket/refs/heads/master/3proxy.cfg
+    download_z4r_file "del.proxyauth" /etc/3proxy/.proxyauth
+    download_z4r_file "3proxy.cfg" /etc/3proxy/3proxy.cfg
  elif [[ "$clean_answer" == "MARZBAN" ]]; then
      echo "Установка Marzban"
      bash -c "$(curl -sL --connect-timeout 10 https://github.com/Gozargah/Marzban-scripts/raw/master/marzban.sh)" @ install
@@ -703,34 +904,7 @@ EOF
 
 #Функция получения инфы о статусе безразборного режима для отображения в меню
 get_bezr_status() {
-	#Источник сраты
-	SRC_START="--filter-tcp=443,2053,2083,2087,2096,8443 --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt"
-
-	#Извлечение ядра (стратегии)
-	CORE_BEZR=$(sed -n "s|.*$SRC_START\(.*\)--new.*|\1|p" "/opt/zapret/config" | head -n 1)
-	[ -z "$CORE_BEZR" ] && { echo "Ошибка: SRC_START не найден. Вероятно старый конфиг. Обновление через 5 пункт меню или переустановкой."; exit 1; }
-	CORE_BEZR_TRIMMED=$(echo "$CORE_BEZR" | sed 's/^[[:space:]]*//;s/[[:space:]]*$//')
-
-	#Поиск потенциальных строк (YT и RKN с цифрами)
-	POTENTIAL_LINES_BEZR=$(grep -n "/extra_strats/TCP/YT/[0-9]\+\.txt" "/opt/zapret/config" | grep "/extra_strats/TCP/RKN/[0-9]\+\.txt")
-
-	if [ -z "$POTENTIAL_LINES_BEZR" ]; then
-		echo "Ошибка: Строки с путями стратегий не найдены."
-		exit 1
-	fi
-
-	# Поиск нужной строки и извлечение номера стратегии
-	STRATEGY_ID_BEZR=""
-	while IFS= read -r line; do
-		L_TEXT_BEZR=$(echo "$line" | cut -d: -f2-)
-
-		if [[ "$L_TEXT_BEZR" == *"$CORE_BEZR_TRIMMED"* ]]; then
-			# Извлекаем число из части /TCP/RKN/X.txt и используем sed с обратной ссылкой \1 для захвата цифр
-			STRATEGY_ID_BEZR=$(echo "$L_TEXT_BEZR" | sed -n 's|.*/extra_strats/TCP/RKN/\([0-9]\+\)\.txt.*|\1|p')
-			break
-		fi
-	done <<< "$POTENTIAL_LINES_BEZR"
-
+	STRATEGY_ID_BEZR="$(get_bezrazbor_num_from_config /opt/zapret/config)"
 	if [ -n "$STRATEGY_ID_BEZR" ]; then
 		echo "$STRATEGY_ID_BEZR"
 	else
@@ -742,40 +916,35 @@ get_bezr_status() {
 bezrazbor_selector() {
 	clear
 	echo -e "Текущий статус: ${yellow}$(get_bezr_status)${plain}"
-	echo "Введите номер стратегии (1-17), '0' для отключения режима или нажмите Enter для возврата к меню: "
+	echo "Введите номер стратегии (1-$(strategy_max_num TCP)), '0' для отключения режима или нажмите Enter для возврата к меню: "
 	read -re -p "" STRAT_NUM_BEZR
 
 	if [ -z "$STRAT_NUM_BEZR" ]; then
 		return
 	fi
+	mkdir -p "$HOSTLIST_STATE_DIR/cache" 2>/dev/null || true
 
 	if [ "$STRAT_NUM_BEZR" = "0" ]; then
-		# Если ввели 0 - отрубаем безразборный режим
-		NEW_PARAMS_BEZR="--hostlist-domains=bezrazbor.disabled"
-		echo "Режим сброса: выбрано $NEW_PARAMS_BEZR"
+		echo "0" > "$BEZRAZBOR_STATE_FILE"
+		echo "Безразборный режим отключен."
 	else
-		# Ищем строку-донор для указанного номера. Убираем экранирование \ перед --new, чтобы не было warning
-		NEW_LINE_BEZR=$(grep "RKN/${STRAT_NUM_BEZR}.txt" "/opt/zapret/config" | grep "\-\-new" | head -n 1)
-
-		if [ -z "$NEW_LINE_BEZR" ]; then
-			echo "Ошибка: Стратегия с номером $STRAT_NUM_BEZR не найдена в файле."
+		case "$STRAT_NUM_BEZR" in
+			*[!0-9]*)
+			echo "Ошибка: нужно ввести номер стратегии."
+			pause_enter
+			return
+			;;
+		esac
+		if ! strategy_is_enabled TCP "$STRAT_NUM_BEZR"; then
+			echo "Ошибка: стратегия $STRAT_NUM_BEZR отключена или не найдена."
 			pause_enter
 			return
 		fi
-
-		# Извлекаем параметры из донора (всё, что после RKN/номер.txt и до --new)
-		NEW_PARAMS_BEZR=$(echo "$NEW_LINE_BEZR" | sed -n "s/.*RKN\/${STRAT_NUM_BEZR}\.txt \(.*\) --new/\1/p")
-		
-		# Если параметры после .txt отсутствуют, пробуем альтернативный захват (после none.dom)
-		if [ -z "$NEW_PARAMS_BEZR" ]; then
-			NEW_PARAMS_BEZR=$(echo "$NEW_LINE_BEZR" | sed -n 's/.*none.dom \(.*\) --new/\1/p')
-		fi
-		
-		echo "Выбраны параметры для стратегии $STRAT_NUM_BEZR: $NEW_PARAMS_BEZR"
+		echo "$STRAT_NUM_BEZR" > "$BEZRAZBOR_STATE_FILE"
+		echo "Безразборный режим активирован на стратегии $STRAT_NUM_BEZR."
 	fi
 
-	#Применение изменений в файле. Используем модифицированную строку sed
-	sed -i "s|\(2096,8443 --hostlist-exclude-domains=googlevideo.com --hostlist-exclude=/opt/zapret/extra_strats/TCP/YT/List.txt \).*\( --new\)|\1$NEW_PARAMS_BEZR\2|" "/opt/zapret/config"
+	build_config_from_strategies /opt/zapret/config.default /opt/zapret/config
 	if [ $? -eq 0 ]; then
 		echo -e "${yellow}Выполняем перезапуск zapret${plain}"
 		/opt/zapret/init.d/sysv/zapret restart
@@ -784,8 +953,11 @@ bezrazbor_selector() {
         if [ -n "$add_ru" ]; then
           echo "Пропуск добавления ru доменов."
         else
-          echo "ru" >> /opt/zapret/lists/netrogat.txt
-          echo -e "Домены ru добавлены в исключения (netrogat.txt)."
+          if append_unique_lines /opt/zapret/lists/netrogat.txt "ru"; then
+            echo -e "Домены ru добавлены в исключения (netrogat.txt)."
+          else
+            echo -e "Уже есть в исключениях."
+          fi
         fi
 		echo -e "${green}Успешно! Файл /opt/zapret/config обновлен. Zapret перезапущен${plain}"
 	else
@@ -805,7 +977,9 @@ get_menu() {
     update_recommendations  
   while true; do
     local strategies_status
+    local fooling_mode
     strategies_status=$(get_current_strategies_info)
+    fooling_mode=$(get_fooling_mode)
     TITLE_MENU_LINE=""
     if [[ -s "$PREMIUM_TITLE_FILE" ]]; then
       TITLE_MENU_LINE="\n${pink}Титул:${plain} $(cat "$PREMIUM_TITLE_FILE")${yellow}\n"
@@ -822,7 +996,7 @@ get_menu() {
 '"${cyan}"'Enter'"${yellow}"' (без цифр) - переустановка/обновление zapret
 '"${cyan}"'0'"${yellow}"'. Выход
 '"${cyan}"'01'"${yellow}"'. Проверить доступность сервисов (Тест не всегда точен). '"${cyan}"'001'"${yellow}"' - проверка 16кб блока зарубежных хостеров (актуально для безразборного режима)
-'"${cyan}"'1'"${yellow}"'. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' '$(grep -q "fooling=ts,badsum" "/opt/zapret/config" && echo "Фулинг:${green}ts+badsum" || echo "Фулинг:${green}ts")' '${plain}']'"${yellow}"'
+'"${cyan}"'1'"${yellow}"'. Сменить стратегии или добавить домен в хост-лист. Текущие: '"${plain}"'[ '"${strategies_status}"' Фулинг:'"${green}${fooling_mode}${plain}"' ]'"${yellow}"'
 '"${cyan}"'2'"${yellow}"'. '"$(pidof nfqws >/dev/null && echo "Остановить ${green}запущенный ${yellow}zapret" || echo "Запустить ${red}остановленный ${yellow}zapret")"'. Для restart введите '"${cyan}"'22'"${yellow}"'
 '"${cyan}"'3'"${yellow}"'. Показать домены которые zapret посчитал недоступными
 '"${cyan}"'4'"${yellow}"'. Удалить zapret
@@ -835,7 +1009,7 @@ get_menu() {
 '"${cyan}"'11'"${yellow}"'. Управление аппаратным ускорением zapret. Может увеличить скорость на роутере. Сейчас: '"${plain}"'['"$(grep '^FLOWOFFLOAD=' /opt/zapret/config)"']'"${yellow}"'
 '"${cyan}"'12'"${yellow}"'. Меню (Де)Активации работы по всем доменам TCP-443,2053,2083,2087,2096,8443 без хост-листов (не затрагивает youtube стратегии и кастомные домены) (безразборный режим) Сейчас: '"${plain}"'['"$(get_bezr_status)"']'"${yellow}"'
 '"${cyan}"'13'"${yellow}"'. Активировать доступ в меню через браузер (web-ssh) (~3мб места)
-'"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и 2,4,12 стратегий. Сейчас:'"${plain}[$(grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1)]${yellow}"' (дефолтный sni: msn.com)
+'"${cyan}"'14'"${yellow}"'. Сменить sni fake-файла для дефолтной стратегии РКН-листа и '"$(strategy_sni_mod_nums_label)"' стратегий. Сейчас:'"${plain}[$(get_fake_tls_sni)]${yellow}"' (дефолтный sni: msn.com)
 '"${cyan}"'15'"${yellow}"'. Провайдер (Поверхностные рекомендации стратетий)
 '"$( [ "$KEENETIC_POLICY_SUPPORTED" = "1" ] && echo ${cyan}16${yellow}. Настройка Keenetic-политики для nfqws. Сейчас: ${plain}[$(get_keenetic_policy_status)]${yellow} )"'
 '"${cyan}"'777'"${yellow}"'. Активировать zeefeer premium (Нажимать только Valery ProD, Nomad, JorjeousJorje, avg97, Xoz, GeGunT, blagodarenya, mikhyan, Xoz, andric62, Whoze, Necronicle, Andrei_5288515371, Dina_turat, Nergalss, Александру, АлександруП, vecheromholodno, ЕвгениюГ, Dyadyabo, izzzgoy, Grigaraz, Reconnaissance, comandante1928, umad, rudnev2028, rutakote, railwayfx, vtokarev1604, Grigaraz, a40letbezurojaya, subzeero452, SadFrozz, Avatar-Lion и остальным поддержавшим проект. Но если очень хочется - можно нажать и другим)\033[0m'
@@ -926,8 +1100,11 @@ get_menu() {
     if [ "$user_domain" == "0" ] ; then
      echo "Ввод отменён"
     elif [ -n "$user_domain" ]; then
-      echo "$user_domain" >> /opt/zapret/lists/netrogat.txt
-      echo -e "Домен ${yellow}$user_domain${plain} добавлен в исключения (netrogat.txt)."
+      if append_unique_lines /opt/zapret/lists/netrogat.txt "$user_domain"; then
+        echo -e "Домен ${yellow}$user_domain${plain} добавлен в исключения (netrogat.txt)."
+      else
+        echo -e "Домен ${yellow}$user_domain${plain} уже есть в исключениях (netrogat.txt)."
+      fi
     else
       echo "Ввод пустой, ничего не добавлено"
     fi
@@ -987,8 +1164,8 @@ get_menu() {
 	if [[ -z "$NEW_SNI" ]]; then
 		echo "Пустой ввод. Изменений не будет."
 	else
-		sed -i -E "s|(=sni=)[^[:space:]]+( --)|\1${NEW_SNI}\2|g" "/opt/zapret/config"
-		/opt/zapret/init.d/sysv/zapret restart
+		set_fake_tls_sni_state "$NEW_SNI"
+		rebuild_config_and_restart
 		echo -e "${green}Выполнен перезапуск zapret. SNI теперь фейкуется под:${plain} $NEW_SNI"
 		hosters_check
 	fi
@@ -1106,7 +1283,7 @@ Enter - выход
 fi
 
 #Инфа о времени обновления скрипта
-commit_date=$(curl -s --max-time 10 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4)
+commit_date=$(curl -s --max-time 10 "$(z4r_api_url 'commits?path=z4r.sh&per_page=1')" | grep '"date"' | head -n1 | cut -d'"' -f4)
 if [[ -z "$commit_date" ]]; then
     echo -e "${red}Не был получен доступ к api.github.com (таймаут 15 сек). Возможны проблемы при установке.${plain}"
     if [ "$hardware" = "keenetic" ]; then
@@ -1117,7 +1294,7 @@ if [[ -z "$commit_date" ]]; then
         else
             echo $IP_ghub
             ndmc -c "ip host api.github.com $IP_ghub"
-            echo -e "${yellow}zeefeer обновлен (UTC +0): $(curl -s --max-time 10 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=z4r.sh&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+            echo -e "${yellow}zeefeer обновлен (UTC +0): $(curl -s --max-time 10 "$(z4r_api_url 'commits?path=z4r.sh&per_page=1')" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
         fi
     fi
 else
@@ -1149,6 +1326,7 @@ fi
  if [ -d /opt/zapret/extra_strats ] && [ -f "/opt/zapret/config" ]; then
     if [ $1 ]; then
         Strats_Tryer $1
+        pause_enter
     fi
     get_menu
  fi
@@ -1192,7 +1370,7 @@ backup_strats
 remove_zapret -y
 
 #Запрос желаемой версии zapret
-echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s --connect-timeout 3 "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s --connect-timeout 3 "$(z4r_api_url 'commits?path=config.default&per_page=1')" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
 version_select
 
 #Запрос на установку web-ssh
