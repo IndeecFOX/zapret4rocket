@@ -132,25 +132,20 @@ menu_action_restore_config_backup() {
 }
 
 backup_strats() {
-  # Бэкап папки стратегий
-  if [ -d /opt/zapret/extra_strats ]; then
-    echo -e "${yellow}Сделать бэкап /opt/zapret/extra_strats, выбранного фулинга, статуса безразборного режима и текущего SNI?${plain}"
+  # Бэкап папок состояния и пользовательских стратегий
+  if [ -d /opt/zapret/extra_strats ] || [ -d /opt/zapret/z4r_strategies ]; then
+    echo -e "${yellow}Сделать бэкап /opt/zapret/extra_strats и /opt/zapret/z4r_strategies ?${plain}"
     echo -e "${yellow}5 - Да, Enter - Нет, 0 - отмена${plain}"
     read -r ans
     if [ "$ans" = "0" ]; then
         get_menu # сигнал “отмена/в меню”
     fi
     if [ "$ans" = "5" ] || [ "$ans" = "y" ] || [ "$ans" = "Y" ]; then
-	  rm -f /opt/z4r_settings_backup 
- 	  # Строка 1: fooling (ts или ts,badsum)
-	  grep -q "fooling=ts,badsum" "/opt/zapret/config" && echo "ts,badsum" > /opt/z4r_settings_backup || echo "ts" > /opt/z4r_settings_backup
-	  # Строка 2: sni
-	  grep -oE '=sni=[^[:space:]]+ --' /opt/zapret/config | tail -n1 | cut -d= -f3 | cut -d' ' -f1 >> /opt/z4r_settings_backup
-	  # Строка 3: bezr
-	  [ "$(get_bezr_status)" != "Выключен" ] && echo "$(get_bezr_status)" >> /opt/z4r_settings_backup || echo "" >> /opt/z4r_settings_backup
       rm -rf /opt/extra_strats 2>/dev/null || true
-      cp -rf /opt/zapret/extra_strats /opt/ || true
-      echo -e "${green}Бэкап extra_strats сохранён в /opt/extra_strats${plain}"
+      rm -rf /opt/z4r_strategies 2>/dev/null || true
+      [ -d /opt/zapret/extra_strats ] && cp -rf /opt/zapret/extra_strats /opt/ || true
+      [ -d /opt/zapret/z4r_strategies ] && cp -rf /opt/zapret/z4r_strategies /opt/ || true
+      echo -e "${green}Бэкап extra_strats/z4r_strategies сохранён в /opt${plain}"
     fi
   fi
 
@@ -173,7 +168,7 @@ backup_strats() {
 
 
 menu_action_update_config_reset() {
-  echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "https://api.github.com/repos/IndeecFOX/zapret4rocket/commits?path=config.default&per_page=1" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
+  echo -e "${yellow}Конфиг обновлен (UTC +0): $(curl -s "$(z4r_api_url 'commits?path=config.default&per_page=1')" | grep '"date"' | head -n1 | cut -d'"' -f4) ${plain}"
 
   mkdir -p "$CONFIG_ROLLBACK_CACHE_DIR" 2>/dev/null || true
   if [ -f /opt/zapret/config ]; then
@@ -200,9 +195,9 @@ menu_action_update_config_reset() {
   # Раскомменчивание юзера под keenetic или merlin
   change_user
 
-  cp -f /opt/zapret/config.default /opt/zapret/config
   ensure_keenetic_policy_config_defaults /opt/zapret/config
   ensure_keenetic_policy_hooks /opt/zapret/config
+  build_config_from_strategies /opt/zapret/config.default /opt/zapret/config
 
   /opt/zapret/init.d/sysv/zapret start
 
