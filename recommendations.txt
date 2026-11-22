@@ -9,16 +9,17 @@
  - Cheboksary|UDP:0|TCP:1|GV:1|RKN:1
  - Cherepovets|UDP:1|TCP:1|GV:1|RKN:5
  - Chernushka|UDP:1|TCP:1|GV:0|RKN:11
- - Dolgoprudnyy|UDP:1|TCP:1|GV:3|RKN:5
+ - Dolgoprudnyy|UDP:0, 1|TCP:0|GV:3, 11|RKN:0
  - Engels|UDP:1|TCP:4|GV:0|RKN:0
  - Frankfurt am Main|UDP:0, 7|TCP:1|GV:0, 1, 6|RKN:0
  - Fryazino|UDP:0|TCP:1|GV:5|RKN:0
- - Iglino|UDP:3|TCP:1|GV:12|RKN:17
+ - Iglino|UDP:3|TCP:1|GV:12|RKN:9
  - Irkutsk|UDP:1|TCP:1|GV:1|RKN:5
  - Ivanovo|UDP:0|TCP:1|GV:1|RKN:1
  - Kaluga|UDP:4|TCP:1|GV:1|RKN:2
  - Kazan|UDP:0, 2, 3|TCP:1|GV:0, 1|RKN:1
  - Kiknur|UDP:0|TCP:0|GV:11|RKN:12
+ - Kirov|UDP:0|TCP:0|GV:0|RKN:17
  - Kondratovo|UDP:5|TCP:11|GV:11|RKN:0
  - Krasnaya Polyana|UDP:0|TCP:0|GV:0|RKN:7
  - Krasnodar|UDP:0|TCP:0|GV:0|RKN:5
@@ -39,9 +40,9 @@
  - Oryol|UDP:0|TCP:0|GV:0|RKN:0
  - Podolsk|UDP:1|TCP:1|GV:5|RKN:6
  - Pskov|UDP:0|TCP:1|GV:0|RKN:0
- - Rostov-na-Donu|UDP:0, 1|TCP:0|GV:0, 1|RKN:4
+ - Rostov-na-Donu|UDP:0, 1|TCP:0|GV:0, 1|RKN:0
  - Rostov-on-Don|UDP:0|TCP:0|GV:0|RKN:5
- - Saint Petersburg|UDP:1|TCP:0|GV:0|RKN:0
+ - Saint Petersburg|UDP:1, 0|TCP:0|GV:0, 1, 16|RKN:0
  - Samara|UDP:0, 1|TCP:1|GV:3|RKN:0
  - Sevastopol|UDP:0|TCP:11|GV:0|RKN:7
  - Severodvinsk|UDP:0, 1|TCP:0|GV:0, 1|RKN:0
@@ -55,7 +56,7 @@
  - Tuymazy|UDP:1|TCP:6|GV:1|RKN:5
  - Tver|UDP:4|TCP:1|GV:0|RKN:4
  - Tyumen|UDP:1, 2, 5|TCP:17|GV:0, 1, 11|RKN:11
- - Ufa|UDP:1|TCP:6|GV:0|RKN:0
+ - Ufa|UDP:1|TCP:6|GV:0, 1|RKN:0
  - Vardane|UDP:0|TCP:1|GV:1|RKN:0
  - Voronezh|UDP:0|TCP:0|GV:0|RKN:2
  - Yanino-2|UDP:0|TCP:1|GV:1|RKN:0
@@ -190,7 +191,7 @@ Barvikha - ZagorodTelecom LLC|UDP:3, 7, 0|TCP:7|GV:0, 5, 13|RKN:2
 bashtel|UDP:3|TCP:1|GV:0|RKN:2
 Bataysk - PJSC Rostelecom Macroregional Branch South|UDP:0|TCP:0|GV:1, 3|RKN:1
 BAZA.NET LLC|UDP:1|TCP:0|GV:1|RKN:0
-Beeline|UDP:0, 6, 1|TCP:0|GV:1, 0, 3|RKN:0
+Beeline|UDP:0, 6, 1|TCP:0|GV:0, 1, 3|RKN:0
 beeline|UDP:7|TCP:4|GV:3|RKN:5
 Beeline - |UDP:0, 1, 3|TCP:0|GV:0, 1, 8|RKN:1
 Beeline - Cherepovets|UDP:1|TCP:1|GV:0, 2|RKN:0
@@ -442,7 +443,7 @@ Helsinki - Node Host Limited|UDP:0|TCP:9|GV:2|RKN:2
 Helsinki - Play2go International Limited|UDP:0|TCP:0|GV:0, 2|RKN:0
 Hong Kong - DataCamp Limited|UDP:1|TCP:17|GV:0|RKN:17
 html - headtitle301 Moved Permanentlytitlehead|UDP:0, 2|TCP:0|GV:0, 1|RKN:0
-htmlheadtitle403 Forbiddentitleheadbodycenterh1403 Forbidden|UDP:1, 0|TCP:1|GV:0, 1, 3|RKN:0
+htmlheadtitle403 Forbiddentitleheadbodycenterh1403 Forbidden|UDP:1, 0|TCP:1|RKN:0
 iauliai - Solid Systems LLC|UDP:0|TCP:12|RKN:0
 Iglino - JSC Ufanet|UDP:2|TCP:0|RKN:0
 Imeni Vorovskogo - Intelsc Ltd.|UDP:5|TCP:1|RKN:13
@@ -850,6 +851,7 @@ megafon - |UDP:2|TCP:3|RKN:0
 Megafon -  |UDP:2|TCP:1|RKN:0
 Megafon - Belgorod|UDP:6|TCP:0|RKN:2
 Megafon - Moscow|UDP:0|TCP:1|RKN:0
+megafon - stary oskol|UDP:0|TCP:0|RKN:1
 megasvyaz llc - moscow|UDP:8|TCP:11|RKN:9
 Megion - Pride Limited company|UDP:0, 1|TCP:0|RKN:1
 Meleuz - Bashinformsvyaz Company RUMS DSL|UDP:5|TCP:1|RKN:4
@@ -890,7 +892,7 @@ Moscow - Agronet LLC|UDP:1, 0|TCP:0|RKN:8
 Moscow - AGTEL|UDP:4|TCP:0|RKN:0
 Moscow - All known AS8752|UDP:1|TCP:0|RKN:12
 Moscow - Altagen JSC|UDP:0, 4, 1|TCP:1|RKN:0
-Moscow - AO ASVT|UDP:2, 3|TCP:13|RKN:2
+Moscow - AO ASVT|UDP:3, 2|TCP:13|RKN:2
 Moscow - AOIOT|UDP:0|TCP:0|RKN:2
 Moscow - AVK|UDP:1|TCP:1|RKN:0
 Moscow - AVK-Wellcom Ltd.|UDP:0, 7|TCP:0|RKN:1
@@ -1148,10 +1150,12 @@ Mstikhino - PJSC MegaFon|UDP:0, 3, 4|TCP:0|RKN:2
 MTS|UDP:0, 1, 4|TCP:0|RKN:0
 MTS - |UDP:0, 1, 2|TCP:0|RKN:0
 mts - |UDP:0|TCP:0|RKN:0
+MTS - Kazan|UDP:3|TCP:0|RKN:5
 MTS - Krasnodar|UDP:0, 1|TCP:0|RKN:0
 MTS - Lipetsk|UDP:3|TCP:4|RKN:16
 MTS - MOSCOW|UDP:0|TCP:2|RKN:0
 MTS - Moscow|UDP:0, 5|TCP:0|RKN:0
+mts - moscow|UDP:1|TCP:0|RKN:17
 mts - perm|UDP:1|TCP:1|RKN:12
 MTS - Rostov-on-Don|UDP:8|TCP:8|RKN:2
 MTS - Saratov|UDP:7|TCP:4|RKN:0
@@ -1218,7 +1222,7 @@ Nizhnekamsk - PJSC TATTELECOM|UDP:4|TCP:3|RKN:0
 Nizhnekamsk - TATTELECOM|UDP:1|TCP:1|RKN:5
 Nizhnevartovsk - JSC Avantel|UDP:3|TCP:0|RKN:0
 Nizhnevartovsk - TNGS-NORTH network|UDP:0|TCP:0|RKN:12
-Nizhniy Novgorod - CJSC ER-Telecom Holding Nizhny Novgorod b|UDP:0, 1, 3|TCP:0|RKN:0
+Nizhniy Novgorod - CJSC ER-Telecom Holding Nizhny Novgorod b|UDP:0, 1, 2|TCP:0|RKN:0
 Nizhniy Novgorod - Closed Join Stock Company KOMSTAR-Regiony|UDP:0|TCP:5|RKN:1
 Nizhniy Novgorod - CORBINA-BROADBAND|UDP:1, 2, 0|TCP:1|RKN:1
 Nizhniy Novgorod - Informational-measuring systems Ltd|UDP:6, 1, 0|TCP:0|RKN:0
@@ -1244,7 +1248,7 @@ Noginsk - Flex Ltd.|UDP:4|TCP:4|RKN:5
 Noginsk - for Flex Ltd|UDP:1|TCP:0|RKN:9
 Nolinsk - Mobile Telesystems PJSC|UDP:2|TCP:1|RKN:12
 Norilsk - MTS PJSC|UDP:1, 0, 3|TCP:1|RKN:0
-Norilsk - Norilsk-Telecom|UDP:8, 0, 1|TCP:1|RKN:14
+Norilsk - Norilsk-Telecom|UDP:8, 1, 0|TCP:1|RKN:0
 Norilsk - Norilsk-Telecom JSC|UDP:0|TCP:17|RKN:0
 Norilsk - ZSTTK|UDP:0, 2|TCP:2|RKN:4
 Noviy Internet|UDP:0|TCP:0|RKN:0
@@ -1531,7 +1535,7 @@ rostelecom - smolensk|UDP:0|TCP:1|RKN:0
 Rostelecom - SPB|UDP:1|TCP:0|RKN:0
 Rostelecom - Stavropol|UDP:3|TCP:0|RKN:4
 Rostelecom - Syktyvkar|UDP:4|TCP:7|RKN:17
-Rostelecom - Taganrog|UDP:0|TCP:0|RKN:5
+Rostelecom - Taganrog|UDP:0, 2|TCP:0|RKN:5
 Rostelecom - Togliatti|UDP:1|TCP:5|RKN:0
 rostelecom - Tomsk|UDP:1|TCP:2|RKN:0
 Rostelecom - Tula|UDP:1|TCP:0|RKN:2
@@ -1689,7 +1693,7 @@ Sharan - Bashinformsvyaz Company RUMS DSL|UDP:0|TCP:1|RKN:8
 Sharan - PJSC Bashinformsvyaz|UDP:0|TCP:8|RKN:4
 Sharanga - Rostelecom networks|UDP:1|TCP:1|RKN:5
 Sharya - Verhnevolzhsky Branch|UDP:0|TCP:11|RKN:0
-Shatura - UDP Ltd.|UDP:1|TCP:6|RKN:2
+Shatura - UDP Ltd.|UDP:1|TCP:6|RKN:10
 Shcherbinka - GORCOM|UDP:0|TCP:2|RKN:4
 Shchyokino - CORBINA-BROADBAND|UDP:1|TCP:0|RKN:0
 Shchyokino - IT Ltd.|UDP:0|TCP:5|RKN:5
@@ -1994,7 +1998,3 @@ Troshkovo - Intronex Setevye Resheniya Ltd.|UDP:7|TCP:9|RKN:5
 Troyelga - ZAO MTU-Intels Moscow Region Network|UDP:0|TCP:17|RKN:0
 Trytek LLC - 0|UDP:0|TCP:0|RKN:0
 Trytek LLC - Murom|UDP:1|TCP:1|RKN:5
-Tsarskoye Selo - SkyNet LLC|UDP:0|TCP:0|RKN:5
-Tsarskoye Selo - Teleskan-Intercom Ltd|UDP:2|TCP:0|RKN:0
-Tsibanobalka - CrystalNET Plus|UDP:0|TCP:12|RKN:0
-Tsiolkovsky - RUAMUR|UDP:1|TCP:1|RKN:5
