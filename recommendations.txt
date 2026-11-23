@@ -5,6 +5,7 @@
  - |UDP:0, 1, 2|TCP:0|GV:0, 3|RKN:0
  - -|UDP:0|TCP:0|GV:4|RKN:0
  - Amsterdam|UDP:3|TCP:0|GV:0|RKN:0
+ - Arzamas|UDP:8|TCP:10|GV:3|RKN:0
  - Barnaul|UDP:2|TCP:8|GV:0|RKN:0
  - Cheboksary|UDP:0|TCP:1|GV:1|RKN:1
  - Cherepovets|UDP:1|TCP:1|GV:1|RKN:5
@@ -13,7 +14,7 @@
  - Engels|UDP:1|TCP:4|GV:0|RKN:0
  - Frankfurt am Main|UDP:0, 7|TCP:1|GV:0, 1, 6|RKN:0
  - Fryazino|UDP:0|TCP:1|GV:5|RKN:0
- - Iglino|UDP:3|TCP:1|GV:12|RKN:9
+ - Iglino|UDP:3|TCP:1|GV:12|RKN:12
  - Irkutsk|UDP:1|TCP:1|GV:1|RKN:5
  - Ivanovo|UDP:0|TCP:1|GV:1|RKN:1
  - Kaluga|UDP:4|TCP:1|GV:1|RKN:2
@@ -35,7 +36,7 @@
  - Norilsk|UDP:8|TCP:15|GV:17|RKN:11
  - Novocheboksarsk|UDP:0|TCP:0|GV:0|RKN:5
  - Novokuznetsk|UDP:1|TCP:6|GV:11|RKN:6
- - Novosibirsk|UDP:4, 5|TCP:0|GV:2, 4|RKN:2
+ - Novosibirsk|UDP:0, 4, 5|TCP:0|GV:2, 4|RKN:0
  - Omsk|UDP:1, 0|TCP:11|GV:1, 0|RKN:5
  - Oryol|UDP:0|TCP:0|GV:0|RKN:0
  - Podolsk|UDP:1|TCP:1|GV:5|RKN:6
@@ -50,7 +51,7 @@
  - Sochi|UDP:3|TCP:3|GV:1|RKN:0
  - Sokolovyy|UDP:8|TCP:0|GV:0|RKN:0
  - St Petersburg|UDP:0, 1|TCP:0|GV:1, 0|RKN:7
- - Stavropol|UDP:0, 1, 4|TCP:1|GV:1, 0|RKN:1
+ - Stavropol|UDP:0, 1, 4|TCP:0|GV:1, 0|RKN:1
  - Stockholm|UDP:0|TCP:0|GV:0|RKN:6
  - Tula|UDP:0|TCP:2|GV:2|RKN:5
  - Tuymazy|UDP:1|TCP:6|GV:1|RKN:5
@@ -58,6 +59,7 @@
  - Tyumen|UDP:1, 2, 5|TCP:17|GV:0, 1, 11|RKN:11
  - Ufa|UDP:1|TCP:6|GV:0, 1|RKN:0
  - Vardane|UDP:0|TCP:1|GV:1|RKN:0
+ - Volga|UDP:6|TCP:6|GV:6|RKN:0
  - Voronezh|UDP:0|TCP:0|GV:0|RKN:2
  - Yanino-2|UDP:0|TCP:1|GV:1|RKN:0
  - Yaushi|UDP:2|TCP:0|GV:6|RKN:2
@@ -400,7 +402,7 @@ Feodosiya - Telecommunication company FEONET LLC|UDP:0, 1, 2|TCP:0|GV:0, 1, 6|RK
 firstbyte|UDP:0|TCP:0|GV:0|RKN:2
 focuslife - |UDP:0|TCP:0|GV:1|RKN:0
 Frankfurt am Main - DpkgSoft International Limited|UDP:0|TCP:0|GV:0, 5|RKN:0
-Frankfurt am Main - Hostes LLC|UDP:4|TCP:0|GV:3|RKN:0
+Frankfurt am Main - Hostes LLC|UDP:0, 4|TCP:0|GV:3|RKN:0
 Frankfurt am Main - International Hosting Company Limited|UDP:0|TCP:0|GV:0|RKN:1
 Frankfurt am Main - NetCrafters OU|UDP:0|TCP:1|GV:1, 0|RKN:5
 Frankfurt am Main - OC NETWORKS LIMITED|UDP:1|TCP:2|GV:1|RKN:0
@@ -441,8 +443,8 @@ Helsinki - Baykov Ilya Sergeevich|UDP:0|TCP:0|GV:0|RKN:5
 Helsinki - Hetzner Online GmbH|UDP:0|TCP:0|GV:0|RKN:7
 Helsinki - Node Host Limited|UDP:0|TCP:9|GV:2|RKN:2
 Helsinki - Play2go International Limited|UDP:0|TCP:0|GV:0, 2|RKN:0
-Hong Kong - DataCamp Limited|UDP:1|TCP:17|GV:0|RKN:17
-html - headtitle301 Moved Permanentlytitlehead|UDP:0, 2|TCP:0|GV:0, 1|RKN:0
+Hong Kong - DataCamp Limited|UDP:1|TCP:17|RKN:17
+html - headtitle301 Moved Permanentlytitlehead|UDP:0, 2|TCP:0|RKN:0
 htmlheadtitle403 Forbiddentitleheadbodycenterh1403 Forbidden|UDP:1, 0|TCP:1|RKN:0
 iauliai - Solid Systems LLC|UDP:0|TCP:12|RKN:0
 Iglino - JSC Ufanet|UDP:2|TCP:0|RKN:0
@@ -557,7 +559,7 @@ Kazan - Rostelecom|UDP:0, 1|TCP:0|RKN:5
 Kazan - Rostelecom networks|UDP:0, 2|TCP:0|RKN:0
 Kazan - SkyNetwork Ltd.|UDP:0, 6|TCP:1|RKN:1
 Kazan - Tattelecom|UDP:0, 4, 1|TCP:1|RKN:7
-Kazan - TATTELECOM|UDP:0, 1, 4|TCP:0|RKN:5
+Kazan - TATTELECOM|UDP:0, 1, 4|TCP:1|RKN:5
 Kazan - Teleset Company. City of Kazan.|UDP:0, 1, 5|TCP:0|RKN:0
 Kemerovo - Closed Joint Stock Company Kuzbassenergosviaz|UDP:0|TCP:0|RKN:17
 Kemerovo - GIR SER|UDP:4|TCP:0|RKN:4
@@ -820,6 +822,7 @@ Lyublino - Moscow Local Telephone Network OAO MGTS|UDP:0|TCP:0|RKN:0
 Lyublino - OJSC Comcor|UDP:1|TCP:0|RKN:0
 m |UDP:0|TCP:0|RKN:0
 Magadan - JSC DalSviaz|UDP:0|TCP:0|RKN:2
+Maginfo - Magnitogorsk|UDP:2|TCP:1|RKN:2
 Magnitogorsk - Agrosvyaz-M Ltd|UDP:1|TCP:1|RKN:0
 Magnitogorsk - Elfimov Sergey Ivanovich PE|UDP:0|TCP:0|RKN:0
 Magnitogorsk - Intersvyaz-2 JSC|UDP:0, 1|TCP:1|RKN:0
@@ -1056,7 +1059,7 @@ Moscow - NCNET|UDP:0, 3, 1|TCP:0|RKN:0
 Moscow - Net By Net Holding LLC|UDP:3, 0, 1|TCP:1|RKN:0
 Moscow - Net By Net Holding LLC Kursk|UDP:0, 1|TCP:0|RKN:0
 Moscow - NetByNet|UDP:0, 1|TCP:0|RKN:5
-Moscow - Netorn LLC|UDP:3|TCP:0|RKN:5
+Moscow - Netorn LLC|UDP:5|TCP:0|RKN:5
 Moscow - New Communication Technologies LLC|UDP:5|TCP:5|RKN:0
 Moscow - New Hosting Technologies LLC|UDP:0, 7, 1|TCP:1|RKN:5
 Moscow - NIC-HOSTING|UDP:3|TCP:2|RKN:0
@@ -1511,7 +1514,7 @@ Rome - Aeza Group LLC|UDP:1|TCP:4|RKN:0
 Rossoh - CORBINA-BROADBAND|UDP:3|TCP:0|RKN:0
 Rossosh - Rostelecom networks|UDP:1|TCP:2|RKN:4
 rostelecom|UDP:0, 1|TCP:0|RKN:0
-Rostelecom|UDP:0, 1|TCP:0|RKN:0
+Rostelecom|UDP:1, 0|TCP:0|RKN:0
 Rostelecom - 0|UDP:0|TCP:0|RKN:11
 Rostelecom - Arkhangelsk|UDP:0|TCP:1|RKN:5
 Rostelecom - Astrakhan|UDP:0|TCP:0|RKN:0
@@ -1693,7 +1696,7 @@ Sharan - Bashinformsvyaz Company RUMS DSL|UDP:0|TCP:1|RKN:8
 Sharan - PJSC Bashinformsvyaz|UDP:0|TCP:8|RKN:4
 Sharanga - Rostelecom networks|UDP:1|TCP:1|RKN:5
 Sharya - Verhnevolzhsky Branch|UDP:0|TCP:11|RKN:0
-Shatura - UDP Ltd.|UDP:1|TCP:6|RKN:10
+Shatura - UDP Ltd.|UDP:1|TCP:6|RKN:1
 Shcherbinka - GORCOM|UDP:0|TCP:2|RKN:4
 Shchyokino - CORBINA-BROADBAND|UDP:1|TCP:0|RKN:0
 Shchyokino - IT Ltd.|UDP:0|TCP:5|RKN:5
@@ -1856,7 +1859,7 @@ St Petersburg - TELVIO Ltd.|UDP:0, 2|TCP:13|RKN:1
 St Petersburg - TimeWeb Co. LTD|UDP:1|TCP:1|RKN:3
 St Petersburg - TimeWeb LLC|UDP:4|TCP:1|RKN:3
 St Petersburg - TTK-Retail|UDP:0|TCP:1|RKN:7
-St Petersburg - Unet Communication LLC|UDP:2, 4|TCP:0|RKN:6
+St Petersburg - Unet Communication LLC|UDP:2|TCP:0|RKN:6
 St Petersburg - UNIS Ltd.|UDP:0|TCP:0|RKN:2
 St Petersburg - V Online LLC.|UDP:0, 5|TCP:0|RKN:0
 St Petersburg - vds|UDP:1|TCP:2|RKN:13
@@ -1995,6 +1998,3 @@ Transtelecom - Khabarovsk|UDP:5|TCP:0|RKN:8
 TransTeleCom - Komsomolsk-on-Amur|UDP:0|TCP:1|RKN:4
 Troitsk - Moscow Local Telephone Network OAO MGTS|UDP:0|TCP:0|RKN:0
 Troshkovo - Intronex Setevye Resheniya Ltd.|UDP:7|TCP:9|RKN:5
-Troyelga - ZAO MTU-Intels Moscow Region Network|UDP:0|TCP:17|RKN:0
-Trytek LLC - 0|UDP:0|TCP:0|RKN:0
-Trytek LLC - Murom|UDP:1|TCP:1|RKN:5
