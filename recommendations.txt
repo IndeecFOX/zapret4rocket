@@ -36,7 +36,7 @@
  - Norilsk|UDP:8|TCP:15|GV:17|RKN:11
  - Novocheboksarsk|UDP:0|TCP:0|GV:0|RKN:5
  - Novokuznetsk|UDP:1|TCP:6|GV:11|RKN:6
- - Novosibirsk|UDP:5, 4|TCP:0|GV:2, 4|RKN:2
+ - Novosibirsk|UDP:5, 4|TCP:0|GV:2, 0, 4|RKN:0
  - Omsk|UDP:1, 0|TCP:11|GV:1, 0|RKN:5
  - Oryol|UDP:0|TCP:0|GV:0|RKN:0
  - Podolsk|UDP:1|TCP:1|GV:5, 11|RKN:0
@@ -45,7 +45,7 @@
  - Rostov-on-Don|UDP:0|TCP:0|GV:0|RKN:5
  - Saint Petersburg|UDP:1, 0|TCP:0|GV:0, 1, 16|RKN:0
  - Samara|UDP:0, 1|TCP:1|GV:3|RKN:0
- - Saransk|UDP:0|TCP:0|GV:1|RKN:0
+ - Saransk|UDP:0, 4|TCP:0|GV:0, 1|RKN:0
  - Sevastopol|UDP:0|TCP:11|GV:0|RKN:7
  - Severodvinsk|UDP:0, 1|TCP:0|GV:0, 1|RKN:0
  - Slobodskoy|UDP:1|TCP:0|GV:0|RKN:0
@@ -53,7 +53,7 @@
  - Sochi|UDP:3|TCP:3|GV:1|RKN:0
  - Sokolovyy|UDP:8|TCP:0|GV:0|RKN:0
  - St Petersburg|UDP:0, 1|TCP:0|GV:1, 0|RKN:7
- - Stavropol|UDP:0, 1, 4|TCP:0|GV:1, 0|RKN:1
+ - Stavropol|UDP:0, 1, 4|TCP:0|GV:0, 1|RKN:1
  - Stockholm|UDP:0|TCP:0|GV:0|RKN:6
  - Tula|UDP:0|TCP:2|GV:2|RKN:5
  - Tuymazy|UDP:1|TCP:6|GV:1|RKN:5
@@ -65,7 +65,7 @@
  - Voronezh|UDP:0|TCP:0|GV:0|RKN:2
  - Yanino-2|UDP:0|TCP:1|GV:1|RKN:0
  - Yaushi|UDP:2|TCP:0|GV:6|RKN:2
- - Yekaterinburg|UDP:0, 1, 3|TCP:0|GV:0, 1|RKN:0
+ - Yekaterinburg|UDP:0, 1, 3|TCP:0|GV:0, 1, 11|RKN:0
  - Yelabuga|UDP:1, 7|TCP:0|GV:1|RKN:0
  - Yoshkar-Ola|UDP:0|TCP:1|GV:0|RKN:5
  - Yuzhnyy|UDP:1|TCP:1|GV:6|RKN:0
@@ -878,7 +878,7 @@ Mikhaylovsk - PJSC Vimpelcom|UDP:0|TCP:0|RKN:12
 Mikhaylovsk - Sll Computer  Communication System|UDP:0, 2|TCP:1|RKN:5
 Mikheyevo - MKS Telecom LLC|UDP:1|TCP:1|RKN:5
 Mikhnevo - MKS Telecom LLC|UDP:1, 2, 5|TCP:1|RKN:5
-Mineralnye Vody - CORBINA-BROADBAND|UDP:5, 3|TCP:5|RKN:5
+Mineralnye Vody - CORBINA-BROADBAND|UDP:5, 8|TCP:5|RKN:5
 Mineralnye Vody - Stavropol branch of OJSC Rostelecom|UDP:2|TCP:3|RKN:16
 Minusinsk - Alfatel Ltd|UDP:0|TCP:0|RKN:2
 Minusinsk - Kristelecom Ltd.|UDP:0|TCP:0|RKN:2
@@ -1160,7 +1160,7 @@ MTS - |UDP:0, 1, 2|TCP:0|RKN:0
 mts - |UDP:0|TCP:0|RKN:0
 MTS - Kazan|UDP:3|TCP:0|RKN:5
 MTS - Krasnodar|UDP:0, 1|TCP:0|RKN:0
-MTS - Lipetsk|UDP:3|TCP:3|RKN:16
+MTS - Lipetsk|UDP:3|TCP:4|RKN:16
 MTS - MOSCOW|UDP:0|TCP:2|RKN:0
 MTS - Moscow|UDP:0, 5|TCP:0|RKN:0
 mts - moscow|UDP:1|TCP:0|RKN:17
@@ -1701,7 +1701,7 @@ Sharan - Bashinformsvyaz Company RUMS DSL|UDP:0|TCP:1|RKN:8
 Sharan - PJSC Bashinformsvyaz|UDP:0|TCP:8|RKN:4
 Sharanga - Rostelecom networks|UDP:1|TCP:1|RKN:5
 Sharya - Verhnevolzhsky Branch|UDP:0|TCP:11|RKN:0
-Shatura - UDP Ltd.|UDP:1|TCP:6|RKN:1
+Shatura - UDP Ltd.|UDP:1|TCP:1|RKN:1
 Shcherbinka - GORCOM|UDP:0|TCP:2|RKN:4
 Shchyokino - CORBINA-BROADBAND|UDP:1|TCP:0|RKN:0
 Shchyokino - IT Ltd.|UDP:0|TCP:5|RKN:5
@@ -1734,6 +1734,7 @@ Simferopol - PE Tsibrankov Konstantin Igorevich|UDP:0|TCP:0|RKN:8
 Sinev Maksim Viktorovich|UDP:0|TCP:0|RKN:0
 Singapore - tang|UDP:0|TCP:1|RKN:5
 Skynet|UDP:0|TCP:1|RKN:0
+SkyNet - Saint Petersburg|UDP:1|TCP:1|RKN:0
 skynet - spb|UDP:0|TCP:1|RKN:0
 Skynet - Spb|UDP:2|TCP:0|RKN:8
 SkyNet Networks|UDP:1|TCP:12|RKN:1
@@ -1777,7 +1778,7 @@ St Petersburg - Arkhangelskaya oblast|UDP:0|TCP:10|RKN:0
 St Petersburg - Asarta LLC|UDP:1, 0, 4|TCP:0|RKN:5
 St Petersburg - B2B B2C Network|UDP:0|TCP:0|RKN:4
 St Petersburg - Beget LLC|UDP:0, 1, 2|TCP:0|RKN:0
-St Petersburg - BEGET.RU|UDP:0|TCP:0|RKN:1
+St Petersburg - BEGET.RU|UDP:0, 1|TCP:0|RKN:0
 St Petersburg - brand AtHome|UDP:0, 3, 1|TCP:0|RKN:5
 St Petersburg - CJSC ER-Telecom Holding Saint-Petersburg bra|UDP:0, 2, 1|TCP:0|RKN:5
 St Petersburg - Comfortel Ltd.|UDP:1, 0, 6|TCP:1|RKN:1
@@ -1899,7 +1900,7 @@ Stavropol - OOO Set network|UDP:0, 3|TCP:0|RKN:1
 Stavropol - OOOSET|UDP:1, 0, 2|TCP:1|RKN:0
 Stavropol - PJSC Rostelecom|UDP:0, 1, 4|TCP:0|RKN:0
 Stavropol - PJSC Southern Telecommunications Company|UDP:0|TCP:0|RKN:4
-Stavropol - PJSC Vimpelcom|UDP:0, 1|TCP:1|RKN:1
+Stavropol - PJSC Vimpelcom|UDP:0, 1|TCP:1|RKN:0
 Stavropol - Stavropol branch of PJSC STC|UDP:3|TCP:1|RKN:0
 Stavropol - Telko JSC|UDP:0, 2|TCP:0|RKN:0
 Sterlitamak - BRAS pool Rostelecom-Bashinformsvyaz|UDP:1|TCP:4|RKN:10
@@ -1997,4 +1998,3 @@ Tomsk - TOMTEL networks|UDP:0, 1|TCP:0|RKN:0
 Tonshalovo - Vologodskaya oblast|UDP:1|TCP:0|RKN:0
 Torshilovskiy - Rostelecom networks|UDP:1|TCP:1|RKN:9
 Tosno - OtradnoeNet Ltd|UDP:0, 1, 2|TCP:1|RKN:0
-Tosno - SkyNet LLC|UDP:1|TCP:1|RKN:7
