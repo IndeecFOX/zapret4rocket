@@ -13,6 +13,26 @@ CACHE_DIR="/opt/zapret/extra_strats/cache"
 TELEMETRY_CFG="$CACHE_DIR/telemetry.config"
 PROVIDER_TXT="$CACHE_DIR/provider.txt"
 
+telemetry_strategy_value() {
+    local folder="$1"
+    local type="$2"
+    local max active
+
+    max="$(strategy_max_num "$type")"
+    active="$(get_active_strat_num "$folder" "$max" "$type")"
+    case "$active" in
+        ''|0) echo "0" ;;
+        *[!0-9]*) echo "0" ;;
+        *)
+            if strategy_is_custom_num "$active"; then
+                echo ""
+            else
+                echo "$active"
+            fi
+            ;;
+    esac
+}
+
 # Функция инициализации (Спрашивает пользователя один раз)
 init_telemetry() {
     mkdir -p "$CACHE_DIR"
@@ -87,20 +107,22 @@ send_stats() {
     my_isp=$(echo "$my_isp" | head -c 60)
     [ -z "$my_isp" ] && my_isp="Unknown"
 
-    # 2. Определяем номера стратегий
-    local s_udp=$(get_active_strat_num "/opt/zapret/extra_strats/UDP/YT" 8)
-    local s_tcp=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/YT" 17)
-    local s_gv=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/GV" 17)
-    local s_rkn=$(get_active_strat_num "/opt/zapret/extra_strats/TCP/RKN" 17)
+    # 2. Определяем номера стратегий. Пользовательские стратегии (N >= 1000)
+    # не отправляются вообще, чтобы не раскрывать локальные настройки.
+    local s_udp s_tcp s_gv s_rkn
+    s_udp="$(telemetry_strategy_value "/opt/zapret/extra_strats/UDP/YT" UDP)"
+    s_tcp="$(telemetry_strategy_value "/opt/zapret/extra_strats/TCP/YT" TCP)"
+    s_gv="$(telemetry_strategy_value "/opt/zapret/extra_strats/TCP/GV" TCP)"
+    s_rkn="$(telemetry_strategy_value "/opt/zapret/extra_strats/TCP/RKN" TCP)"
 
     # 3. Отправка в Google Forms (Тихий режим, в фоне &)
-    curl -sL --max-time 10 \
+    set -- -sL --max-time 10 \
         -d "$ENTRY_UUID=$tel_uuid" \
-        -d "$ENTRY_ISP=$my_isp" \
-        -d "$ENTRY_UDP=$s_udp" \
-        -d "$ENTRY_TCP=$s_tcp" \
-        -d "$ENTRY_GV=$s_gv" \
-        -d "$ENTRY_RKN=$s_rkn" \
-        "https://docs.google.com/forms/d/e/$STATS_FORM_ID/formResponse" > /dev/null 2>&1 &
+        -d "$ENTRY_ISP=$my_isp"
+    [ -n "$s_udp" ] && set -- "$@" -d "$ENTRY_UDP=$s_udp"
+    [ -n "$s_tcp" ] && set -- "$@" -d "$ENTRY_TCP=$s_tcp"
+    [ -n "$s_gv" ] && set -- "$@" -d "$ENTRY_GV=$s_gv"
+    [ -n "$s_rkn" ] && set -- "$@" -d "$ENTRY_RKN=$s_rkn"
+    curl "$@" "https://docs.google.com/forms/d/e/$STATS_FORM_ID/formResponse" > /dev/null 2>&1 &
 }
 # ---- /Telemetry module integration ----
