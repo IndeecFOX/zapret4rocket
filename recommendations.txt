@@ -35,14 +35,15 @@
  - Nizhniy Novgorod|UDP:0|TCP:1|GV:1|RKN:16
  - Norilsk|UDP:8|TCP:15|GV:17|RKN:11
  - Novocheboksarsk|UDP:0|TCP:0|GV:0|RKN:5
- - Novokuznetsk|UDP:1|TCP:6|GV:11|RKN:6
- - Novosibirsk|UDP:5, 4|TCP:0|GV:2, 0, 4|RKN:0
+ - Novokuznetsk|UDP:1|TCP:0|GV:3, 11|RKN:4
+ - Novosibirsk|UDP:5, 4, 6|TCP:0|GV:2, 0, 4|RKN:0
  - Omsk|UDP:1, 0|TCP:11|GV:1, 0|RKN:5
  - Oryol|UDP:0|TCP:0|GV:0|RKN:0
  - Podolsk|UDP:1|TCP:1|GV:5, 11|RKN:0
  - Pskov|UDP:0|TCP:1|GV:0|RKN:0
  - Rostov-na-Donu|UDP:0, 1|TCP:0|GV:1, 0|RKN:0
  - Rostov-on-Don|UDP:0|TCP:0|GV:0|RKN:5
+ - Ryazan|UDP:0|TCP:0|GV:1|RKN:2
  - Saint Petersburg|UDP:1, 0|TCP:0|GV:0, 1, 16|RKN:0
  - Samara|UDP:0, 1|TCP:1|GV:3|RKN:0
  - Saransk|UDP:0, 4|TCP:0|GV:0, 1|RKN:0
@@ -55,11 +56,13 @@
  - St Petersburg|UDP:0, 1|TCP:0|GV:1, 0|RKN:7
  - Stavropol|UDP:0, 1, 4|TCP:0|GV:0, 1|RKN:1
  - Stockholm|UDP:0|TCP:0|GV:0|RKN:6
+ - Tatarsk|UDP:4|TCP:0|GV:11|RKN:5
  - Tula|UDP:0|TCP:2|GV:2|RKN:5
  - Tuymazy|UDP:1|TCP:6|GV:1|RKN:5
  - Tver|UDP:4|TCP:1|GV:0|RKN:4
  - Tyumen|UDP:1, 2, 5|TCP:17|GV:0, 1, 11|RKN:11
  - Ufa|UDP:1|TCP:6|GV:0, 1|RKN:0
+ - Uglich|UDP:2|TCP:1|GV:1|RKN:2
  - Vardane|UDP:0|TCP:1|GV:1|RKN:0
  - Volga|UDP:6|TCP:6|GV:6|RKN:0
  - Voronezh|UDP:0|TCP:0|GV:0|RKN:2
@@ -357,7 +360,7 @@ Dolgoprudny - MIPT-TELECOM|UDP:1, 4|TCP:11|GV:0, 1, 7|RKN:5
 Dolgoprudny - Non state educational institution Educational |UDP:0|TCP:0|GV:0, 3|RKN:1
 dom.ru|UDP:3|TCP:0|GV:0|RKN:0
 Dom.ru - |UDP:3|TCP:9|GV:2|RKN:0
-dom.ru - Moscow|UDP:0|TCP:0|GV:0|RKN:0
+dom.ru - Moscow|UDP:0|TCP:3|GV:1|RKN:7
 DOM.RU - Penza|UDP:1|TCP:1|GV:1|RKN:1
 Dom.ru - Rostov-na-Donu|UDP:2|TCP:1|GV:1|RKN:5
 dom.ru - volgograd|UDP:3|TCP:0|GV:0|RKN:0
@@ -440,9 +443,9 @@ Gubkin - SigmaTV network|UDP:1|TCP:1|GV:1|RKN:5
 Gubkin - SVYAZ-TELECOM|UDP:1|TCP:1|GV:1|RKN:5
 Gukovo - JSC Rostelecom regional branch Siberia|UDP:5|TCP:1|GV:1|RKN:4
 Gus-Khrustalnyy - TeleServise Ltd|UDP:1, 0|TCP:0|GV:0, 1|RKN:0
-h1Not Foundh1The requested URL linefieldsispcity was not fou|UDP:1|TCP:3|GV:0|RKN:13
-Haverfordwest - Global Connectivity Solutions LLP|UDP:0|TCP:0|GV:0|RKN:5
-Helsinki - Aeza International LTD|UDP:1|TCP:0|GV:0|RKN:0
+h1Not Foundh1The requested URL linefieldsispcity was not fou|UDP:1|TCP:3|RKN:13
+Haverfordwest - Global Connectivity Solutions LLP|UDP:0|TCP:0|RKN:5
+Helsinki - Aeza International LTD|UDP:1|TCP:0|RKN:0
 Helsinki - Baykov Ilya Sergeevich|UDP:0|TCP:0|RKN:5
 Helsinki - Hetzner Online GmbH|UDP:0|TCP:0|RKN:7
 Helsinki - Node Host Limited|UDP:0|TCP:9|RKN:2
@@ -469,6 +472,7 @@ Irkutsk - INSYS network|UDP:2|TCP:1|RKN:2
 Irkutsk - JSC ER-Telecom Holding|UDP:0|TCP:1|RKN:5
 Irkutsk - JSC ER-Telecom Holding Irkutsk branch|UDP:1, 0, 3|TCP:0|RKN:0
 Irkutsk - JSC Rostelecom regional branch Siberia|UDP:0|TCP:0|RKN:5
+Irkutsk - Limited Liability Company TTK-Svyaz|UDP:1|TCP:4|RKN:0
 Irkutsk - MTS Irkutsk|UDP:2|TCP:8|RKN:17
 Irkutsk - MTS PJSC|UDP:6, 2, 0|TCP:5|RKN:0
 Irkutsk - OJSC Sibirtelecom|UDP:8|TCP:1|RKN:1
@@ -548,7 +552,7 @@ Kanevskaya - Firma Svyaz Ltd.|UDP:0|TCP:1|RKN:8
 Kansas City - Cloudflare Inc.|UDP:3|TCP:1|RKN:0
 Karabanovo - Trytek LLC|UDP:0|TCP:0|RKN:0
 Kavalerovo - Primorye NET|UDP:0|TCP:0|RKN:0
-Kavkazskaya - Omiplat LLC|UDP:0, 1|TCP:0|RKN:0
+Kavkazskaya - Omiplat LLC|UDP:1, 0|TCP:0|RKN:0
 Kazan - CJSC ER-Telecom Holding Kazan branch|UDP:0, 1, 2|TCP:0|RKN:0
 Kazan - JSC ER-Telecom Holding|UDP:0, 1|TCP:0|RKN:0
 Kazan - JSC Ufanet|UDP:0, 2, 1|TCP:1|RKN:5
@@ -1555,7 +1559,7 @@ rostelecom - Yaroslavl|UDP:0|TCP:0|RKN:5
 Rostelecom Nets|UDP:0|TCP:1|RKN:4
 ROSTELEKOM|UDP:1|TCP:3|RKN:0
 rostelekom|UDP:0|TCP:17|RKN:0
-Rostelekom|UDP:1, 4|TCP:0|RKN:5
+Rostelekom|UDP:1, 4|TCP:0|RKN:4
 rostelekom - ekaterinburg|UDP:2|TCP:0|RKN:4
 Rostelekom - Krasnodar|UDP:0|TCP:0|RKN:15
 rostelekom - kursk|UDP:0|TCP:7|RKN:0
@@ -1732,6 +1736,7 @@ Simferopol - Ltd. Cypher|UDP:0, 2, 1|TCP:1|RKN:0
 Simferopol - Miranda-Media B2C NAT  3|UDP:1|TCP:1|RKN:4
 Simferopol - PE Tsibrankov Konstantin Igorevich|UDP:0|TCP:0|RKN:8
 Sinev Maksim Viktorovich|UDP:0|TCP:0|RKN:0
+Singapore - ACO TECH SERVICES LTD|UDP:0|TCP:2|RKN:5
 Singapore - tang|UDP:0|TCP:1|RKN:5
 Skynet|UDP:0|TCP:1|RKN:0
 SkyNet - Saint Petersburg|UDP:1|TCP:1|RKN:0
@@ -1821,7 +1826,7 @@ St Petersburg - MTS-SPB|UDP:1|TCP:1|RKN:17
 St Petersburg - Net By Net Holding LLC|UDP:0, 1, 2|TCP:0|RKN:0
 St Petersburg - Net By Net Holding LLC Spb|UDP:6|TCP:5|RKN:7
 St Petersburg - NetCrafters OU|UDP:0|TCP:1|RKN:5
-St Petersburg - Nevalink LLC|UDP:0, 1|TCP:0|RKN:0
+St Petersburg - Nevalink LLC|UDP:1, 0|TCP:1|RKN:0
 St Petersburg - NevalinkRoute|UDP:0, 2, 1|TCP:0|RKN:4
 St Petersburg - NODEX|UDP:0, 1|TCP:0|RKN:0
 St Petersburg - OBIT Ltd.|UDP:4, 0, 1|TCP:1|RKN:13
@@ -1858,7 +1863,7 @@ St Petersburg - SPb Yota PAT|UDP:1, 2|TCP:0|RKN:0
 St Petersburg - SPBNIT|UDP:2, 0, 1|TCP:1|RKN:5
 St Petersburg - SPRINTHOST.RU LLC|UDP:0, 1|TCP:1|RKN:0
 St Petersburg - Start LLC|UDP:0, 3, 2|TCP:0|RKN:0
-St Petersburg - Tele2 Russia Groups|UDP:0, 3|TCP:4|RKN:0
+St Petersburg - Tele2 Russia Groups|UDP:0, 1|TCP:4|RKN:0
 St Petersburg - Teleskan-Intercom Ltd|UDP:0|TCP:0|RKN:0
 St Petersburg - Teleskan-Intercom Ltd. network|UDP:1|TCP:1|RKN:5
 St Petersburg - TELVIO Ltd.|UDP:0, 2|TCP:13|RKN:1
@@ -1993,8 +1998,3 @@ Tomsk - OOO NETCOM|UDP:6|TCP:3|RKN:15
 Tomsk - Part of traffic manipulation|UDP:1, 0|TCP:0|RKN:0
 Tomsk - PJSC Rostelecom|UDP:0|TCP:0|RKN:0
 Tomsk - Rostelecom networks|UDP:2, 3, 1|TCP:0|RKN:0
-Tomsk - Tele2 Russia Groups|UDP:1|TCP:0|RKN:3
-Tomsk - TOMTEL networks|UDP:0, 1|TCP:0|RKN:0
-Tonshalovo - Vologodskaya oblast|UDP:1|TCP:0|RKN:0
-Torshilovskiy - Rostelecom networks|UDP:1|TCP:1|RKN:9
-Tosno - OtradnoeNet Ltd|UDP:0, 1, 2|TCP:1|RKN:0
